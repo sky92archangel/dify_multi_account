@@ -33,13 +33,7 @@ const SettingTimeZone: FC<{
 }) => {
   const setShowAccountSettingModal = useModalContextSelector(s => s.setShowAccountSettingModal)
   return (
-    <button
-      type="button"
-      className="cursor-pointer border-none bg-transparent p-0 text-left body-xs-regular text-text-accent focus-visible:ring-1 focus-visible:ring-components-input-border-active focus-visible:outline-hidden"
-      onClick={() => setShowAccountSettingModal({ payload: ACCOUNT_SETTING_TAB.LANGUAGE })}
-    >
-      {children}
-    </button>
+    <span className="cursor-pointer body-xs-regular text-text-accent" onClick={() => setShowAccountSettingModal({ payload: ACCOUNT_SETTING_TAB.LANGUAGE })}>{children}</span>
   )
 }
 const AutoUpdateSetting: FC<Props> = ({
@@ -110,21 +104,20 @@ const AutoUpdateSetting: FC<Props> = ({
 
   const renderTimePickerTrigger = useCallback(({ inputElem, onClick, isOpen }: TriggerParams) => {
     return (
-      <button
-        type="button"
-        className="group flex h-8 w-[160px] cursor-pointer items-center justify-between rounded-lg border-none bg-components-input-bg-normal px-2 text-left hover:bg-state-base-hover-alt focus-visible:ring-1 focus-visible:ring-components-input-border-active focus-visible:outline-hidden"
+      <div
+        className="group flex h-8 w-[160px] cursor-pointer items-center justify-between rounded-lg bg-components-input-bg-normal px-2 hover:bg-state-base-hover-alt"
         onClick={onClick}
       >
         <div className="flex w-0 grow items-center gap-x-1">
           <RiTimeLine className={cn(
-            'size-4 shrink-0 text-text-tertiary',
+            'h-4 w-4 shrink-0 text-text-tertiary',
             isOpen ? 'text-text-secondary' : 'group-hover:text-text-secondary',
           )}
           />
           {inputElem}
         </div>
         <div className="system-sm-regular text-text-tertiary">{convertTimezoneToOffsetStr(timezone)}</div>
-      </button>
+      </div>
     )
   }, [timezone])
 
@@ -150,6 +143,7 @@ const AutoUpdateSetting: FC<Props> = ({
                   timezone={timezone}
                   onChange={v => handleChange('upgrade_time_of_day')(convertLocalSecondsToUTCDaySeconds(dayjsToTimeOfDay(v), timezone!))}
                   onClear={() => handleChange('upgrade_time_of_day')(convertLocalSecondsToUTCDaySeconds(0, timezone!))}
+                  popupClassName="z-99"
                   title={t(`${i18nPrefix}.updateTime`, { ns: 'plugin' })}
                   minuteFilter={minuteFilter}
                   renderTrigger={renderTimePickerTrigger}

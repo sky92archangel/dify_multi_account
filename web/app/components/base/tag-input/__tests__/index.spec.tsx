@@ -63,7 +63,7 @@ describe('TagInput', () => {
     it('should hide remove controls when remove is disabled', () => {
       renderTagInput({ items: ['alpha'], disableRemove: true })
 
-      expect(screen.queryByRole('button', { name: 'common.operation.remove alpha' })).not.toBeInTheDocument()
+      expect(screen.queryByTestId('remove-tag')).not.toBeInTheDocument()
     })
 
     it('should apply focused style in special mode when input is focused', async () => {
@@ -83,9 +83,9 @@ describe('TagInput', () => {
     it('should remove item when remove control is clicked', async () => {
       const { onChange } = renderTagInput({ items: ['alpha', 'beta'] })
 
-      const removeControl = screen.getByRole('button', { name: 'common.operation.remove alpha' })
+      const removeControl = screen.getAllByTestId('remove-tag')[0]
 
-      await userEvent.click(removeControl)
+      await userEvent.click(removeControl!)
 
       expect(onChange).toHaveBeenCalledWith(['beta'])
     })

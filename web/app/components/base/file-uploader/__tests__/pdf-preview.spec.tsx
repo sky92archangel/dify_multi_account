@@ -35,7 +35,7 @@ describe('PdfPreview', () => {
   }
 
   const getControl = (rightClass: 'right-24' | 'right-16' | 'right-6') => {
-    const control = document.querySelector(`button.absolute.${rightClass}.top-6`) as HTMLButtonElement | null
+    const control = document.querySelector(`div.absolute.${rightClass}.top-6`) as HTMLDivElement | null
     expect(control).toBeInTheDocument()
     return control!
   }
@@ -129,12 +129,14 @@ describe('PdfPreview', () => {
     expect(mockOnCancel).toHaveBeenCalled()
   })
 
-  it('should render the overlay and keep backdrop clicks from closing', () => {
+  it('should render the overlay and stop click propagation', () => {
     render(<PdfPreview url="https://example.com/doc.pdf" onCancel={mockOnCancel} />)
 
-    const overlay = screen.getByRole('dialog')
+    const overlay = document.querySelector('[tabindex="-1"]')
     expect(overlay).toBeInTheDocument()
-    fireEvent.click(overlay)
-    expect(mockOnCancel).not.toHaveBeenCalled()
+    const event = new MouseEvent('click', { bubbles: true })
+    const stopPropagation = vi.spyOn(event, 'stopPropagation')
+    overlay!.dispatchEvent(event)
+    expect(stopPropagation).toHaveBeenCalled()
   })
 })

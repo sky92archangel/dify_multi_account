@@ -79,7 +79,6 @@ const getResetInDaysFromDate = (resetDate?: number | null) => {
 export const parseCurrentPlan = (data: CurrentPlanInfoBackend) => {
   const planType = data.billing.subscription.plan
   const planPreset = ALL_PLANS[planType]
-  const vectorSpaceLimit = getPlanVectorSpaceLimitMB(planType)
   const resolveRateLimit = (limit?: number, fallback?: number) => {
     const value = limit ?? fallback ?? 0
     return parseRateLimit(value)
@@ -94,7 +93,7 @@ export const parseCurrentPlan = (data: CurrentPlanInfoBackend) => {
   return {
     type: planType,
     usage: {
-      vectorSpace: 0,
+      vectorSpace: data.vector_space.size,
       buildApps: data.apps?.size || 0,
       teamMembers: data.members.size,
       annotatedResponse: data.annotation_quota_limit.size,
@@ -103,7 +102,7 @@ export const parseCurrentPlan = (data: CurrentPlanInfoBackend) => {
       triggerEvents: getQuotaUsage(data.trigger_event),
     },
     total: {
-      vectorSpace: vectorSpaceLimit,
+      vectorSpace: parseLimit(data.vector_space.limit),
       buildApps: parseLimit(data.apps?.limit) || 0,
       teamMembers: parseLimit(data.members.limit),
       annotatedResponse: parseLimit(data.annotation_quota_limit.limit),

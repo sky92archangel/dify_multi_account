@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import CrawledResult from '../base/crawled-result'
 import CrawledResultItem from '../base/crawled-result-item'
 import Header from '../base/header'
-import Input from '../base/text-input'
+import Input from '../base/input'
 
 const createCrawlResultItem = (overrides: Partial<CrawlResultItem> = {}): CrawlResultItem => ({
   title: 'Test Page Title',
@@ -277,7 +277,8 @@ describe('CrawledResultItem', () => {
       const props = createItemProps()
       render(<CrawledResultItem {...props} />)
 
-      const checkbox = screen.getByRole('checkbox', { name: /test page title/i })
+      // Find checkbox by data-testid
+      const checkbox = screen.getByTestId('checkbox-test-item')
       expect(checkbox)!.toBeInTheDocument()
     })
 
@@ -295,7 +296,7 @@ describe('CrawledResultItem', () => {
       const props = createItemProps({ isChecked: false, onCheckChange })
 
       render(<CrawledResultItem {...props} />)
-      const checkbox = screen.getByRole('checkbox', { name: /test page title/i })
+      const checkbox = screen.getByTestId('checkbox-test-item')
       await userEvent.click(checkbox)
 
       expect(onCheckChange).toHaveBeenCalledWith(true)
@@ -306,7 +307,7 @@ describe('CrawledResultItem', () => {
       const props = createItemProps({ isChecked: true, onCheckChange })
 
       render(<CrawledResultItem {...props} />)
-      const checkbox = screen.getByRole('checkbox', { name: /test page title/i })
+      const checkbox = screen.getByTestId('checkbox-test-item')
       await userEvent.click(checkbox)
 
       expect(onCheckChange).toHaveBeenCalledWith(false)
@@ -364,8 +365,9 @@ describe('CrawledResult', () => {
     ...overrides,
   })
 
-  const getSelectAllCheckbox = () => screen.getByRole('checkbox', { name: /selectAll|resetAll/ })
-  const getItemCheckbox = (index: number) => screen.getByRole('checkbox', { name: new RegExp(`Page ${index + 1}`) })
+  // Helper functions to get checkboxes by data-testid
+  const getSelectAllCheckbox = () => screen.getByTestId('checkbox-select-all')
+  const getItemCheckbox = (index: number) => screen.getByTestId(`checkbox-item-${index}`)
 
   describe('Rendering', () => {
     it('should render all items in list', () => {

@@ -17,7 +17,7 @@ const Preview: FC<Props> = ({
   const isBasicApp = ['agent-chat', 'chat', 'completion'].includes(appDetail.mode)
 
   return (
-    <div className="size-full">
+    <div className="h-full w-full">
       {isBasicApp ? <BasicAppPreview appId={appId} /> : <FlowAppPreview appId={appId} className="h-full" />}
     </div>
   )

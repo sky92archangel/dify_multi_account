@@ -3,7 +3,6 @@ from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 from flask import Flask
-from pytest_mock import MockerFixture
 from werkzeug.exceptions import NotFound
 
 from controllers.console import console_ns
@@ -36,7 +35,7 @@ def dataset():
 
 
 @pytest.fixture(autouse=True)
-def bypass_decorators(mocker: MockerFixture):
+def bypass_decorators(mocker):
     """Bypass all decorators on the API method."""
     mocker.patch(
         "controllers.console.datasets.hit_testing.setup_required",
@@ -57,7 +56,7 @@ def bypass_decorators(mocker: MockerFixture):
 
 
 class TestHitTestingApi:
-    def test_hit_testing_success(self, app: Flask, dataset, dataset_id):
+    def test_hit_testing_success(self, app, dataset, dataset_id):
         api = HitTestingApi()
         method = unwrap(api.post)
 
@@ -100,7 +99,7 @@ class TestHitTestingApi:
         assert "records" in result
         assert result["records"] == []
 
-    def test_hit_testing_success_with_optional_record_fields(self, app: Flask, dataset, dataset_id):
+    def test_hit_testing_success_with_optional_record_fields(self, app, dataset, dataset_id):
         api = HitTestingApi()
         method = unwrap(api.post)
 
@@ -151,7 +150,7 @@ class TestHitTestingApi:
         assert result["query"] == payload["query"]
         assert result["records"] == records
 
-    def test_hit_testing_dataset_not_found(self, app: Flask, dataset_id):
+    def test_hit_testing_dataset_not_found(self, app, dataset_id):
         api = HitTestingApi()
         method = unwrap(api.post)
 
@@ -176,7 +175,7 @@ class TestHitTestingApi:
             with pytest.raises(NotFound, match="Dataset not found"):
                 method(api, dataset_id)
 
-    def test_hit_testing_invalid_args(self, app: Flask, dataset, dataset_id):
+    def test_hit_testing_invalid_args(self, app, dataset, dataset_id):
         api = HitTestingApi()
         method = unwrap(api.post)
 

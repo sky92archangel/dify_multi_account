@@ -1,11 +1,5 @@
 import type { StateCreator } from 'zustand'
 
-export type WorkflowContextMenuTarget
-  = | { type: 'panel' }
-    | { type: 'selection' }
-    | { type: 'node', nodeId: string }
-    | { type: 'edge', edgeId: string }
-
 export type PanelSliceShape = {
   panelWidth: number
   showFeaturesPanel: boolean
@@ -22,8 +16,22 @@ export type PanelSliceShape = {
   setShowUserComments: (showUserComments: boolean) => void
   showUserCursors: boolean
   setShowUserCursors: (showUserCursors: boolean) => void
-  contextMenuTarget?: WorkflowContextMenuTarget
-  setContextMenuTarget: (contextMenuTarget: WorkflowContextMenuTarget | undefined) => void
+  panelMenu?: {
+    top: number
+    left: number
+  }
+  setPanelMenu: (panelMenu: PanelSliceShape['panelMenu']) => void
+  selectionMenu?: {
+    clientX: number
+    clientY: number
+  }
+  setSelectionMenu: (selectionMenu: PanelSliceShape['selectionMenu']) => void
+  edgeMenu?: {
+    clientX: number
+    clientY: number
+    edgeId: string
+  }
+  setEdgeMenu: (edgeMenu: PanelSliceShape['edgeMenu']) => void
   showVariableInspectPanel: boolean
   setShowVariableInspectPanel: (showVariableInspectPanel: boolean) => void
   initShowLastRunTab: boolean
@@ -48,8 +56,12 @@ export const createPanelSlice: StateCreator<PanelSliceShape> = set => ({
   setShowUserComments: showUserComments => set(() => ({ showUserComments })),
   showUserCursors: true,
   setShowUserCursors: showUserCursors => set(() => ({ showUserCursors })),
-  contextMenuTarget: undefined,
-  setContextMenuTarget: contextMenuTarget => set(() => ({ contextMenuTarget })),
+  panelMenu: undefined,
+  setPanelMenu: panelMenu => set(() => ({ panelMenu })),
+  selectionMenu: undefined,
+  setSelectionMenu: selectionMenu => set(() => ({ selectionMenu })),
+  edgeMenu: undefined,
+  setEdgeMenu: edgeMenu => set(() => ({ edgeMenu })),
   showVariableInspectPanel: false,
   setShowVariableInspectPanel: showVariableInspectPanel => set(() => ({ showVariableInspectPanel })),
   initShowLastRunTab: false,

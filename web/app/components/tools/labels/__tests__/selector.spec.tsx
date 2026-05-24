@@ -34,28 +34,12 @@ vi.mock('@langgenius/dify-ui/popover', async () => {
     )
   }
 
-  const PopoverTrigger = ({
-    children,
-    className,
-    render,
-  }: {
-    children?: React.ReactNode
-    className?: string
-    render?: React.ReactNode
-  }) => {
+  const PopoverTrigger = ({ render }: { render: React.ReactNode }) => {
     const { open, setOpen } = React.useContext(PopoverContext)
-    if (render) {
-      return (
-        <div onClick={() => setOpen(!open)}>
-          {render}
-        </div>
-      )
-    }
-
     return (
-      <button type="button" className={className} onClick={() => setOpen(!open)}>
-        {children}
-      </button>
+      <div onClick={() => setOpen(!open)}>
+        {render}
+      </div>
     )
   }
 
@@ -133,12 +117,6 @@ describe('LabelSelector', () => {
       render(<LabelSelector value={[]} onChange={mockOnChange} />)
 
       expect(screen.getByText('tools.createTool.toolInput.labelPlaceholder')).toBeInTheDocument()
-    })
-
-    it('should render the trigger as a native button', () => {
-      render(<LabelSelector value={[]} onChange={mockOnChange} />)
-
-      expect(screen.getByRole('button', { name: 'tools.createTool.toolInput.labelPlaceholder' })).toHaveAttribute('type', 'button')
     })
 
     it('should display selected labels as comma-separated list', () => {
@@ -224,10 +202,10 @@ describe('LabelSelector', () => {
       })
 
       // Find the label item in the dropdown list and click it
-      // Use getAllByTitle and select the one in the dropdown.
+      // Use getAllByTitle and select the one in the dropdown (with text-sm class)
       const agentElements = screen.getAllByTitle('Agent')
       const dropdownItem = agentElements.find(el =>
-        el.classList.contains('text-sm/5'),
+        el.classList.contains('text-sm'),
       )
 
       await act(async () => {
@@ -265,7 +243,9 @@ describe('LabelSelector', () => {
         vi.advanceTimersByTime(10)
       })
 
-      expect(screen.getAllByRole('checkbox').length).toBeGreaterThan(0)
+      // Checkboxes should be visible in the dropdown
+      const checkboxes = document.querySelectorAll('[data-testid^="checkbox"]')
+      expect(checkboxes.length).toBeGreaterThan(0)
     })
   })
 

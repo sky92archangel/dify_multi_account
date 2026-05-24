@@ -1,7 +1,4 @@
 import type { ComponentType, SVGProps } from 'react'
-import { FieldRoot } from '@langgenius/dify-ui/field'
-import { FieldsetLegend, FieldsetRoot } from '@langgenius/dify-ui/fieldset'
-import { RadioGroup } from '@langgenius/dify-ui/radio-group'
 import {
   fireEvent,
   render,
@@ -12,7 +9,7 @@ import {
   RetrievalSearchMethodEnum,
   WeightedScoreEnum,
 } from '../../../types'
-import { SearchMethodOption } from '../search-method-option'
+import SearchMethodOption from '../search-method-option'
 
 const mockUseModelListAndDefaultModel = vi.hoisted(() => vi.fn())
 const mockUseProviderContext = vi.hoisted(() => vi.fn())
@@ -71,61 +68,28 @@ const createProps = () => ({
     description: 'Semantic description',
     effectColor: 'purple',
   },
+  hybridSearchModeOptions,
   searchMethod: RetrievalSearchMethodEnum.semantic,
   onRetrievalSearchMethodChange: vi.fn(),
-  hybridSearch: {
-    mode: HybridSearchModeEnum.WeightedScore,
-    options: hybridSearchModeOptions,
-    onModeChange: vi.fn(),
-    weightedScore,
-    onWeightedScoreChange: vi.fn(),
+  hybridSearchMode: HybridSearchModeEnum.WeightedScore,
+  onHybridSearchModeChange: vi.fn(),
+  weightedScore,
+  onWeightedScoreChange: vi.fn(),
+  rerankingModelEnabled: false,
+  onRerankingModelEnabledChange: vi.fn(),
+  rerankingModel: {
+    reranking_provider_name: '',
+    reranking_model_name: '',
   },
-  reranking: {
-    enabled: false,
-    onEnabledChange: vi.fn(),
-    rerankingModel: {
-      reranking_provider_name: '',
-      reranking_model_name: '',
-    },
-    onRerankingModelChange: vi.fn(),
-    showMultiModalTip: false,
-  },
-  retrievalParameters: {
-    topK: {
-      value: 3,
-      onChange: vi.fn(),
-    },
-    scoreThreshold: {
-      value: 0.5,
-      onChange: vi.fn(),
-      enabled: true,
-      onEnabledChange: vi.fn(),
-    },
-  },
+  onRerankingModelChange: vi.fn(),
+  topK: 3,
+  onTopKChange: vi.fn(),
+  scoreThreshold: 0.5,
+  onScoreThresholdChange: vi.fn(),
+  isScoreThresholdEnabled: true,
+  onScoreThresholdEnabledChange: vi.fn(),
+  showMultiModalTip: false,
 })
-
-function renderSearchMethodOption(props: ReturnType<typeof createProps>) {
-  const {
-    onRetrievalSearchMethodChange,
-    ...optionProps
-  } = props
-
-  render(
-    <FieldRoot name="retrieval_search_method">
-      <FieldsetRoot
-        render={(
-          <RadioGroup
-            value={props.searchMethod}
-            onValueChange={value => onRetrievalSearchMethodChange(value)}
-          />
-        )}
-      >
-        <FieldsetLegend>Retrieval search method</FieldsetLegend>
-        <SearchMethodOption {...optionProps} />
-      </FieldsetRoot>
-    </FieldRoot>,
-  )
-}
 
 describe('SearchMethodOption', () => {
   beforeEach(() => {
@@ -152,32 +116,37 @@ describe('SearchMethodOption', () => {
   it('should render semantic search controls and notify retrieval and reranking changes', () => {
     const props = createProps()
 
-    renderSearchMethodOption(props)
+    render(<SearchMethodOption {...props} />)
 
     expect(screen.getByText('Semantic title'))!.toBeInTheDocument()
     expect(screen.getByText('common.modelProvider.rerankModel.key'))!.toBeInTheDocument()
     expect(screen.getByText('plugin.detailPanel.configureModel'))!.toBeInTheDocument()
     expect(screen.getAllByRole('switch')).toHaveLength(2)
 
+    fireEvent.click(screen.getByText('Semantic title'))
     fireEvent.click(screen.getAllByRole('switch')[0]!)
 
-    expect(props.reranking.onEnabledChange).toHaveBeenCalledWith(true)
+    expect(props.onRetrievalSearchMethodChange).toHaveBeenCalledWith(RetrievalSearchMethodEnum.semantic)
+    expect(props.onRerankingModelEnabledChange).toHaveBeenCalledWith(true)
   })
 
-  it('should notify retrieval changes when an inactive option is selected', () => {
+  it('should render the reranking switch for full-text search as well', () => {
     const props = createProps()
-    const fullTextProps = {
-      ...props,
-      option: {
-        ...props.option,
-        id: RetrievalSearchMethodEnum.fullText,
-        title: 'Full-text title',
-      },
-    }
 
-    renderSearchMethodOption(fullTextProps)
+    render(
+      <SearchMethodOption
+        {...props}
+        option={{
+          ...props.option,
+          id: RetrievalSearchMethodEnum.fullText,
+          title: 'Full-text title',
+        }}
+        searchMethod={RetrievalSearchMethodEnum.fullText}
+      />,
+    )
 
     expect(screen.getByText('Full-text title'))!.toBeInTheDocument()
+    expect(screen.getByText('common.modelProvider.rerankModel.key'))!.toBeInTheDocument()
 
     fireEvent.click(screen.getByText('Full-text title'))
 
@@ -186,25 +155,20 @@ describe('SearchMethodOption', () => {
 
   it('should render hybrid weighted-score controls without reranking model selector', () => {
     const props = createProps()
-    const hybridProps = {
-      ...props,
-      option: {
-        ...props.option,
-        id: RetrievalSearchMethodEnum.hybrid,
-        title: 'Hybrid title',
-      },
-      searchMethod: RetrievalSearchMethodEnum.hybrid,
-      hybridSearch: {
-        ...props.hybridSearch,
-        mode: HybridSearchModeEnum.WeightedScore,
-      },
-      reranking: {
-        ...props.reranking,
-        showMultiModalTip: true,
-      },
-    }
 
-    renderSearchMethodOption(hybridProps)
+    render(
+      <SearchMethodOption
+        {...props}
+        option={{
+          ...props.option,
+          id: RetrievalSearchMethodEnum.hybrid,
+          title: 'Hybrid title',
+        }}
+        searchMethod={RetrievalSearchMethodEnum.hybrid}
+        hybridSearchMode={HybridSearchModeEnum.WeightedScore}
+        showMultiModalTip
+      />,
+    )
 
     expect(screen.getByText('Weighted mode'))!.toBeInTheDocument()
     expect(screen.getByText('Rerank mode'))!.toBeInTheDocument()
@@ -215,30 +179,25 @@ describe('SearchMethodOption', () => {
 
     fireEvent.click(screen.getByText('Rerank mode'))
 
-    expect(props.hybridSearch.onModeChange).toHaveBeenCalledWith(HybridSearchModeEnum.RerankingModel)
+    expect(props.onHybridSearchModeChange).toHaveBeenCalledWith(HybridSearchModeEnum.RerankingModel)
   })
 
   it('should render the hybrid reranking selector when reranking mode is selected', () => {
     const props = createProps()
-    const hybridProps = {
-      ...props,
-      option: {
-        ...props.option,
-        id: RetrievalSearchMethodEnum.hybrid,
-        title: 'Hybrid title',
-      },
-      searchMethod: RetrievalSearchMethodEnum.hybrid,
-      hybridSearch: {
-        ...props.hybridSearch,
-        mode: HybridSearchModeEnum.RerankingModel,
-      },
-      reranking: {
-        ...props.reranking,
-        showMultiModalTip: true,
-      },
-    }
 
-    renderSearchMethodOption(hybridProps)
+    render(
+      <SearchMethodOption
+        {...props}
+        option={{
+          ...props.option,
+          id: RetrievalSearchMethodEnum.hybrid,
+          title: 'Hybrid title',
+        }}
+        searchMethod={RetrievalSearchMethodEnum.hybrid}
+        hybridSearchMode={HybridSearchModeEnum.RerankingModel}
+        showMultiModalTip
+      />,
+    )
 
     expect(screen.getByText('plugin.detailPanel.configureModel'))!.toBeInTheDocument()
     expect(screen.queryByText('common.modelProvider.rerankModel.key')).not.toBeInTheDocument()
@@ -248,22 +207,23 @@ describe('SearchMethodOption', () => {
 
   it('should hide the score-threshold control for keyword search', () => {
     const props = createProps()
-    const keywordProps = {
-      ...props,
-      option: {
-        ...props.option,
-        id: RetrievalSearchMethodEnum.keywordSearch,
-        title: 'Keyword title',
-      },
-      searchMethod: RetrievalSearchMethodEnum.keywordSearch,
-    }
 
-    renderSearchMethodOption(keywordProps)
+    render(
+      <SearchMethodOption
+        {...props}
+        option={{
+          ...props.option,
+          id: RetrievalSearchMethodEnum.keywordSearch,
+          title: 'Keyword title',
+        }}
+        searchMethod={RetrievalSearchMethodEnum.keywordSearch}
+      />,
+    )
 
     fireEvent.change(screen.getByRole('textbox'), { target: { value: '9' } })
 
     expect(screen.getAllByRole('textbox')).toHaveLength(1)
     expect(screen.queryAllByRole('switch')).toHaveLength(0)
-    expect(props.retrievalParameters.topK.onChange).toHaveBeenCalledWith(9)
+    expect(props.onTopKChange).toHaveBeenCalledWith(9)
   })
 })

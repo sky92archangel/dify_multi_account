@@ -1,6 +1,5 @@
 import type { Mock } from 'vitest'
 import type { OnlineDriveFile } from '@/models/pipeline'
-import { RadioGroup } from '@langgenius/dify-ui/radio-group'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import * as React from 'react'
 import { OnlineDriveFileType } from '@/models/pipeline'
@@ -1287,8 +1286,8 @@ describe('Item', () => {
     ...overrides,
   })
 
-  const queryCheckbox = () => screen.queryByRole('checkbox')
-  const getCheckbox = () => screen.getByRole('checkbox')
+  // Helper to find custom checkbox element (div-based implementation)
+  const findCheckbox = (container: HTMLElement) => container.querySelector('[data-testid^="checkbox-"]')
   const getRadio = () => screen.getByRole('radio')
 
   beforeEach(() => {
@@ -1331,8 +1330,8 @@ describe('Item', () => {
         isMultipleChoice: true,
         file: createMockOnlineDriveFile({ type: OnlineDriveFileType.file }),
       })
-      render(<ActualItem {...props} />)
-      expect(getCheckbox()).toBeInTheDocument()
+      const { container } = render(<ActualItem {...props} />)
+      expect(findCheckbox(container)).toBeInTheDocument()
     })
 
     it('should render radio in single choice mode for file', () => {
@@ -1349,8 +1348,8 @@ describe('Item', () => {
         file: createMockOnlineDriveFile({ type: OnlineDriveFileType.bucket, name: 'my-bucket' }),
         isMultipleChoice: true,
       })
-      render(<ActualItem {...props} />)
-      expect(queryCheckbox()).not.toBeInTheDocument()
+      const { container } = render(<ActualItem {...props} />)
+      expect(findCheckbox(container)).not.toBeInTheDocument()
       expect(screen.queryByRole('radio')).not.toBeInTheDocument()
     })
 
@@ -1367,23 +1366,23 @@ describe('Item', () => {
     describe('isSelected prop', () => {
       it('should show checkbox as checked when isSelected is true', () => {
         const props = createItemProps({ isSelected: true, isMultipleChoice: true })
-        render(<ActualItem {...props} />)
-        expect(getCheckbox()).toHaveAttribute('aria-checked', 'true')
+        const { container } = render(<ActualItem {...props} />)
+        const checkbox = findCheckbox(container)
+        // Checked checkbox shows check icon
+        expect(checkbox?.querySelector('[data-testid^="check-icon-"]')).toBeInTheDocument()
       })
 
       it('should show checkbox as unchecked when isSelected is false', () => {
         const props = createItemProps({ isSelected: false, isMultipleChoice: true })
-        render(<ActualItem {...props} />)
-        expect(getCheckbox()).toHaveAttribute('aria-checked', 'false')
+        const { container } = render(<ActualItem {...props} />)
+        const checkbox = findCheckbox(container)
+        // Unchecked checkbox has no check icon
+        expect(checkbox?.querySelector('[data-testid^="check-icon-"]')).not.toBeInTheDocument()
       })
 
       it('should show radio as checked when isSelected is true', () => {
         const props = createItemProps({ isSelected: true, isMultipleChoice: false })
-        render(
-          <RadioGroup aria-label="Files" value={props.file.id}>
-            <ActualItem {...props} />
-          </RadioGroup>,
-        )
+        render(<ActualItem {...props} />)
         const radio = getRadio()
         expect(radio).toHaveAttribute('aria-checked', 'true')
       })
@@ -1393,8 +1392,9 @@ describe('Item', () => {
       it('should not call onSelect when clicking disabled checkbox', () => {
         const onSelect = vi.fn()
         const props = createItemProps({ disabled: true, isMultipleChoice: true, onSelect })
-        render(<ActualItem {...props} />)
-        fireEvent.click(getCheckbox())
+        const { container } = render(<ActualItem {...props} />)
+        const checkbox = findCheckbox(container)
+        fireEvent.click(checkbox!)
         expect(onSelect).not.toHaveBeenCalled()
       })
 
@@ -1412,22 +1412,22 @@ describe('Item', () => {
       it('should default to true', () => {
         const props = createItemProps()
         delete (props as Partial<ItemProps>).isMultipleChoice
-        render(<ActualItem {...props} />)
-        expect(getCheckbox()).toBeInTheDocument()
+        const { container } = render(<ActualItem {...props} />)
+        expect(findCheckbox(container)).toBeInTheDocument()
       })
 
       it('should render checkbox when true', () => {
         const props = createItemProps({ isMultipleChoice: true })
-        render(<ActualItem {...props} />)
-        expect(getCheckbox()).toBeInTheDocument()
+        const { container } = render(<ActualItem {...props} />)
+        expect(findCheckbox(container)).toBeInTheDocument()
         expect(screen.queryByRole('radio')).not.toBeInTheDocument()
       })
 
       it('should render radio when false', () => {
         const props = createItemProps({ isMultipleChoice: false })
-        render(<ActualItem {...props} />)
+        const { container } = render(<ActualItem {...props} />)
         expect(getRadio()).toBeInTheDocument()
-        expect(queryCheckbox()).not.toBeInTheDocument()
+        expect(findCheckbox(container)).not.toBeInTheDocument()
       })
     })
   })
@@ -1477,8 +1477,9 @@ describe('Item', () => {
         const onSelect = vi.fn()
         const file = createMockOnlineDriveFile()
         const props = createItemProps({ file, onSelect, isMultipleChoice: true })
-        render(<ActualItem {...props} />)
-        fireEvent.click(getCheckbox())
+        const { container } = render(<ActualItem {...props} />)
+        const checkbox = findCheckbox(container)
+        fireEvent.click(checkbox!)
         expect(onSelect).toHaveBeenCalledWith(file)
       })
 
@@ -1486,17 +1487,7 @@ describe('Item', () => {
         const onSelect = vi.fn()
         const file = createMockOnlineDriveFile()
         const props = createItemProps({ file, onSelect, isMultipleChoice: false })
-        render(
-          <RadioGroup
-            aria-label="Files"
-            onValueChange={(fileId) => {
-              if (fileId === file.id)
-                onSelect(file)
-            }}
-          >
-            <ActualItem {...props} />
-          </RadioGroup>,
-        )
+        render(<ActualItem {...props} />)
         const radio = getRadio()
         fireEvent.click(radio)
         expect(onSelect).toHaveBeenCalledWith(file)
@@ -1506,8 +1497,9 @@ describe('Item', () => {
         const onSelect = vi.fn()
         const file = createMockOnlineDriveFile()
         const props = createItemProps({ file, onSelect, isMultipleChoice: true })
-        render(<ActualItem {...props} />)
-        fireEvent.click(getCheckbox())
+        const { container } = render(<ActualItem {...props} />)
+        const checkbox = findCheckbox(container)
+        fireEvent.click(checkbox!)
         expect(onSelect).toHaveBeenCalledTimes(1)
       })
     })

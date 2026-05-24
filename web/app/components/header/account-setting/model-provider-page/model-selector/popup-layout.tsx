@@ -1,6 +1,4 @@
-import type { ReactNode } from 'react'
-import { cn } from '@langgenius/dify-ui/cn'
-import { ComboboxInput, ComboboxInputGroup } from '@langgenius/dify-ui/combobox'
+import type { FC, ReactNode } from 'react'
 import {
   ScrollAreaContent,
   ScrollAreaRoot,
@@ -14,9 +12,9 @@ type ModelSelectorPopupFrameProps = {
   children: ReactNode
 }
 
-export function ModelSelectorPopupFrame({
+export const ModelSelectorPopupFrame: FC<ModelSelectorPopupFrameProps> = ({
   children,
-}: ModelSelectorPopupFrameProps) {
+}) => {
   return (
     <div className="flex max-h-[min(624px,var(--available-height,624px))] flex-col overflow-hidden rounded-xl bg-components-panel-bg">
       {children}
@@ -25,52 +23,44 @@ export function ModelSelectorPopupFrame({
 }
 
 type ModelSelectorSearchHeaderProps = {
-  inputValue: string
-  onInputValueChange: (value: string) => void
+  searchText: string
+  onSearchTextChange: (value: string) => void
 }
 
-export function ModelSelectorSearchHeader({
-  inputValue,
-  onInputValueChange,
-}: ModelSelectorSearchHeaderProps) {
+export const ModelSelectorSearchHeader: FC<ModelSelectorSearchHeaderProps> = ({
+  searchText,
+  onSearchTextChange,
+}) => {
   const { t } = useTranslation()
 
   return (
     <div className="shrink-0 bg-components-panel-bg px-2 pt-2 pb-1">
-      <ComboboxInputGroup
-        className={cn(
-          'h-8 min-h-8 px-2',
-          inputValue
-            ? 'border-components-input-border-active bg-components-input-bg-active shadow-xs'
-            : 'border-transparent bg-components-input-bg-normal',
-        )}
+      <div className={`
+        flex h-8 items-center rounded-lg border px-2
+        ${searchText ? 'border-components-input-border-active bg-components-input-bg-active shadow-xs' : 'border-transparent bg-components-input-bg-normal'}
+      `}
       >
         <span
           className={`
-            mr-0.5 i-ri-search-line size-4 shrink-0
-            ${inputValue ? 'text-text-tertiary' : 'text-text-quaternary'}
+            mr-0.5 i-ri-search-line h-4 w-4 shrink-0
+            ${searchText ? 'text-text-tertiary' : 'text-text-quaternary'}
           `}
-          aria-hidden="true"
         />
-        <ComboboxInput
-          aria-label={t('form.searchModel', { ns: 'datasetSettings' }) || ''}
-          className="block h-4.5 grow px-1 py-0 text-[13px] text-text-primary"
+        <input
+          className="block h-[18px] grow appearance-none bg-transparent px-1 text-[13px] text-text-primary outline-hidden"
           placeholder={t('form.searchModel', { ns: 'datasetSettings' }) || ''}
+          value={searchText}
+          onChange={e => onSearchTextChange(e.target.value)}
         />
         {
-          inputValue && (
-            <button
-              type="button"
-              aria-label={t('operation.clear', { ns: 'common' }) || 'Clear'}
-              className="ml-1.5 flex size-3.5 shrink-0 cursor-pointer items-center justify-center rounded-none text-text-quaternary outline-hidden hover:bg-transparent hover:text-text-quaternary focus-visible:bg-transparent focus-visible:ring-1 focus-visible:ring-components-input-border-active"
-              onClick={() => onInputValueChange('')}
-              onPointerDown={event => event.preventDefault()}
-            >
-              <span className="i-custom-vender-solid-general-x-circle size-3.5" aria-hidden="true" />
-            </button>
+          searchText && (
+            <span
+              className="ml-1.5 i-custom-vender-solid-general-x-circle h-[14px] w-[14px] shrink-0 cursor-pointer text-text-quaternary"
+              onClick={() => onSearchTextChange('')}
+            />
           )
         }
-      </ComboboxInputGroup>
+      </div>
     </div>
   )
 }
@@ -80,19 +70,22 @@ type ModelSelectorScrollBodyProps = {
   label: string
 }
 
-export function ModelSelectorScrollBody({
+export const ModelSelectorScrollBody: FC<ModelSelectorScrollBodyProps> = ({
   children,
   label,
-}: ModelSelectorScrollBodyProps) {
+}) => {
   return (
     <ScrollAreaRoot className="relative min-h-0 overflow-hidden overscroll-contain">
       <ScrollAreaViewport
         aria-label={label}
-        className="max-h-[calc(min(624px,var(--available-height,624px))-84px)] overflow-x-hidden overscroll-contain"
+        className="max-h-[calc(min(624px,var(--available-height,624px))-84px)] overscroll-contain"
         role="region"
       >
-        <ScrollAreaContent className="min-w-0 overflow-x-hidden">{children}</ScrollAreaContent>
+        <ScrollAreaContent className="min-w-0">
+          {children}
+        </ScrollAreaContent>
       </ScrollAreaViewport>
+      {/* Keep the overlay scrollbar above sticky provider headers inside this scroll area. */}
       <ScrollAreaScrollbar className="z-2 data-[orientation=vertical]:my-1 data-[orientation=vertical]:me-1">
         <ScrollAreaThumb />
       </ScrollAreaScrollbar>
@@ -100,7 +93,7 @@ export function ModelSelectorScrollBody({
   )
 }
 
-export function CompatibleModelsNotice() {
+export const CompatibleModelsNotice = () => {
   const { t } = useTranslation()
 
   return (
@@ -117,9 +110,9 @@ type ModelProviderSettingsFooterProps = {
   onOpenSettings: () => void
 }
 
-export function ModelProviderSettingsFooter({
+export const ModelProviderSettingsFooter: FC<ModelProviderSettingsFooterProps> = ({
   onOpenSettings,
-}: ModelProviderSettingsFooterProps) {
+}) => {
   const { t } = useTranslation()
 
   return (
@@ -129,7 +122,7 @@ export function ModelProviderSettingsFooter({
         className="flex h-8 w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-1 text-text-tertiary hover:bg-state-base-hover hover:text-text-secondary"
         onClick={onOpenSettings}
       >
-        <span className="i-ri-equalizer-2-line size-4 shrink-0" />
+        <span className="i-ri-equalizer-2-line h-4 w-4 shrink-0" />
         <span className="system-xs-medium">{t('modelProvider.selector.modelProviderSettings', { ns: 'common' })}</span>
       </button>
     </div>

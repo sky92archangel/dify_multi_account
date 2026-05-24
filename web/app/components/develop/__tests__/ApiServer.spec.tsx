@@ -5,13 +5,7 @@ import ApiServer from '../ApiServer'
 
 vi.mock('@/app/components/develop/secret-key/secret-key-modal', () => ({
   default: ({ isShow, onClose }: { isShow: boolean, onClose: () => void }) => (
-    isShow
-      ? (
-          <div role="dialog" aria-label="Secret key">
-            <button type="button" onClick={onClose}>Close Modal</button>
-          </div>
-        )
-      : null
+    isShow ? <div data-testid="secret-key-modal"><button onClick={onClose}>Close Modal</button></div> : null
   ),
 }))
 
@@ -87,7 +81,7 @@ describe('ApiServer', () => {
         await user.click(apiKeyButton)
       })
 
-      expect(screen.getByRole('dialog', { name: 'Secret key' })).toBeInTheDocument()
+      expect(screen.getByTestId('secret-key-modal')).toBeInTheDocument()
     })
 
     it('should close modal when close button is clicked', async () => {
@@ -99,14 +93,14 @@ describe('ApiServer', () => {
         await user.click(apiKeyButton)
       })
 
-      expect(screen.getByRole('dialog', { name: 'Secret key' })).toBeInTheDocument()
+      expect(screen.getByTestId('secret-key-modal')).toBeInTheDocument()
 
-      const closeButton = screen.getByRole('button', { name: 'Close Modal' })
+      const closeButton = screen.getByText('Close Modal')
       await act(async () => {
         await user.click(closeButton)
       })
 
-      expect(screen.queryByRole('dialog', { name: 'Secret key' })).not.toBeInTheDocument()
+      expect(screen.queryByTestId('secret-key-modal')).not.toBeInTheDocument()
     })
   })
 

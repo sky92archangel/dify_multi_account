@@ -8,6 +8,13 @@ vi.mock('@/context/i18n', () => ({
   useDocLink: () => mockDocLink,
 }))
 
+// Mock window.open
+const mockWindowOpen = vi.fn()
+Object.defineProperty(window, 'open', {
+  value: mockWindowOpen,
+  writable: true,
+})
+
 describe('CustomizeModal', () => {
   const defaultProps = {
     isShow: true,
@@ -20,12 +27,6 @@ describe('CustomizeModal', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
-
-  const getAnchorButton = (name: RegExp) => {
-    const button = screen.getByRole('button', { name })
-    expect(button.tagName).toBe('A')
-    return button as HTMLAnchorElement
-  }
 
   // Rendering tests - verify component renders correctly with various configurations
   describe('Rendering', () => {
@@ -137,7 +138,7 @@ describe('CustomizeModal', () => {
 
       // Assert - find the GitHub link and verify it contains an SVG icon
       await waitFor(() => {
-        const githubLink = getAnchorButton(/step1Operation/i)
+        const githubLink = screen.getByRole('link', { name: /step1Operation/i })
         expect(githubLink).toBeInTheDocument()
         expect(githubLink.querySelector('svg')).toBeInTheDocument()
       })
@@ -188,7 +189,7 @@ describe('CustomizeModal', () => {
 
       // Assert
       await waitFor(() => {
-        const githubLink = getAnchorButton(/step1Operation/i)
+        const githubLink = screen.getByRole('link', { name: /step1Operation/i })
         expect(githubLink).toHaveAttribute('href', 'https://github.com/langgenius/webapp-conversation')
       })
     })
@@ -202,7 +203,7 @@ describe('CustomizeModal', () => {
 
       // Assert
       await waitFor(() => {
-        const githubLink = getAnchorButton(/step1Operation/i)
+        const githubLink = screen.getByRole('link', { name: /step1Operation/i })
         expect(githubLink).toHaveAttribute('href', 'https://github.com/langgenius/webapp-conversation')
       })
     })
@@ -216,7 +217,7 @@ describe('CustomizeModal', () => {
 
       // Assert
       await waitFor(() => {
-        const githubLink = getAnchorButton(/step1Operation/i)
+        const githubLink = screen.getByRole('link', { name: /step1Operation/i })
         expect(githubLink).toHaveAttribute('href', 'https://github.com/langgenius/webapp-text-generator')
       })
     })
@@ -230,7 +231,7 @@ describe('CustomizeModal', () => {
 
       // Assert
       await waitFor(() => {
-        const githubLink = getAnchorButton(/step1Operation/i)
+        const githubLink = screen.getByRole('link', { name: /step1Operation/i })
         expect(githubLink).toHaveAttribute('href', 'https://github.com/langgenius/webapp-text-generator')
       })
     })
@@ -244,7 +245,7 @@ describe('CustomizeModal', () => {
 
       // Assert
       await waitFor(() => {
-        const githubLink = getAnchorButton(/step1Operation/i)
+        const githubLink = screen.getByRole('link', { name: /step1Operation/i })
         expect(githubLink).toHaveAttribute('href', 'https://github.com/langgenius/webapp-text-generator')
       })
     })
@@ -261,7 +262,7 @@ describe('CustomizeModal', () => {
 
       // Assert
       await waitFor(() => {
-        const githubLink = getAnchorButton(/step1Operation/i)
+        const githubLink = screen.getByRole('link', { name: /step1Operation/i })
         expect(githubLink).toHaveAttribute('target', '_blank')
         expect(githubLink).toHaveAttribute('rel', 'noopener noreferrer')
       })
@@ -276,7 +277,7 @@ describe('CustomizeModal', () => {
 
       // Assert
       await waitFor(() => {
-        const vercelLink = getAnchorButton(/step2Operation/i)
+        const vercelLink = screen.getByRole('link', { name: /step2Operation/i })
         expect(vercelLink).toHaveAttribute('href', 'https://vercel.com/docs/concepts/deployments/git/vercel-for-github')
         expect(vercelLink).toHaveAttribute('target', '_blank')
         expect(vercelLink).toHaveAttribute('rel', 'noopener noreferrer')
@@ -286,7 +287,7 @@ describe('CustomizeModal', () => {
 
   // User interactions tests - verify user actions trigger expected behaviors
   describe('User Interactions', () => {
-    it('should render the API docs link for way 2', async () => {
+    it('should call window.open with doc link when way 2 button is clicked', async () => {
       // Arrange
       const props = { ...defaultProps }
 
@@ -297,10 +298,16 @@ describe('CustomizeModal', () => {
         expect(screen.getByText('appOverview.overview.appInfo.customize.way2.operation')).toBeInTheDocument()
       })
 
-      const way2Link = getAnchorButton(/way2\.operation/i)
-      expect(way2Link).toHaveAttribute('href', expect.stringContaining('/use-dify/publish/developing-with-apis'))
-      expect(way2Link).toHaveAttribute('target', '_blank')
-      expect(way2Link).toHaveAttribute('rel', 'noopener noreferrer')
+      const way2Button = screen.getByText('appOverview.overview.appInfo.customize.way2.operation').closest('button')
+      expect(way2Button).toBeInTheDocument()
+      fireEvent.click(way2Button!)
+
+      // Assert
+      expect(mockWindowOpen).toHaveBeenCalledTimes(1)
+      expect(mockWindowOpen).toHaveBeenCalledWith(
+        expect.stringContaining('/use-dify/publish/developing-with-apis'),
+        '_blank',
+      )
     })
 
     it('should call onClose when modal close button is clicked', async () => {
@@ -316,7 +323,7 @@ describe('CustomizeModal', () => {
         expect(screen.getByText('appOverview.overview.appInfo.customize.title')).toBeInTheDocument()
       })
 
-      const closeButton = screen.getByRole('button', { name: 'Close' })
+      const closeButton = screen.getByTestId('modal-close-button')
       fireEvent.click(closeButton)
       expect(onClose).toHaveBeenCalledTimes(1)
     })
@@ -411,7 +418,7 @@ describe('CustomizeModal', () => {
 
       // Assert - Find GitHub link and verify it contains an SVG icon with expected class
       await waitFor(() => {
-        const githubLink = getAnchorButton(/step1Operation/i)
+        const githubLink = screen.getByRole('link', { name: /step1Operation/i })
         const githubIcon = githubLink.querySelector('svg')
         expect(githubIcon).toBeInTheDocument()
         expect(githubIcon).toHaveClass('text-text-secondary')

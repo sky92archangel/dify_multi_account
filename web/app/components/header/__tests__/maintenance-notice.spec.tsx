@@ -5,7 +5,7 @@ import { NOTICE_I18N } from '@/i18n-config/language'
 import MaintenanceNotice from '../maintenance-notice'
 
 vi.mock('@/app/components/base/icons/src/vender/line/general', () => ({
-  X: (props: React.SVGProps<SVGSVGElement>) => <svg {...props} />,
+  X: ({ onClick }: { onClick?: () => void }) => <button type="button" aria-label="close notice" onClick={onClick} />,
 }))
 
 vi.mock(
@@ -78,7 +78,7 @@ describe('MaintenanceNotice', () => {
       render(<MaintenanceNotice />)
       expect(screen.getByText('Notice Title')).toBeInTheDocument()
 
-      fireEvent.click(screen.getByRole('button', { name: 'common.operation.close' }))
+      fireEvent.click(screen.getByRole('button', { name: /close notice/i }))
 
       expect(screen.queryByText('Notice Title')).not.toBeInTheDocument()
       expect(localStorage.getItem('hide-maintenance-notice')).toBe('1')
@@ -88,7 +88,7 @@ describe('MaintenanceNotice', () => {
       setNoticeHref('https://dify.ai/notice')
       render(<MaintenanceNotice />)
 
-      const desc = screen.getByRole('button', { name: 'Notice Description' })
+      const desc = screen.getByText('Notice Description')
       fireEvent.click(desc)
 
       expect(windowOpenSpy).toHaveBeenCalledWith(

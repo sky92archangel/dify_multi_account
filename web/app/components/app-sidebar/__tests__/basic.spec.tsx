@@ -7,6 +7,12 @@ vi.mock('@/app/components/base/icons/src/vender/workflow', () => ({
   WindowCursor: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="webapp-icon" {...props} />,
 }))
 
+vi.mock('@/app/components/base/tooltip', () => ({
+  default: ({ popupContent }: { popupContent: React.ReactNode }) => (
+    <div data-testid="tooltip">{popupContent}</div>
+  ),
+}))
+
 vi.mock('../../base/app-icon', () => ({
   default: ({ icon, background, innerIcon, className }: {
     icon?: string
@@ -69,12 +75,13 @@ describe('AppBasic', () => {
 
     it('should show hover tip when provided', () => {
       render(<AppBasic name="My App" type="Chatbot" hoverTip="Some tip" />)
-      expect(screen.getByLabelText('Some tip')).toBeInTheDocument()
+      expect(screen.getByTestId('tooltip')).toBeInTheDocument()
+      expect(screen.getByText('Some tip')).toBeInTheDocument()
     })
 
     it('should not show hover tip when not provided', () => {
       render(<AppBasic name="My App" type="Chatbot" />)
-      expect(screen.queryByLabelText('Some tip')).not.toBeInTheDocument()
+      expect(screen.queryByTestId('tooltip')).not.toBeInTheDocument()
     })
   })
 

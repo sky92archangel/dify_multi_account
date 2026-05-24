@@ -1,6 +1,6 @@
 import type { Plugin } from 'vite'
 import path from 'node:path'
-import { normalizeViteModuleId } from './utils.ts'
+import { normalizeViteModuleId } from './utils'
 
 type NextStaticImageTestPluginOptions = {
   projectRoot: string

@@ -29,7 +29,6 @@ import {
 } from './var-reference-vars.helpers'
 
 const VAR_SEARCH_INPUT_CLASS_NAME = 'var-search-input'
-export const VAR_REFERENCE_CHILD_POPUP_CLASS_NAME = 'var-reference-vars-child-popup'
 
 const resolveValueSelector = ({
   itemData,
@@ -78,6 +77,7 @@ type ItemProps = {
   isLoopVar?: boolean
   isFlat?: boolean
   isInCodeGeneratorInstructionEditor?: boolean
+  zIndex?: number
   className?: string
   preferSchemaType?: boolean
   isSelected?: boolean
@@ -96,6 +96,7 @@ const Item: FC<ItemProps> = ({
   isLoopVar,
   isFlat,
   isInCodeGeneratorInstructionEditor,
+  zIndex,
   className,
   preferSchemaType,
   isSelected,
@@ -116,15 +117,15 @@ const Item: FC<ItemProps> = ({
           <span
             aria-hidden
             className={cn(
-              'size-3.5 shrink-0 text-util-colors-violet-violet-600',
+              'h-3.5 w-3.5 shrink-0 text-util-colors-violet-violet-600',
               isInCodeGeneratorInstructionEditor ? 'i-custom-vender-line-general-code-assistant' : 'i-custom-vender-line-general-magic-edit',
             )}
           />
         )
       case 'error_message':
-        return <span aria-hidden className="i-custom-vender-solid-development-variable-02 size-3.5 shrink-0 text-util-colors-orange-dark-orange-dark-600" />
+        return <span aria-hidden className="i-custom-vender-solid-development-variable-02 h-3.5 w-3.5 shrink-0 text-util-colors-orange-dark-orange-dark-600" />
       default:
-        return <span aria-hidden className="i-custom-vender-solid-development-variable-02 size-3.5 shrink-0 text-text-accent" />
+        return <span aria-hidden className="i-custom-vender-solid-development-variable-02 h-3.5 w-3.5 shrink-0 text-text-accent" />
     }
   }, [isFlat, isInCodeGeneratorInstructionEditor, itemData.variable])
 
@@ -209,7 +210,7 @@ const Item: FC<ItemProps> = ({
       className={cn(
         (isObj || isStructureOutput) ? 'pr-1' : 'pr-[18px]',
         (isHovering || isSelected) && ((isObj || isStructureOutput) ? 'bg-components-panel-on-panel-item-bg-hover' : 'bg-state-base-hover'),
-        'relative flex h-6 w-full cursor-pointer items-center rounded-md pl-3 outline-hidden focus:outline-hidden focus-visible:outline-hidden',
+        'relative flex h-6 w-full cursor-pointer items-center rounded-md pl-3',
         className,
       )}
       data-selected={isSelected ? 'true' : 'false'}
@@ -247,7 +248,7 @@ const Item: FC<ItemProps> = ({
       <div className="ml-1 shrink-0 text-xs font-normal text-text-tertiary capitalize">{(preferSchemaType && itemData.schemaType) ? itemData.schemaType : itemData.type}</div>
       {
         (isObj || isStructureOutput) && (
-          <span aria-hidden className={cn('ml-0.5 i-custom-vender-line-arrows-chevron-right size-3 text-text-quaternary', isHovering && 'text-text-tertiary')} />
+          <span aria-hidden className={cn('ml-0.5 i-custom-vender-line-arrows-chevron-right h-3 w-3 text-text-quaternary', isHovering && 'text-text-tertiary')} />
         )
       }
     </div>
@@ -262,7 +263,12 @@ const Item: FC<ItemProps> = ({
       <PopoverContent
         placement="left-start"
         sideOffset={0}
-        popupClassName={cn(VAR_REFERENCE_CHILD_POPUP_CLASS_NAME, 'border-none bg-transparent p-0 shadow-none backdrop-blur-none')}
+        popupClassName="border-none bg-transparent p-0 shadow-none backdrop-blur-none"
+        positionerProps={{
+          style: {
+            zIndex: zIndex || 100,
+          },
+        }}
       >
         {(isStructureOutput || isObj) && (
           <PickerStructurePanel
@@ -290,6 +296,7 @@ type Props = {
   maxHeightClass?: string
   onClose?: () => void
   onBlur?: () => void
+  zIndex?: number
   isInCodeGeneratorInstructionEditor?: boolean
   showManageInputField?: boolean
   onManageInputField?: () => void
@@ -307,6 +314,7 @@ const VarReferenceVars: FC<Props> = ({
   maxHeightClass,
   onClose,
   onBlur,
+  zIndex,
   isInCodeGeneratorInstructionEditor,
   showManageInputField,
   onManageInputField,
@@ -428,7 +436,7 @@ const VarReferenceVars: FC<Props> = ({
       {
         !hideSearch && (
           <>
-            <div className={cn('m-2', searchBoxClassName)} onClick={e => e.stopPropagation()}>
+            <div className={cn('mx-2 mt-2 mb-2', searchBoxClassName)} onClick={e => e.stopPropagation()}>
               <Input
                 className={VAR_SEARCH_INPUT_CLASS_NAME}
                 showLeftIcon
@@ -481,6 +489,7 @@ const VarReferenceVars: FC<Props> = ({
                         isLoopVar={item.isLoop}
                         isFlat={item.isFlat}
                         isInCodeGeneratorInstructionEditor={isInCodeGeneratorInstructionEditor}
+                        zIndex={zIndex}
                         preferSchemaType={preferSchemaType}
                         isSelected={effectiveSelectedIndex === optionIndex}
                         onActivate={() => setSelectedIndex(optionIndex)}

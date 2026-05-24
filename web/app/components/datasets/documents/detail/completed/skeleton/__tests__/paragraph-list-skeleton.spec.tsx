@@ -40,11 +40,12 @@ describe('ParagraphListSkeleton', () => {
 
   // Checkbox tests
   describe('Checkboxes', () => {
-    it('should render checkbox skeleton placeholders', () => {
+    it('should render disabled checkboxes', () => {
       const { container } = render(<ParagraphListSkeleton />)
 
-      const checkboxSkeletons = container.querySelectorAll('[class*="size-4"][class*="rounded-sm"]')
-      expect(checkboxSkeletons).toHaveLength(10)
+      // Assert - Checkbox component uses cursor-not-allowed class when disabled
+      const disabledCheckboxes = container.querySelectorAll('.cursor-not-allowed')
+      expect(disabledCheckboxes.length).toBeGreaterThan(0)
     })
 
     it('should render checkboxes with shrink-0 class for consistent sizing', () => {

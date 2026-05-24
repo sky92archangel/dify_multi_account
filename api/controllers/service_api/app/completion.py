@@ -8,8 +8,7 @@ from pydantic import BaseModel, Field, field_validator
 from werkzeug.exceptions import BadRequest, InternalServerError, NotFound
 
 import services
-from controllers.common.fields import SimpleResultResponse
-from controllers.common.schema import register_response_schema_models, register_schema_models
+from controllers.common.schema import register_schema_models
 from controllers.service_api import service_api_ns
 from controllers.service_api.app.error import (
     AppUnavailableError,
@@ -76,7 +75,6 @@ class ChatRequestPayload(BaseModel):
 
 
 register_schema_models(service_api_ns, CompletionRequestPayload, ChatRequestPayload)
-register_response_schema_models(service_api_ns, SimpleResultResponse)
 
 
 @service_api_ns.route("/completion-messages")
@@ -157,7 +155,6 @@ class CompletionStopApi(Resource):
             404: "Task not found",
         }
     )
-    @service_api_ns.response(200, "Task stopped successfully", service_api_ns.models[SimpleResultResponse.__name__])
     @validate_app_token(fetch_user_arg=FetchUserArg(fetch_from=WhereisUserArg.JSON, required=True))
     def post(self, app_model: App, end_user: EndUser, task_id: str):
         """Stop a running completion task."""
@@ -257,7 +254,6 @@ class ChatStopApi(Resource):
             404: "Task not found",
         }
     )
-    @service_api_ns.response(200, "Task stopped successfully", service_api_ns.models[SimpleResultResponse.__name__])
     @validate_app_token(fetch_user_arg=FetchUserArg(fetch_from=WhereisUserArg.JSON, required=True))
     def post(self, app_model: App, end_user: EndUser, task_id: str):
         """Stop a running chat message generation."""

@@ -1,8 +1,8 @@
 'use client'
 import type { DataSet } from '@/models/datasets'
-import { useMemo } from 'react'
+import { useHover } from 'ahooks'
+import { useMemo, useRef } from 'react'
 import { useSelector as useAppContextWithSelector } from '@/context/app-context'
-import { DatasetCardTags } from '@/features/tag-management/components/dataset-card-tags'
 import { useRouter } from '@/next/navigation'
 import CornerLabels from './components/corner-labels'
 import DatasetCardFooter from './components/dataset-card-footer'
@@ -10,27 +10,29 @@ import DatasetCardHeader from './components/dataset-card-header'
 import DatasetCardModals from './components/dataset-card-modals'
 import Description from './components/description'
 import OperationsDropdown from './components/operations-dropdown'
-import { useDatasetCardState as useDatasetCardController } from './hooks/use-dataset-card-state'
+import TagArea from './components/tag-area'
+import { useDatasetCardState } from './hooks/use-dataset-card-state'
 
 const EXTERNAL_PROVIDER = 'external'
 
 type DatasetCardProps = {
   dataset: DataSet
   onSuccess?: () => void
-  onOpenTagManagement?: () => void
 }
 
 const DatasetCard = ({
   dataset,
   onSuccess,
-  onOpenTagManagement = () => {},
 }: DatasetCardProps) => {
   const { push } = useRouter()
 
   const isCurrentWorkspaceDatasetOperator = useAppContextWithSelector(state => state.isCurrentWorkspaceDatasetOperator)
+  const tagSelectorRef = useRef<HTMLDivElement>(null)
+  const isHoveringTagSelector = useHover(tagSelectorRef)
 
-  const datasetCard = useDatasetCardController({ dataset, onSuccess })
   const {
+    tags,
+    setTags,
     modalState,
     openRenameModal,
     closeRenameModal,
@@ -38,7 +40,7 @@ const DatasetCard = ({
     handleExportPipeline,
     detectIsUsedByApp,
     onConfirmDelete,
-  } = datasetCard
+  } = useDatasetCardState({ dataset, onSuccess })
 
   const isExternalProvider = dataset.provider === EXTERNAL_PROVIDER
   const isPipelineUnpublished = useMemo(() => {
@@ -70,13 +72,14 @@ const DatasetCard = ({
         <CornerLabels dataset={dataset} />
         <DatasetCardHeader dataset={dataset} />
         <Description dataset={dataset} />
-        <DatasetCardTags
-          datasetId={dataset.id}
-          embeddingAvailable={dataset.embedding_available}
-          tags={dataset.tags}
+        <TagArea
+          ref={tagSelectorRef}
+          dataset={dataset}
+          tags={tags}
+          setTags={setTags}
+          onSuccess={onSuccess}
+          isHoveringTagSelector={isHoveringTagSelector}
           onClick={handleTagAreaClick}
-          onOpenTagManagement={onOpenTagManagement}
-          onTagsChange={onSuccess}
         />
         <DatasetCardFooter dataset={dataset} />
         <OperationsDropdown

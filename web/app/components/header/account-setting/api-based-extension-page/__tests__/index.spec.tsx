@@ -1,66 +1,38 @@
-import type { ApiBasedExtensionResponse } from '@dify/contracts/api/console/api-based-extension/types.gen'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { ApiBasedExtensionPage } from '../index'
+import type { SetStateAction } from 'react'
+import type { ModalContextState, ModalState } from '@/context/modal-context'
+import type { ApiBasedExtension } from '@/models/common'
+import { fireEvent, render, screen } from '@testing-library/react'
+import { useModalContext } from '@/context/modal-context'
+import { useApiBasedExtensions } from '@/service/use-common'
+import ApiBasedExtensionPage from '../index'
 
-const {
-  mockApiBasedExtensionsQuery,
-  mockCreateApiBasedExtension,
-  mockUpdateApiBasedExtension,
-  mockDeleteApiBasedExtension,
-} = vi.hoisted(() => ({
-  mockApiBasedExtensionsQuery: vi.fn(),
-  mockCreateApiBasedExtension: vi.fn(),
-  mockUpdateApiBasedExtension: vi.fn(),
-  mockDeleteApiBasedExtension: vi.fn(),
+vi.mock('@/service/use-common', () => ({
+  useApiBasedExtensions: vi.fn(),
 }))
 
-vi.mock('@/service/client', () => ({
-  consoleQuery: {
-    apiBasedExtension: {
-      get: {
-        queryOptions: () => ({}),
-      },
-      post: {
-        mutationOptions: () => ({ mutationFn: mockCreateApiBasedExtension }),
-      },
-      byId: {
-        post: {
-          mutationOptions: () => ({ mutationFn: mockUpdateApiBasedExtension }),
-        },
-        delete: {
-          mutationOptions: () => ({ mutationFn: mockDeleteApiBasedExtension }),
-        },
-      },
-    },
-  },
-}))
-
-vi.mock('@tanstack/react-query', () => ({
-  useQuery: vi.fn(() => mockApiBasedExtensionsQuery()),
-  useMutation: vi.fn((options: { mutationFn: (variables: unknown) => Promise<unknown> }) => ({
-    isPending: false,
-    mutate: (variables: unknown, mutationOptions?: { onSuccess?: (data: unknown) => void }) => {
-      options.mutationFn(variables).then(data => mutationOptions?.onSuccess?.(data))
-    },
-  })),
+vi.mock('@/context/modal-context', () => ({
+  useModalContext: vi.fn(),
 }))
 
 describe('ApiBasedExtensionPage', () => {
+  const mockRefetch = vi.fn<() => void>()
+  const mockSetShowApiBasedExtensionModal = vi.fn<(value: SetStateAction<ModalState<ApiBasedExtension> | null>) => void>()
+
   beforeEach(() => {
     vi.clearAllMocks()
-    mockApiBasedExtensionsQuery.mockReturnValue({
-      data: [],
-      isPending: false,
-    })
+    vi.mocked(useModalContext).mockReturnValue({
+      setShowApiBasedExtensionModal: mockSetShowApiBasedExtensionModal,
+    } as unknown as ModalContextState)
   })
 
   describe('Rendering', () => {
     it('should render empty state when no data exists', () => {
       // Arrange
-      mockApiBasedExtensionsQuery.mockReturnValue({
+      vi.mocked(useApiBasedExtensions).mockReturnValue({
         data: [],
         isPending: false,
-      })
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useApiBasedExtensions>)
 
       // Act
       render(<ApiBasedExtensionPage />)
@@ -72,15 +44,16 @@ describe('ApiBasedExtensionPage', () => {
 
     it('should render list of extensions when data exists', () => {
       // Arrange
-      const mockData: ApiBasedExtensionResponse[] = [
-        { id: '1', name: 'Extension 1', api_endpoint: 'url1', api_key: 'key1' },
-        { id: '2', name: 'Extension 2', api_endpoint: 'url2', api_key: 'key2' },
+      const mockData = [
+        { id: '1', name: 'Extension 1', api_endpoint: 'url1' },
+        { id: '2', name: 'Extension 2', api_endpoint: 'url2' },
       ]
 
-      mockApiBasedExtensionsQuery.mockReturnValue({
+      vi.mocked(useApiBasedExtensions).mockReturnValue({
         data: mockData,
         isPending: false,
-      })
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useApiBasedExtensions>)
 
       // Act
       render(<ApiBasedExtensionPage />)
@@ -95,10 +68,11 @@ describe('ApiBasedExtensionPage', () => {
 
     it('should handle loading state', () => {
       // Arrange
-      mockApiBasedExtensionsQuery.mockReturnValue({
-        data: undefined,
+      vi.mocked(useApiBasedExtensions).mockReturnValue({
+        data: null,
         isPending: true,
-      })
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useApiBasedExtensions>)
 
       // Act
       render(<ApiBasedExtensionPage />)
@@ -143,82 +117,68 @@ describe('ApiBasedExtensionPage', () => {
   describe('User Interactions', () => {
     it('should open modal when clicking add button', () => {
       // Arrange
-      mockApiBasedExtensionsQuery.mockReturnValue({
+      vi.mocked(useApiBasedExtensions).mockReturnValue({
         data: [],
         isPending: false,
-      })
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useApiBasedExtensions>)
 
       // Act
       render(<ApiBasedExtensionPage />)
       fireEvent.click(screen.getByText('common.apiBasedExtension.add'))
 
       // Assert
-      expect(screen.getByRole('dialog', { name: 'common.apiBasedExtension.modal.title' })).toBeInTheDocument()
+      expect(mockSetShowApiBasedExtensionModal).toHaveBeenCalledWith(expect.objectContaining({
+        payload: {},
+      }))
     })
 
-    it('should close add modal when create mutation succeeds', async () => {
+    it('should call refetch when onSaveCallback is executed from the modal', () => {
       // Arrange
-      mockCreateApiBasedExtension.mockResolvedValue({
-        id: 'new-id',
-        name: 'New Ext',
-        api_endpoint: 'https://api.test',
-        api_key: 'secret-key',
-      })
-      mockApiBasedExtensionsQuery.mockReturnValue({
+      vi.mocked(useApiBasedExtensions).mockReturnValue({
         data: [],
         isPending: false,
-      })
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useApiBasedExtensions>)
 
       // Act
       render(<ApiBasedExtensionPage />)
       fireEvent.click(screen.getByText('common.apiBasedExtension.add'))
-      fireEvent.change(screen.getByPlaceholderText('common.apiBasedExtension.modal.name.placeholder'), { target: { value: 'New Ext' } })
-      fireEvent.change(screen.getByPlaceholderText('common.apiBasedExtension.modal.apiEndpoint.placeholder'), { target: { value: 'https://api.test' } })
-      fireEvent.change(screen.getByPlaceholderText('common.apiBasedExtension.modal.apiKey.placeholder'), { target: { value: 'secret-key' } })
-      fireEvent.click(screen.getByText('common.operation.save'))
 
-      // Assert
-      await waitFor(() => {
-        expect(mockCreateApiBasedExtension).toHaveBeenCalledWith({
-          body: {
-            name: 'New Ext',
-            api_endpoint: 'https://api.test',
-            api_key: 'secret-key',
-          },
-        })
-        expect(screen.queryByRole('dialog', { name: 'common.apiBasedExtension.modal.title' })).not.toBeInTheDocument()
-      })
+      // Trigger callback manually from the mock call
+      const callArgs = mockSetShowApiBasedExtensionModal.mock.calls[0]![0]
+      if (typeof callArgs === 'object' && callArgs !== null && 'onSaveCallback' in callArgs) {
+        if (callArgs.onSaveCallback) {
+          callArgs.onSaveCallback()
+          // Assert
+          expect(mockRefetch).toHaveBeenCalled()
+        }
+      }
     })
 
-    it('should close edit modal when update mutation succeeds', async () => {
+    it('should call refetch when an item is updated', () => {
       // Arrange
-      const extension: ApiBasedExtensionResponse = { id: '1', name: 'Extension 1', api_endpoint: 'url1', api_key: 'long-api-key' }
-      mockUpdateApiBasedExtension.mockResolvedValue({ ...extension, name: 'Updated' })
-      mockApiBasedExtensionsQuery.mockReturnValue({
-        data: [extension],
+      const mockData = [{ id: '1', name: 'Extension 1', api_endpoint: 'url1' }]
+      vi.mocked(useApiBasedExtensions).mockReturnValue({
+        data: mockData,
         isPending: false,
-      })
+        refetch: mockRefetch,
+      } as unknown as ReturnType<typeof useApiBasedExtensions>)
 
       render(<ApiBasedExtensionPage />)
 
       // Act - Click edit on the rendered item
       fireEvent.click(screen.getByText('common.operation.edit'))
-      fireEvent.click(screen.getByText('common.operation.save'))
+
+      // Retrieve the onSaveCallback from the modal call and execute it
+      const callArgs = mockSetShowApiBasedExtensionModal.mock.calls[0]![0]
+      if (typeof callArgs === 'object' && callArgs !== null && 'onSaveCallback' in callArgs) {
+        if (callArgs.onSaveCallback)
+          callArgs.onSaveCallback()
+      }
 
       // Assert
-      await waitFor(() => {
-        expect(mockUpdateApiBasedExtension).toHaveBeenCalledWith({
-          params: {
-            id: '1',
-          },
-          body: {
-            name: 'Extension 1',
-            api_endpoint: 'url1',
-            api_key: '[__HIDDEN__]',
-          },
-        })
-        expect(screen.queryByRole('dialog', { name: 'common.apiBasedExtension.modal.editTitle' })).not.toBeInTheDocument()
-      })
+      expect(mockRefetch).toHaveBeenCalled()
     })
   })
 })

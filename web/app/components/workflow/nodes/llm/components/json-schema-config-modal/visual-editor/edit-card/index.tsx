@@ -232,6 +232,7 @@ const EditCard: FC<EditCardProps> = ({
             currentValue={currentFields.type}
             items={maximumDepthReached ? MAXIMUM_DEPTH_TYPE_OPTIONS : TYPE_OPTIONS}
             onSelect={handleTypeChange}
+            popupClassName="z-1000"
           />
           {
             currentFields.required && (

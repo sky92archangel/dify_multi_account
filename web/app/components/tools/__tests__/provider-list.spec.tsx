@@ -306,7 +306,7 @@ describe('ProviderList', () => {
       const input = screen.getByRole('textbox')
       fireEvent.change(input, { target: { value: 'Google' } })
       expect(screen.queryByTestId('card-weather-tool')).not.toBeInTheDocument()
-      fireEvent.click(screen.getByRole('button', { name: 'common.operation.clear' }))
+      fireEvent.click(screen.getByTestId('input-clear'))
       expect(screen.getByTestId('card-weather-tool')).toBeInTheDocument()
     })
 

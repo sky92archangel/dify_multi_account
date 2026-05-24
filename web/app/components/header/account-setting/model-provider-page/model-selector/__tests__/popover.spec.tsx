@@ -1,11 +1,28 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import type { ReactNode } from 'react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import ModelSelector from '../index'
+
+type PopoverProps = {
+  children: ReactNode
+  onOpenChange?: (open: boolean) => void
+}
+
+let latestOnOpenChange: PopoverProps['onOpenChange']
 
 vi.mock('../../hooks', () => ({
   useCurrentProviderAndModel: () => ({
     currentProvider: undefined,
     currentModel: undefined,
   }),
+}))
+
+vi.mock('@langgenius/dify-ui/popover', () => ({
+  Popover: ({ children, onOpenChange }: PopoverProps) => {
+    latestOnOpenChange = onOpenChange
+    return <div>{children}</div>
+  },
+  PopoverTrigger: ({ render }: { render: ReactNode }) => <>{render}</>,
+  PopoverContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }))
 
 vi.mock('../model-selector-trigger', () => ({
@@ -26,16 +43,19 @@ vi.mock('../popup', () => ({
   ),
 }))
 
-describe('ModelSelector combobox branches', () => {
+describe('ModelSelector popover branches', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    latestOnOpenChange = undefined
   })
 
-  it('should open and close through combobox trigger when editable', () => {
+  it('should open and close through popover callbacks when editable', () => {
     const onHide = vi.fn()
     render(<ModelSelector modelList={[]} onHide={onHide} />)
 
-    fireEvent.click(screen.getByRole('combobox'))
+    act(() => {
+      latestOnOpenChange?.(true)
+    })
 
     expect(screen.getByText('open-editable')).toBeInTheDocument()
 
@@ -45,10 +65,12 @@ describe('ModelSelector combobox branches', () => {
     expect(onHide).toHaveBeenCalledTimes(1)
   })
 
-  it('should ignore combobox open requests when readonly', () => {
+  it('should ignore popover open changes when readonly', () => {
     render(<ModelSelector modelList={[]} readonly />)
 
-    fireEvent.click(screen.getByRole('combobox'))
+    act(() => {
+      latestOnOpenChange?.(true)
+    })
 
     expect(screen.getByText('closed-readonly')).toBeInTheDocument()
   })

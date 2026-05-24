@@ -55,6 +55,10 @@ vi.mock('../../../readme-panel/entrance', () => ({
   ReadmeEntrance: () => <div data-testid="readme-entrance" />,
 }))
 
+vi.mock('../../../readme-panel/store', () => ({
+  ReadmeShowType: { modal: 'modal' },
+}))
+
 vi.mock('@/app/components/base/encrypted-bottom', () => ({
   EncryptedBottom: () => <div data-testid="encrypted-bottom" />,
 }))
@@ -231,7 +235,7 @@ describe('ApiKeyModal', () => {
     const mockOnClose = vi.fn()
     render(<ApiKeyModal pluginPayload={basePayload} onClose={mockOnClose} />)
 
-    fireEvent.click(screen.getByRole('button', { name: /Close|operation.close/ }))
+    fireEvent.click(screen.getByTestId('modal-close'))
     expect(mockOnClose).toHaveBeenCalled()
   })
 

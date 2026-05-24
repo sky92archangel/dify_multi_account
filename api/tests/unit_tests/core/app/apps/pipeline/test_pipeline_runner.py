@@ -22,7 +22,6 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
-from pytest_mock import MockerFixture
 
 import core.app.apps.pipeline.pipeline_runner as module
 from core.app.apps.pipeline.pipeline_runner import PipelineRunner
@@ -127,7 +126,7 @@ def test_update_document_status_on_failure(mocker, runner):
     session.commit.assert_called_once()
 
 
-def test_run_pipeline_not_found(mocker: MockerFixture):
+def test_run_pipeline_not_found(mocker):
     app_generate_entity = _build_app_generate_entity()
     app_generate_entity.invoke_from = InvokeFrom.WEB_APP
     app_generate_entity.single_iteration_run = None
@@ -151,7 +150,7 @@ def test_run_pipeline_not_found(mocker: MockerFixture):
         runner.run()
 
 
-def test_run_workflow_not_initialized(mocker: MockerFixture):
+def test_run_workflow_not_initialized(mocker):
     app_generate_entity = _build_app_generate_entity()
 
     pipeline = MagicMock(id="pipe")
@@ -175,7 +174,7 @@ def test_run_workflow_not_initialized(mocker: MockerFixture):
         runner.run()
 
 
-def test_run_single_iteration_path(mocker: MockerFixture):
+def test_run_single_iteration_path(mocker):
     app_generate_entity = _build_app_generate_entity()
     app_generate_entity.single_iteration_run = MagicMock()
 
@@ -224,7 +223,7 @@ def test_run_single_iteration_path(mocker: MockerFixture):
     runner._handle_event.assert_called()
 
 
-def test_run_normal_path_builds_graph(mocker: MockerFixture):
+def test_run_normal_path_builds_graph(mocker):
     app_generate_entity = _build_app_generate_entity()
 
     pipeline = MagicMock(id="pipe")

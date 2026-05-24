@@ -1,8 +1,6 @@
-from collections import UserString
 from unittest.mock import MagicMock
 
 import pytest
-from pytest_mock import MockerFixture
 
 from core.app.app_config.easy_ui_based_app.prompt_template.manager import (
     PromptTemplateConfigManager,
@@ -13,25 +11,21 @@ from core.app.app_config.easy_ui_based_app.prompt_template.manager import (
 # -----------------------------
 
 
-class DummyEnumValue(UserString):
+class DummyEnumValue:
     def __init__(self, value):
-        super().__init__(value)
         self.value = value
 
 
 class DummyPromptType:
     def __init__(self):
-        self.SIMPLE = DummyEnumValue("simple")
-        self.ADVANCED = DummyEnumValue("advanced")
+        self.SIMPLE = "simple"
+        self.ADVANCED = "advanced"
 
     def value_of(self, value):
-        for enum_value in self:
-            if enum_value.value == value:
-                return enum_value
-        raise ValueError(f"invalid prompt type value {value}")
+        return value
 
     def __iter__(self):
-        return iter([self.SIMPLE, self.ADVANCED])
+        return iter([DummyEnumValue("simple"), DummyEnumValue("advanced")])
 
 
 # -----------------------------
@@ -44,7 +38,7 @@ class TestPromptTemplateConfigManagerConvert:
         with pytest.raises(ValueError, match="prompt_type is required"):
             PromptTemplateConfigManager.convert({})
 
-    def test_convert_simple_prompt(self, mocker: MockerFixture):
+    def test_convert_simple_prompt(self, mocker):
         mock_prompt_entity_cls = MagicMock()
         mock_prompt_entity_cls.PromptType = DummyPromptType()
 
@@ -62,7 +56,7 @@ class TestPromptTemplateConfigManagerConvert:
         assert result == "simple_entity"
         mock_prompt_entity_cls.assert_called_once_with(prompt_type="simple", simple_prompt_template="hello")
 
-    def test_convert_advanced_chat_valid(self, mocker: MockerFixture):
+    def test_convert_advanced_chat_valid(self, mocker):
         mock_prompt_entity_cls = MagicMock()
         mock_prompt_entity_cls.PromptType = DummyPromptType()
         mock_prompt_entity_cls.return_value = "advanced_entity"
@@ -103,7 +97,7 @@ class TestPromptTemplateConfigManagerConvert:
             {"text": "hi", "role": 123},
         ],
     )
-    def test_convert_advanced_invalid_message_fields(self, mocker: MockerFixture, message):
+    def test_convert_advanced_invalid_message_fields(self, mocker, message):
         mock_prompt_entity_cls = MagicMock()
         mock_prompt_entity_cls.PromptType = DummyPromptType()
 
@@ -120,7 +114,7 @@ class TestPromptTemplateConfigManagerConvert:
         with pytest.raises(ValueError):
             PromptTemplateConfigManager.convert(config)
 
-    def test_convert_advanced_completion_with_roles(self, mocker: MockerFixture):
+    def test_convert_advanced_completion_with_roles(self, mocker):
         mock_prompt_entity_cls = MagicMock()
         mock_prompt_entity_cls.PromptType = DummyPromptType()
         mock_prompt_entity_cls.return_value = "advanced_entity"
@@ -160,7 +154,7 @@ class TestValidateAndSetDefaults:
     def setup_method(self):
         self.valid_model = {"mode": "chat"}
 
-    def _patch_prompt_type(self, mocker: MockerFixture):
+    def _patch_prompt_type(self, mocker):
         mock_prompt_entity_cls = MagicMock()
         mock_prompt_entity_cls.PromptType = DummyPromptType()
         mocker.patch(
@@ -169,7 +163,7 @@ class TestValidateAndSetDefaults:
         )
         return mock_prompt_entity_cls
 
-    def test_default_prompt_type_set(self, mocker: MockerFixture):
+    def test_default_prompt_type_set(self, mocker):
         self._patch_prompt_type(mocker)
 
         config = {"model": self.valid_model}
@@ -179,7 +173,7 @@ class TestValidateAndSetDefaults:
         assert result["prompt_type"] == "simple"
         assert isinstance(keys, list)
 
-    def test_invalid_prompt_type_raises(self, mocker: MockerFixture):
+    def test_invalid_prompt_type_raises(self, mocker):
         class InvalidEnum(DummyPromptType):
             def __iter__(self):
                 return iter([DummyEnumValue("valid")])
@@ -197,7 +191,7 @@ class TestValidateAndSetDefaults:
         with pytest.raises(ValueError):
             PromptTemplateConfigManager.validate_and_set_defaults("chat_app", config)
 
-    def test_invalid_chat_prompt_config_type(self, mocker: MockerFixture):
+    def test_invalid_chat_prompt_config_type(self, mocker):
         self._patch_prompt_type(mocker)
 
         config = {
@@ -209,7 +203,7 @@ class TestValidateAndSetDefaults:
         with pytest.raises(ValueError):
             PromptTemplateConfigManager.validate_and_set_defaults("chat_app", config)
 
-    def test_simple_mode_invalid_pre_prompt_type(self, mocker: MockerFixture):
+    def test_simple_mode_invalid_pre_prompt_type(self, mocker):
         self._patch_prompt_type(mocker)
 
         config = {
@@ -221,7 +215,7 @@ class TestValidateAndSetDefaults:
         with pytest.raises(ValueError):
             PromptTemplateConfigManager.validate_and_set_defaults("chat_app", config)
 
-    def test_advanced_requires_one_config(self, mocker: MockerFixture):
+    def test_advanced_requires_one_config(self, mocker):
         self._patch_prompt_type(mocker)
 
         config = {
@@ -234,7 +228,7 @@ class TestValidateAndSetDefaults:
         with pytest.raises(ValueError):
             PromptTemplateConfigManager.validate_and_set_defaults("chat_app", config)
 
-    def test_advanced_invalid_model_mode(self, mocker: MockerFixture):
+    def test_advanced_invalid_model_mode(self, mocker):
         self._patch_prompt_type(mocker)
 
         config = {
@@ -246,7 +240,7 @@ class TestValidateAndSetDefaults:
         with pytest.raises(ValueError):
             PromptTemplateConfigManager.validate_and_set_defaults("chat_app", config)
 
-    def test_advanced_chat_prompt_length_exceeds(self, mocker: MockerFixture):
+    def test_advanced_chat_prompt_length_exceeds(self, mocker):
         self._patch_prompt_type(mocker)
 
         config = {
@@ -258,7 +252,7 @@ class TestValidateAndSetDefaults:
         with pytest.raises(ValueError):
             PromptTemplateConfigManager.validate_and_set_defaults("chat_app", config)
 
-    def test_completion_prefix_defaults_set_when_empty(self, mocker: MockerFixture):
+    def test_completion_prefix_defaults_set_when_empty(self, mocker):
         self._patch_prompt_type(mocker)
 
         config = {

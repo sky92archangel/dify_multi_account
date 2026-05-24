@@ -18,7 +18,6 @@ import uuid
 from unittest.mock import Mock, patch
 
 import pytest
-from flask import Flask
 from werkzeug.exceptions import NotFound
 
 from controllers.service_api.dataset.segment import (
@@ -783,7 +782,7 @@ class TestSegmentApiGet:
         mock_seg_svc,
         mock_marshal,
         mock_summary_svc,
-        app: Flask,
+        app,
         mock_tenant,
         mock_dataset,
         mock_segment,
@@ -894,7 +893,7 @@ class TestSegmentApiPost:
         mock_seg_svc,
         mock_marshal,
         mock_summary_svc,
-        app: Flask,
+        app,
         mock_tenant,
         mock_dataset,
         mock_segment,
@@ -947,7 +946,7 @@ class TestSegmentApiPost:
         mock_db,
         mock_account_fn,
         mock_doc_svc,
-        app: Flask,
+        app,
         mock_tenant,
         mock_dataset,
     ):
@@ -990,7 +989,7 @@ class TestSegmentApiPost:
         mock_db,
         mock_account_fn,
         mock_doc_svc,
-        app: Flask,
+        app,
         mock_tenant,
         mock_dataset,
     ):
@@ -1042,7 +1041,7 @@ class TestDatasetSegmentApiDelete:
         mock_doc_svc,
         mock_dataset_svc,
         mock_seg_svc,
-        app: Flask,
+        app,
         mock_tenant,
         mock_dataset,
         mock_segment,
@@ -1087,7 +1086,7 @@ class TestDatasetSegmentApiDelete:
         mock_account_fn,
         mock_doc_svc,
         mock_seg_svc,
-        app: Flask,
+        app,
         mock_tenant,
         mock_dataset,
     ):
@@ -1129,7 +1128,7 @@ class TestDatasetSegmentApiDelete:
         mock_account_fn,
         mock_doc_svc,
         mock_dataset_svc,
-        app: Flask,
+        app,
         mock_tenant,
         mock_dataset,
     ):
@@ -1163,7 +1162,7 @@ class TestDatasetSegmentApiDelete:
         mock_account_fn,
         mock_dataset_svc,
         mock_doc_svc,
-        app: Flask,
+        app,
         mock_tenant,
         mock_dataset,
     ):
@@ -1233,7 +1232,7 @@ class TestDatasetSegmentApiUpdate:
         mock_seg_svc,
         mock_marshal,
         mock_summary_svc,
-        app: Flask,
+        app,
         mock_tenant,
         mock_dataset,
         mock_segment,
@@ -1283,7 +1282,7 @@ class TestDatasetSegmentApiUpdate:
         mock_account_fn,
         mock_dataset_svc,
         mock_doc_svc,
-        app: Flask,
+        app,
         mock_tenant,
         mock_dataset,
     ):
@@ -1323,7 +1322,7 @@ class TestDatasetSegmentApiUpdate:
         mock_dataset_svc,
         mock_doc_svc,
         mock_seg_svc,
-        app: Flask,
+        app,
         mock_tenant,
         mock_dataset,
     ):
@@ -1375,7 +1374,7 @@ class TestDatasetSegmentApiGetSingle:
         mock_seg_svc,
         mock_marshal,
         mock_summary_svc,
-        app: Flask,
+        app,
         mock_tenant,
         mock_dataset,
         mock_segment,
@@ -1422,7 +1421,7 @@ class TestDatasetSegmentApiGetSingle:
         mock_seg_svc,
         mock_marshal,
         mock_summary_svc,
-        app: Flask,
+        app,
         mock_tenant,
         mock_dataset,
         mock_segment,
@@ -1461,7 +1460,7 @@ class TestDatasetSegmentApiGetSingle:
         self,
         mock_db,
         mock_account_fn,
-        app: Flask,
+        app,
         mock_tenant,
         mock_dataset,
     ):
@@ -1492,7 +1491,7 @@ class TestDatasetSegmentApiGetSingle:
         mock_account_fn,
         mock_dataset_svc,
         mock_doc_svc,
-        app: Flask,
+        app,
         mock_tenant,
         mock_dataset,
     ):
@@ -1527,7 +1526,7 @@ class TestDatasetSegmentApiGetSingle:
         mock_dataset_svc,
         mock_doc_svc,
         mock_seg_svc,
-        app: Flask,
+        app,
         mock_tenant,
         mock_dataset,
     ):
@@ -1571,7 +1570,7 @@ class TestChildChunkApiGet:
         mock_doc_svc,
         mock_seg_svc,
         mock_marshal,
-        app: Flask,
+        app,
         mock_tenant,
         mock_dataset,
     ):
@@ -1610,7 +1609,7 @@ class TestChildChunkApiGet:
         self,
         mock_db,
         mock_account_fn,
-        app: Flask,
+        app,
         mock_tenant,
         mock_dataset,
     ):
@@ -1639,7 +1638,7 @@ class TestChildChunkApiGet:
         mock_db,
         mock_account_fn,
         mock_doc_svc,
-        app: Flask,
+        app,
         mock_tenant,
         mock_dataset,
     ):
@@ -1671,7 +1670,7 @@ class TestChildChunkApiGet:
         mock_account_fn,
         mock_doc_svc,
         mock_seg_svc,
-        app: Flask,
+        app,
         mock_tenant,
         mock_dataset,
     ):
@@ -1730,7 +1729,7 @@ class TestChildChunkApiPost:
         mock_doc_svc,
         mock_seg_svc,
         mock_marshal,
-        app: Flask,
+        app,
         mock_tenant,
         mock_dataset,
     ):
@@ -1772,7 +1771,7 @@ class TestChildChunkApiPost:
         mock_feature_svc,
         mock_db,
         mock_account_fn,
-        app: Flask,
+        app,
         mock_tenant,
         mock_dataset,
     ):
@@ -1810,7 +1809,7 @@ class TestChildChunkApiPost:
         mock_account_fn,
         mock_doc_svc,
         mock_seg_svc,
-        app: Flask,
+        app,
         mock_tenant,
         mock_dataset,
     ):
@@ -1864,7 +1863,7 @@ class TestDatasetChildChunkApiDelete:
         mock_account_fn,
         mock_doc_svc,
         mock_seg_svc,
-        app: Flask,
+        app,
         mock_tenant,
         mock_dataset,
     ):
@@ -1914,7 +1913,7 @@ class TestDatasetChildChunkApiDelete:
         mock_account_fn,
         mock_doc_svc,
         mock_seg_svc,
-        app: Flask,
+        app,
         mock_tenant,
         mock_dataset,
     ):
@@ -1955,7 +1954,7 @@ class TestDatasetChildChunkApiDelete:
         mock_account_fn,
         mock_doc_svc,
         mock_seg_svc,
-        app: Flask,
+        app,
         mock_tenant,
         mock_dataset,
     ):
@@ -1995,7 +1994,7 @@ class TestDatasetChildChunkApiDelete:
         mock_account_fn,
         mock_doc_svc,
         mock_seg_svc,
-        app: Flask,
+        app,
         mock_tenant,
         mock_dataset,
     ):

@@ -149,7 +149,7 @@ describe('error-handle path', () => {
       await user.click(screen.getByRole('button'))
       await user.click(screen.getByText('workflow.nodes.common.errorHandle.defaultValue.title'))
 
-      expect(onSelected.mock.calls[0]?.[0]).toBe(ErrorHandleTypeEnum.defaultValue)
+      expect(onSelected).toHaveBeenCalledWith(ErrorHandleTypeEnum.defaultValue)
     })
 
     it('should render the error tip only when a strategy exists', () => {

@@ -7,7 +7,6 @@ from pydantic import BaseModel, Field, TypeAdapter, field_validator
 
 from constants import HIDDEN_VALUE
 from fields.base import ResponseModel
-from libs.helper import to_timestamp
 from libs.login import current_account_with_tenant, login_required
 from models.api_based_extension import APIBasedExtension
 from services.api_based_extension_service import APIBasedExtensionService
@@ -41,6 +40,12 @@ def _mask_api_key(api_key: str) -> str:
     return api_key[:3] + "******" + api_key[-3:]
 
 
+def _to_timestamp(value: datetime | int | None) -> int | None:
+    if isinstance(value, datetime):
+        return int(value.timestamp())
+    return value
+
+
 class APIBasedExtensionResponse(ResponseModel):
     id: str
     name: str
@@ -56,7 +61,7 @@ class APIBasedExtensionResponse(ResponseModel):
     @field_validator("created_at", mode="before")
     @classmethod
     def _normalize_created_at(cls, value: datetime | int | None) -> int | None:
-        return to_timestamp(value)
+        return _to_timestamp(value)
 
 
 register_schema_models(console_ns, APIBasedExtensionPayload, CodeBasedExtensionResponse, APIBasedExtensionResponse)
@@ -68,21 +73,6 @@ console_ns.schema_model(
 
 def _serialize_api_based_extension(extension: APIBasedExtension) -> dict[str, Any]:
     return APIBasedExtensionResponse.model_validate(extension, from_attributes=True).model_dump(mode="json")
-
-
-def _serialize_saved_api_based_extension(extension: APIBasedExtension, api_key: str) -> dict[str, Any]:
-    """Serialize a saved extension with the plaintext key used for response masking only.
-
-    APIBasedExtensionService.save mutates the ORM object to hold the encrypted token before returning it. The response
-    contract, however, should match list/detail responses, where api_key is masked from the decrypted token.
-    """
-    return APIBasedExtensionResponse(
-        id=extension.id,
-        name=extension.name,
-        api_endpoint=extension.api_endpoint,
-        api_key=api_key,
-        created_at=to_timestamp(extension.created_at),
-    ).model_dump(mode="json")
 
 
 @console_ns.route("/code-based-extension")
@@ -99,7 +89,7 @@ class CodeBasedExtensionAPI(Resource):
     @login_required
     @account_initialization_required
     def get(self):
-        query = CodeBasedExtensionQuery.model_validate(request.args.to_dict(flat=True))
+        query = CodeBasedExtensionQuery.model_validate(request.args.to_dict(flat=True))  # type: ignore
 
         return CodeBasedExtensionResponse(
             module=query.module,
@@ -140,7 +130,7 @@ class APIBasedExtensionAPI(Resource):
             api_key=payload.api_key,
         )
 
-        return _serialize_saved_api_based_extension(APIBasedExtensionService.save(extension_data), payload.api_key), 201
+        return _serialize_api_based_extension(APIBasedExtensionService.save(extension_data))
 
 
 @console_ns.route("/api-based-extension/<uuid:id>")
@@ -175,19 +165,14 @@ class APIBasedExtensionDetailAPI(Resource):
         extension_data_from_db = APIBasedExtensionService.get_with_tenant_id(current_tenant_id, api_based_extension_id)
 
         payload = APIBasedExtensionPayload.model_validate(console_ns.payload or {})
-        api_key_for_response = extension_data_from_db.api_key
 
         extension_data_from_db.name = payload.name
         extension_data_from_db.api_endpoint = payload.api_endpoint
 
         if payload.api_key != HIDDEN_VALUE:
             extension_data_from_db.api_key = payload.api_key
-            api_key_for_response = payload.api_key
 
-        return _serialize_saved_api_based_extension(
-            APIBasedExtensionService.save(extension_data_from_db),
-            api_key_for_response,
-        )
+        return _serialize_api_based_extension(APIBasedExtensionService.save(extension_data_from_db))
 
     @console_ns.doc("delete_api_based_extension")
     @console_ns.doc(description="Delete API-based extension")
@@ -204,4 +189,4 @@ class APIBasedExtensionDetailAPI(Resource):
 
         APIBasedExtensionService.delete(extension_data_from_db)
 
-        return "", 204
+        return {"result": "success"}, 204

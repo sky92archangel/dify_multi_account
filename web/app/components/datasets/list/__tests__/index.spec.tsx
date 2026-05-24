@@ -36,6 +36,11 @@ vi.mock('@/context/external-api-panel-context', () => ({
   }),
 }))
 
+// Mock tag management store
+vi.mock('@/app/components/base/tag-management/store', () => ({
+  useStore: () => false,
+}))
+
 // Mock useDocumentTitle hook
 vi.mock('@/hooks/use-document-title', () => ({
   default: vi.fn(),
@@ -103,16 +108,15 @@ vi.mock('@/app/components/develop/secret-key/secret-key-modal', () => ({
 }))
 
 // Mock TagManagementModal
-vi.mock('@/features/tag-management/components/tag-management-modal', () => ({
-  TagManagementModal: ({ show }: { show: boolean }) => show ? <div data-testid="tag-management-modal" /> : null,
+vi.mock('@/app/components/base/tag-management', () => ({
+  default: () => <div data-testid="tag-management-modal" />,
 }))
 
 // Mock TagFilter
-vi.mock('@/features/tag-management/components/tag-filter', () => ({
-  TagFilter: ({ onChange, onOpenTagManagement }: { value: string[], onChange: (val: string[]) => void, onOpenTagManagement: () => void }) => (
+vi.mock('@/app/components/base/tag-management/filter', () => ({
+  default: ({ onChange }: { value: string[], onChange: (val: string[]) => void }) => (
     <div data-testid="tag-filter">
       <button onClick={() => onChange(['tag-1', 'tag-2'])}>Select Tags</button>
-      <button onClick={onOpenTagManagement}>Manage Tags</button>
     </div>
   ),
 }))
@@ -222,7 +226,7 @@ describe('List', () => {
     it('should have correct container styling', () => {
       const { container } = render(<List />)
       const mainContainer = container.firstChild as HTMLElement
-      expect(mainContainer).toHaveClass('relative', 'flex', 'grow', 'flex-col')
+      expect(mainContainer).toHaveClass('scroll-container', 'relative', 'flex', 'grow', 'flex-col')
     })
   })
 
@@ -308,9 +312,15 @@ describe('List', () => {
       expect(mockSetShowExternalApiPanel).toHaveBeenCalledWith(false)
     })
 
-    it('should show TagManagementModal when tag management is opened', () => {
-      render(<List />)
-      fireEvent.click(screen.getByText('Manage Tags'))
+    it('should show TagManagementModal when showTagManagementModal is true', async () => {
+      vi.doMock('@/app/components/base/tag-management/store', () => ({
+        useStore: () => true, // showTagManagementModal is true
+      }))
+
+      vi.resetModules()
+      const { default: ListComponent } = await import('../index')
+
+      render(<ListComponent />)
 
       expect(screen.getByTestId('tag-management-modal')).toBeInTheDocument()
     })

@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from enum import StrEnum
-from typing import Any, Protocol
+from typing import Any, Protocol, cast
 from uuid import uuid4
 
 from graphon.enums import BuiltinNodeTypes
@@ -82,10 +82,13 @@ def build_system_variables(values: Mapping[str, Any] | None = None, /, **kwargs:
     normalized = _normalize_system_variable_values(values, **kwargs)
 
     return [
-        segment_to_variable(
-            segment=build_segment(value),
-            selector=system_variable_selector(key),
-            name=key,
+        cast(
+            Variable,
+            segment_to_variable(
+                segment=build_segment(value),
+                selector=system_variable_selector(key),
+                name=key,
+            ),
         )
         for key, value in normalized.items()
     ]
@@ -127,10 +130,13 @@ def build_bootstrap_variables(
 
     for node_id, value in rag_pipeline_variables_map.items():
         variables.append(
-            segment_to_variable(
-                segment=build_segment(value),
-                selector=(RAG_PIPELINE_VARIABLE_NODE_ID, node_id),
-                name=node_id,
+            cast(
+                Variable,
+                segment_to_variable(
+                    segment=build_segment(value),
+                    selector=(RAG_PIPELINE_VARIABLE_NODE_ID, node_id),
+                    name=node_id,
+                ),
             )
         )
 

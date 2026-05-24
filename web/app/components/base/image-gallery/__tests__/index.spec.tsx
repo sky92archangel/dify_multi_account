@@ -113,7 +113,7 @@ describe('ImageGallery', () => {
       await user.click(getImages(container)[0]!)
       expect(screen.queryByTestId('image-preview-container'))!.toBeInTheDocument()
 
-      fireEvent.keyDown(document, { key: 'Escape', code: 'Escape' })
+      await user.keyboard('{Escape}')
 
       await waitFor(() => {
         expect(screen.queryByTestId('image-preview-container')).not.toBeInTheDocument()

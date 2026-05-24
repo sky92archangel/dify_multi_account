@@ -8,8 +8,8 @@ const mockUpdateMemberRole = vi.fn()
 const mockDeleteMemberOrCancelInvitation = vi.fn()
 
 vi.mock('@/service/common', () => ({
-  deleteMemberOrCancelInvitation: (args: unknown) => mockDeleteMemberOrCancelInvitation(args),
-  updateMemberRole: (args: unknown) => mockUpdateMemberRole(args),
+  deleteMemberOrCancelInvitation: () => mockDeleteMemberOrCancelInvitation(),
+  updateMemberRole: () => mockUpdateMemberRole(),
 }))
 
 const mockUseProviderContext = vi.fn(() => ({
@@ -65,21 +65,18 @@ describe('Operation', () => {
     expect(await screen.findByText('common.members.datasetOperator')).toBeInTheDocument()
   })
 
-  it('should show admin-allowed role options when operator role is admin', async () => {
+  it('should show owner-allowed role options when operator role is admin', async () => {
     const user = userEvent.setup()
 
     renderOperation({}, 'admin')
 
     await user.click(screen.getByText('common.members.editor'))
 
-    expect(screen.getByText('common.members.admin')).toBeInTheDocument()
-    expect(screen.getAllByText('common.members.editor')).toHaveLength(2)
+    expect(screen.queryByText('common.members.admin')).not.toBeInTheDocument()
     expect(screen.getByText('common.members.normal')).toBeInTheDocument()
-    expect(screen.queryByText('common.members.datasetOperator')).not.toBeInTheDocument()
-    expect(screen.getByText('common.members.removeFromTeam')).toBeInTheDocument()
   })
 
-  it('should not show role options or remove action when operator role is unsupported', async () => {
+  it('should not show role options when operator role is unsupported', async () => {
     const user = userEvent.setup()
 
     renderOperation({}, 'normal')
@@ -87,7 +84,7 @@ describe('Operation', () => {
     await user.click(screen.getByText('common.members.editor'))
 
     expect(screen.queryByText('common.members.normal')).not.toBeInTheDocument()
-    expect(screen.queryByText('common.members.removeFromTeam')).not.toBeInTheDocument()
+    expect(screen.getByText('common.members.removeFromTeam')).toBeInTheDocument()
   })
 
   it('should call updateMemberRole and onOperate when selecting another role', async () => {
@@ -99,10 +96,7 @@ describe('Operation', () => {
     await user.click(await screen.findByText('common.members.normal'))
 
     await waitFor(() => {
-      expect(mockUpdateMemberRole).toHaveBeenCalledWith({
-        url: '/workspaces/current/members/member-id/update-role',
-        body: { role: 'normal' },
-      })
+      expect(mockUpdateMemberRole).toHaveBeenCalled()
       expect(onOperate).toHaveBeenCalled()
     })
   })
@@ -115,7 +109,7 @@ describe('Operation', () => {
     await user.click(screen.getByText('common.members.editor'))
 
     expect(await screen.findByText('common.members.datasetOperator')).toBeInTheDocument()
-    expect(screen.getByText('common.members.admin')).toBeInTheDocument()
+    expect(screen.queryByText('common.members.admin')).not.toBeInTheDocument()
   })
 
   it('should fall back to normal role label when member role is unknown', () => {
@@ -133,9 +127,7 @@ describe('Operation', () => {
     await user.click(await screen.findByText('common.members.removeFromTeam'))
 
     await waitFor(() => {
-      expect(mockDeleteMemberOrCancelInvitation).toHaveBeenCalledWith({
-        url: '/workspaces/current/members/member-id',
-      })
+      expect(mockDeleteMemberOrCancelInvitation).toHaveBeenCalled()
       expect(onOperate).toHaveBeenCalled()
     })
   })

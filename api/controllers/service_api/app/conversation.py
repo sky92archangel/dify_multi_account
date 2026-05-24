@@ -22,7 +22,7 @@ from fields.conversation_fields import (
     SimpleConversation,
 )
 from graphon.variables.types import SegmentType
-from libs.helper import UUIDStrOrEmpty, to_timestamp
+from libs.helper import UUIDStrOrEmpty
 from models.model import App, AppMode, EndUser
 from services.conversation_service import ConversationService
 
@@ -115,7 +115,9 @@ class ConversationVariableResponse(ResponseModel):
     @field_validator("created_at", "updated_at", mode="before")
     @classmethod
     def normalize_timestamp(cls, value: datetime | int | None) -> int | None:
-        return to_timestamp(value)
+        if isinstance(value, datetime):
+            return int(value.timestamp())
+        return value
 
 
 class ConversationVariableInfiniteScrollPaginationResponse(ResponseModel):

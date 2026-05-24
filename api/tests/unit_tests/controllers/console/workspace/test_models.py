@@ -32,7 +32,7 @@ class TestDefaultModelApi:
         with (
             app.test_request_context(
                 "/",
-                query_string={"model_type": ModelType.LLM},
+                query_string={"model_type": ModelType.LLM.value},
             ),
             patch(
                 "controllers.console.workspace.models.current_account_with_tenant",
@@ -53,7 +53,7 @@ class TestDefaultModelApi:
         payload = {
             "model_settings": [
                 {
-                    "model_type": ModelType.LLM,
+                    "model_type": ModelType.LLM.value,
                     "provider": "openai",
                     "model": "gpt-4",
                 }
@@ -72,12 +72,12 @@ class TestDefaultModelApi:
 
         assert result["result"] == "success"
 
-    def test_get_returns_empty_when_no_default(self, app: Flask):
+    def test_get_returns_empty_when_no_default(self, app):
         api = DefaultModelApi()
         method = unwrap(api.get)
 
         with (
-            app.test_request_context("/", query_string={"model_type": ModelType.LLM}),
+            app.test_request_context("/", query_string={"model_type": ModelType.LLM.value}),
             patch("controllers.console.workspace.models.current_account_with_tenant", return_value=(MagicMock(), "t1")),
             patch("controllers.console.workspace.models.ModelProviderService") as service,
         ):
@@ -113,7 +113,7 @@ class TestModelProviderModelApi:
 
         payload = {
             "model": "gpt-4",
-            "model_type": ModelType.LLM,
+            "model_type": ModelType.LLM.value,
             "load_balancing": {
                 "configs": [{"weight": 1}],
                 "enabled": True,
@@ -139,7 +139,7 @@ class TestModelProviderModelApi:
 
         payload = {
             "model": "gpt-4",
-            "model_type": ModelType.LLM,
+            "model_type": ModelType.LLM.value,
         }
 
         with (
@@ -154,7 +154,7 @@ class TestModelProviderModelApi:
 
         assert status == 204
 
-    def test_get_models_returns_empty(self, app: Flask):
+    def test_get_models_returns_empty(self, app):
         api = ModelProviderModelApi()
         method = unwrap(api.get)
 
@@ -180,7 +180,7 @@ class TestModelProviderModelCredentialApi:
                 "/",
                 query_string={
                     "model": "gpt-4",
-                    "model_type": ModelType.LLM,
+                    "model_type": ModelType.LLM.value,
                 },
             ),
             patch(
@@ -208,7 +208,7 @@ class TestModelProviderModelCredentialApi:
 
         payload = {
             "model": "gpt-4",
-            "model_type": ModelType.LLM,
+            "model_type": ModelType.LLM.value,
             "credentials": {"key": "val"},
         }
 
@@ -224,12 +224,12 @@ class TestModelProviderModelCredentialApi:
 
         assert status == 201
 
-    def test_get_empty_credentials(self, app: Flask):
+    def test_get_empty_credentials(self, app):
         api = ModelProviderModelCredentialApi()
         method = unwrap(api.get)
 
         with (
-            app.test_request_context("/", query_string={"model": "gpt", "model_type": ModelType.LLM}),
+            app.test_request_context("/", query_string={"model": "gpt", "model_type": ModelType.LLM.value}),
             patch("controllers.console.workspace.models.current_account_with_tenant", return_value=(MagicMock(), "t1")),
             patch("controllers.console.workspace.models.ModelProviderService") as service,
             patch("controllers.console.workspace.models.ModelLoadBalancingService") as lb,
@@ -242,13 +242,13 @@ class TestModelProviderModelCredentialApi:
 
         assert result["credentials"] == {}
 
-    def test_delete_success(self, app: Flask):
+    def test_delete_success(self, app):
         api = ModelProviderModelCredentialApi()
         method = unwrap(api.delete)
 
         payload = {
             "model": "gpt",
-            "model_type": ModelType.LLM,
+            "model_type": ModelType.LLM.value,
             "credential_id": "123e4567-e89b-12d3-a456-426614174000",
         }
 
@@ -269,7 +269,7 @@ class TestModelProviderModelCredentialSwitchApi:
 
         payload = {
             "model": "gpt-4",
-            "model_type": ModelType.LLM,
+            "model_type": ModelType.LLM.value,
             "credential_id": "abc",
         }
 
@@ -293,7 +293,7 @@ class TestModelEnableDisableApis:
 
         payload = {
             "model": "gpt-4",
-            "model_type": ModelType.LLM,
+            "model_type": ModelType.LLM.value,
         }
 
         with (
@@ -314,7 +314,7 @@ class TestModelEnableDisableApis:
 
         payload = {
             "model": "gpt-4",
-            "model_type": ModelType.LLM,
+            "model_type": ModelType.LLM.value,
         }
 
         with (
@@ -337,7 +337,7 @@ class TestModelProviderModelValidateApi:
 
         payload = {
             "model": "gpt-4",
-            "model_type": ModelType.LLM,
+            "model_type": ModelType.LLM.value,
             "credentials": {"key": "val"},
         }
 
@@ -360,7 +360,7 @@ class TestModelProviderModelValidateApi:
 
         payload = {
             "model": model_name,
-            "model_type": ModelType.LLM,
+            "model_type": ModelType.LLM.value,
             "credentials": {},
         }
 
@@ -412,11 +412,11 @@ class TestParameterAndAvailableModels:
         ):
             service_mock.return_value.get_models_by_model_type.return_value = []
 
-            result = method(api, ModelType.LLM)
+            result = method(api, ModelType.LLM.value)
 
         assert "data" in result
 
-    def test_empty_rules(self, app: Flask):
+    def test_empty_rules(self, app):
         api = ModelProviderModelParameterRuleApi()
         method = unwrap(api.get)
 
@@ -431,7 +431,7 @@ class TestParameterAndAvailableModels:
 
         assert result["data"] == []
 
-    def test_no_models(self, app: Flask):
+    def test_no_models(self, app):
         api = ModelProviderAvailableModelApi()
         method = unwrap(api.get)
 
@@ -442,6 +442,6 @@ class TestParameterAndAvailableModels:
         ):
             service.return_value.get_models_by_model_type.return_value = []
 
-            result = method(api, ModelType.LLM)
+            result = method(api, ModelType.LLM.value)
 
         assert result["data"] == []

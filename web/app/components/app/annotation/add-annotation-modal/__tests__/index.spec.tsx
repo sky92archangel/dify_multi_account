@@ -91,7 +91,7 @@ describe('AddAnnotationModal', () => {
 
     typeQuestion('Question value')
     typeAnswer('Answer value')
-    fireEvent.click(screen.getByText('appAnnotation.addModal.createNext'))
+    fireEvent.click(screen.getByTestId('checkbox-create-next-checkbox'))
 
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'common.operation.add' }))
@@ -106,7 +106,8 @@ describe('AddAnnotationModal', () => {
 
     typeQuestion('Question value')
     typeAnswer('Answer value')
-    fireEvent.click(screen.getByText('appAnnotation.addModal.createNext'))
+    const createNextToggle = screen.getByText('appAnnotation.addModal.createNext').previousElementSibling as HTMLElement
+    fireEvent.click(createNextToggle)
 
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'common.operation.add' }))

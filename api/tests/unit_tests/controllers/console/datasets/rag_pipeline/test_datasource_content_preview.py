@@ -1,7 +1,6 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from flask import Flask
 from werkzeug.exceptions import Forbidden
 
 from controllers.console import console_ns
@@ -26,7 +25,7 @@ class TestDataSourceContentPreviewApi:
             "credential_id": "cred-1",
         }
 
-    def test_post_success(self, app: Flask):
+    def test_post_success(self, app):
         api = DataSourceContentPreviewApi()
         method = unwrap(api.post)
 
@@ -67,7 +66,7 @@ class TestDataSourceContentPreviewApi:
         assert status == 200
         assert response == preview_result
 
-    def test_post_forbidden_non_account_user(self, app: Flask):
+    def test_post_forbidden_non_account_user(self, app):
         api = DataSourceContentPreviewApi()
         method = unwrap(api.post)
 
@@ -86,7 +85,7 @@ class TestDataSourceContentPreviewApi:
             with pytest.raises(Forbidden):
                 method(api, pipeline, "node-1")
 
-    def test_post_invalid_payload(self, app: Flask):
+    def test_post_invalid_payload(self, app):
         api = DataSourceContentPreviewApi()
         method = unwrap(api.post)
 
@@ -109,7 +108,7 @@ class TestDataSourceContentPreviewApi:
             with pytest.raises(ValueError):
                 method(api, pipeline, "node-1")
 
-    def test_post_without_credential_id(self, app: Flask):
+    def test_post_without_credential_id(self, app):
         api = DataSourceContentPreviewApi()
         method = unwrap(api.post)
 

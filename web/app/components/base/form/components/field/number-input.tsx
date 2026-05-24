@@ -56,6 +56,7 @@ const NumberInputField = ({
         {...(labelOptions ?? {})}
       />
       <NumberField
+        id={field.name}
         name={field.name}
         value={field.state.value}
         min={min}
@@ -68,7 +69,6 @@ const NumberInputField = ({
       >
         <NumberFieldGroup size={size}>
           <NumberFieldInput
-            id={field.name}
             {...inputProps}
             size={size}
             className={inputClassName}

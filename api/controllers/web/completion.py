@@ -5,8 +5,7 @@ from pydantic import BaseModel, Field, field_validator
 from werkzeug.exceptions import InternalServerError, NotFound
 
 import services
-from controllers.common.fields import SimpleResultResponse
-from controllers.common.schema import register_response_schema_models, register_schema_models
+from controllers.common.schema import register_schema_models
 from controllers.web import web_ns
 from controllers.web.error import (
     AppUnavailableError,
@@ -67,7 +66,6 @@ class ChatMessagePayload(BaseModel):
 
 
 register_schema_models(web_ns, CompletionMessagePayload, ChatMessagePayload)
-register_response_schema_models(web_ns, SimpleResultResponse)
 
 
 # define completion api for user
@@ -139,7 +137,6 @@ class CompletionStopApi(WebApiResource):
             500: "Internal Server Error",
         }
     )
-    @web_ns.response(200, "Success", web_ns.models[SimpleResultResponse.__name__])
     def post(self, app_model, end_user, task_id):
         if app_model.mode != AppMode.COMPLETION:
             raise NotCompletionAppError()
@@ -225,7 +222,6 @@ class ChatStopApi(WebApiResource):
             500: "Internal Server Error",
         }
     )
-    @web_ns.response(200, "Success", web_ns.models[SimpleResultResponse.__name__])
     def post(self, app_model, end_user, task_id):
         app_mode = AppMode.value_of(app_model.mode)
         if app_mode not in {AppMode.CHAT, AppMode.AGENT_CHAT, AppMode.ADVANCED_CHAT}:

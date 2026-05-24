@@ -1,13 +1,10 @@
 import type { BlockEnum, ToolWithProvider } from '../types'
-import type { ToolActionPreviewPayload } from './tool/action-item'
 import type { ToolDefaultValue, ToolTypeEnum, ToolValue } from './types'
 import { cn } from '@langgenius/dify-ui/cn'
-import { createPreviewCardHandle, PreviewCard } from '@langgenius/dify-ui/preview-card'
 import { memo, useMemo, useRef } from 'react'
 import Empty from '@/app/components/tools/provider/empty'
 import { useGetLanguage } from '@/context/i18n'
 import IndexBar, { groupItems } from './index-bar'
-import { ToolActionPreviewCard } from './tool/action-item'
 import ToolListFlatView from './tool/tool-list-flat-view/list'
 import ToolListTreeView from './tool/tool-list-tree-view/list'
 import { ViewType } from './view-type-select'
@@ -38,8 +35,8 @@ const Tools = ({
   indexBarClassName,
   selectedTools,
 }: ToolsProps) => {
+  // const tools: any = []
   const language = useGetLanguage()
-  const previewCardHandle = useMemo(() => createPreviewCardHandle<ToolActionPreviewPayload>(), [])
   const isFlatView = viewType === ViewType.flat
   const isShowLetterIndex = isFlatView && tools.length > 10
 
@@ -88,7 +85,7 @@ const Tools = ({
     return result
   }, [withLetterAndGroupViewToolsData, letters])
 
-  const toolRefsRef = useRef<Record<string, HTMLDivElement | null>>({})
+  const toolRefs = useRef({})
 
   return (
     <div className={cn('max-w-full p-1', className)}>
@@ -101,23 +98,21 @@ const Tools = ({
         isFlatView
           ? (
               <ToolListFlatView
-                toolRefs={toolRefsRef}
+                toolRefs={toolRefs}
                 letters={letters}
                 payload={listViewToolData}
-                previewCardHandle={previewCardHandle}
                 isShowLetterIndex={isShowLetterIndex}
                 hasSearchText={hasSearchText}
                 onSelect={onSelect}
                 canNotSelectMultiple={canNotSelectMultiple}
                 onSelectMultiple={onSelectMultiple}
                 selectedTools={selectedTools}
-                indexBar={<IndexBar letters={letters} itemRefs={toolRefsRef} className={indexBarClassName} />}
+                indexBar={<IndexBar letters={letters} itemRefs={toolRefs} className={indexBarClassName} />}
               />
             )
           : (
               <ToolListTreeView
                 payload={treeViewToolsData}
-                previewCardHandle={previewCardHandle}
                 hasSearchText={hasSearchText}
                 onSelect={onSelect}
                 canNotSelectMultiple={canNotSelectMultiple}
@@ -126,11 +121,6 @@ const Tools = ({
               />
             )
       )}
-      <PreviewCard handle={previewCardHandle}>
-        {({ payload }) => (
-          <ToolActionPreviewCard payload={payload as ToolActionPreviewPayload | undefined} />
-        )}
-      </PreviewCard>
     </div>
   )
 }

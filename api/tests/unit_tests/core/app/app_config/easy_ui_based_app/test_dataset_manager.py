@@ -2,7 +2,6 @@ import uuid
 from unittest.mock import MagicMock
 
 import pytest
-from pytest_mock import MockerFixture
 
 from core.app.app_config.easy_ui_based_app.dataset.manager import DatasetConfigManager
 from core.entities.agent_entities import PlanningStrategy
@@ -70,7 +69,7 @@ class TestDatasetConfigManagerConvert:
         assert result.dataset_ids == [valid_uuid]
         assert result.retrieve_config.query_variable == "query"
 
-    def test_convert_single_with_metadata_configs(self, valid_uuid, mocker: MockerFixture):
+    def test_convert_single_with_metadata_configs(self, valid_uuid, mocker):
         mock_retrieve_config = MagicMock()
         mock_entity = MagicMock()
         mock_entity.dataset_ids = [valid_uuid]
@@ -259,7 +258,7 @@ class TestExtractDatasetConfig:
         with pytest.raises(ValueError):
             DatasetConfigManager.extract_dataset_config_for_legacy_compatibility("tenant1", AppMode.CHAT, config)
 
-    def test_extract_invalid_uuid(self, mocker: MockerFixture):
+    def test_extract_invalid_uuid(self, mocker):
         invalid_uuid = "not-a-uuid"
         config = {
             "agent_mode": {
@@ -271,7 +270,7 @@ class TestExtractDatasetConfig:
         with pytest.raises(ValueError):
             DatasetConfigManager.extract_dataset_config_for_legacy_compatibility("tenant1", AppMode.CHAT, config)
 
-    def test_extract_dataset_not_exists(self, valid_uuid, mocker: MockerFixture):
+    def test_extract_dataset_not_exists(self, valid_uuid, mocker):
         mocker.patch(
             "core.app.app_config.easy_ui_based_app.dataset.manager.DatasetService.get_dataset",
             return_value=None,
@@ -293,7 +292,7 @@ class TestExtractDatasetConfig:
 
 
 class TestIsDatasetExists:
-    def test_dataset_exists_true(self, mocker: MockerFixture, valid_uuid):
+    def test_dataset_exists_true(self, mocker, valid_uuid):
         mock_dataset = MagicMock()
         mock_dataset.tenant_id = "tenant1"
         mocker.patch(
@@ -303,14 +302,14 @@ class TestIsDatasetExists:
 
         assert DatasetConfigManager.is_dataset_exists("tenant1", valid_uuid)
 
-    def test_dataset_exists_false_when_not_found(self, mocker: MockerFixture, valid_uuid):
+    def test_dataset_exists_false_when_not_found(self, mocker, valid_uuid):
         mocker.patch(
             "core.app.app_config.easy_ui_based_app.dataset.manager.DatasetService.get_dataset",
             return_value=None,
         )
         assert not DatasetConfigManager.is_dataset_exists("tenant1", valid_uuid)
 
-    def test_dataset_exists_false_when_tenant_mismatch(self, mocker: MockerFixture, valid_uuid):
+    def test_dataset_exists_false_when_tenant_mismatch(self, mocker, valid_uuid):
         mock_dataset = MagicMock()
         mock_dataset.tenant_id = "other"
         mocker.patch(

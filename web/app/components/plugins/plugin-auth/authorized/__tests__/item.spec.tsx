@@ -110,7 +110,7 @@ describe('Item Component', () => {
 
       const { container } = render(<Item credential={credential} />)
 
-      expect(container.firstElementChild).toHaveClass('cursor-not-allowed', 'opacity-50')
+      expect(container.querySelector('[data-state]')).toBeInTheDocument()
     })
 
     it('should not call onItemClick when disabled is true', () => {

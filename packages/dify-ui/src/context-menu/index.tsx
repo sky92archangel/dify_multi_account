@@ -6,6 +6,7 @@ import type { Placement } from '../placement'
 import { ContextMenu as BaseContextMenu } from '@base-ui/react/context-menu'
 import { cn } from '../cn'
 import {
+  overlayBackdropClassName,
   overlayDestructiveClassName,
   overlayIndicatorClassName,
   overlayLabelClassName,
@@ -23,8 +24,6 @@ export const ContextMenuTrigger = BaseContextMenu.Trigger
 export const ContextMenuSub = BaseContextMenu.SubmenuRoot
 export const ContextMenuGroup = BaseContextMenu.Group
 export const ContextMenuRadioGroup = BaseContextMenu.RadioGroup
-export type ContextMenuActions = BaseContextMenu.Root.Actions
-// Intentionally no public Backdrop export; Base UI handles context-menu modal dismissal internally.
 
 type ContextMenuContentProps = {
   children: ReactNode
@@ -51,6 +50,7 @@ type ContextMenuPopupRenderProps = Required<Pick<ContextMenuContentProps, 'child
   popupClassName?: string
   positionerProps?: ContextMenuContentProps['positionerProps']
   popupProps?: ContextMenuContentProps['popupProps']
+  withBackdrop?: boolean
 }
 
 function renderContextMenuPopup({
@@ -62,17 +62,21 @@ function renderContextMenuPopup({
   popupClassName,
   positionerProps,
   popupProps,
+  withBackdrop = false,
 }: ContextMenuPopupRenderProps) {
   const { side, align } = parsePlacement(placement)
 
   return (
     <BaseContextMenu.Portal>
+      {withBackdrop && (
+        <BaseContextMenu.Backdrop className={overlayBackdropClassName} />
+      )}
       <BaseContextMenu.Positioner
         side={side}
         align={align}
         sideOffset={sideOffset}
         alignOffset={alignOffset}
-        className={cn('z-50 outline-hidden', className)}
+        className={cn('z-1002 outline-hidden', className)}
         {...positionerProps}
       >
         <BaseContextMenu.Popup
@@ -109,6 +113,7 @@ export function ContextMenuContent({
     popupClassName,
     positionerProps,
     popupProps,
+    withBackdrop: true,
   })
 }
 

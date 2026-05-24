@@ -51,20 +51,6 @@ vi.mock('@/utils/create-app-tracking', () => ({
   trackCreateApp: (...args: unknown[]) => mockTrackCreateApp(...args),
 }))
 
-const mockConfig = vi.hoisted(() => ({
-  isCloudEdition: false,
-}))
-
-vi.mock('@/config', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/config')>()
-  return {
-    ...actual,
-    get IS_CLOUD_EDITION() {
-      return mockConfig.isCloudEdition
-    },
-  }
-})
-
 vi.mock('@/app/components/explore/create-app-modal', () => ({
   default: (props: CreateAppModalProps) => {
     if (!props.show)
@@ -129,7 +115,7 @@ const createApp = (overrides: Partial<App> = {}): App => ({
   copyright: overrides.copyright ?? '',
   privacy_policy: overrides.privacy_policy ?? null,
   custom_disclaimer: overrides.custom_disclaimer ?? null,
-  categories: overrides.categories ?? ['Writing'],
+  category: overrides.category ?? 'Writing',
   position: overrides.position ?? 1,
   is_listed: overrides.is_listed ?? true,
   install_count: overrides.install_count ?? 0,
@@ -151,7 +137,6 @@ const mockMemberRole = (hasEditPermission: boolean) => {
 
 type RenderOptions = {
   enableExploreBanner?: boolean
-  isCloudEdition?: boolean
 }
 
 const renderAppList = (
@@ -160,7 +145,6 @@ const renderAppList = (
   searchParams?: Record<string, string>,
   options: RenderOptions = {},
 ) => {
-  mockConfig.isCloudEdition = options.isCloudEdition ?? false
   mockMemberRole(hasEditPermission)
   const { wrapper: SystemFeaturesWrapper, queryClient } = createSystemFeaturesWrapper({
     systemFeatures: { enable_explore_banner: options.enableExploreBanner ?? false },
@@ -182,7 +166,6 @@ describe('AppList', () => {
     mockExploreData = { categories: [], allList: [] }
     mockIsLoading = false
     mockIsError = false
-    mockConfig.isCloudEdition = false
   })
 
   afterEach(() => {
@@ -202,7 +185,7 @@ describe('AppList', () => {
     it('should render app cards when data is available', () => {
       mockExploreData = {
         categories: ['Writing', 'Translate'],
-        allList: [createApp(), createApp({ app_id: 'app-2', app: { ...createApp().app, name: 'Beta' }, categories: ['Translate'] })],
+        allList: [createApp(), createApp({ app_id: 'app-2', app: { ...createApp().app, name: 'Beta' }, category: 'Translate' })],
       }
 
       renderAppList()
@@ -216,7 +199,7 @@ describe('AppList', () => {
     it('should filter apps by selected category', () => {
       mockExploreData = {
         categories: ['Writing', 'Translate'],
-        allList: [createApp(), createApp({ app_id: 'app-2', app: { ...createApp().app, name: 'Beta' }, categories: ['Translate'] })],
+        allList: [createApp(), createApp({ app_id: 'app-2', app: { ...createApp().app, name: 'Beta' }, category: 'Translate' })],
       }
 
       renderAppList(false, undefined, { category: 'Writing' })
@@ -256,8 +239,8 @@ describe('AppList', () => {
       mockHandleImportDSL.mockImplementation(async (_payload: unknown, options: { onSuccess?: () => void, onPending?: () => void }) => {
         options.onPending?.()
       })
-      mockHandleImportDSLConfirm.mockImplementation(async (options: { onSuccess?: (payload: { app_mode: AppModeEnum }) => void }) => {
-        options.onSuccess?.({ app_mode: AppModeEnum.CHAT })
+      mockHandleImportDSLConfirm.mockImplementation(async (options: { onSuccess?: () => void }) => {
+        options.onSuccess?.()
       })
 
       renderAppList(true, onSuccess)
@@ -274,9 +257,7 @@ describe('AppList', () => {
       await waitFor(() => {
         expect(mockHandleImportDSLConfirm).toHaveBeenCalledTimes(1)
         expect(mockTrackCreateApp).toHaveBeenCalledWith({
-          source: 'explore_template_list',
           appMode: AppModeEnum.CHAT,
-          templateId: 'app-1',
         })
         expect(onSuccess).toHaveBeenCalledTimes(1)
       })
@@ -298,7 +279,7 @@ describe('AppList', () => {
       })
       expect(screen.queryByText('Alpha')).not.toBeInTheDocument()
 
-      fireEvent.click(screen.getByRole('button', { name: 'common.operation.clear' }))
+      fireEvent.click(screen.getByTestId('input-clear'))
       await act(async () => {
         await vi.advanceTimersByTimeAsync(500)
       })
@@ -370,8 +351,8 @@ describe('AppList', () => {
         allList: [createApp()],
       };
       (fetchAppDetail as unknown as Mock).mockResolvedValue({ export_data: 'yaml', mode: AppModeEnum.CHAT })
-      mockHandleImportDSL.mockImplementation(async (_payload: unknown, options: { onSuccess?: (payload: { app_mode: AppModeEnum }) => void }) => {
-        options.onSuccess?.({ app_mode: AppModeEnum.CHAT })
+      mockHandleImportDSL.mockImplementation(async (_payload: unknown, options: { onSuccess?: () => void }) => {
+        options.onSuccess?.()
       })
 
       renderAppList(true)
@@ -417,7 +398,7 @@ describe('AppList', () => {
         allList: [createApp()],
       }
 
-      renderAppList(true, undefined, undefined, { isCloudEdition: true })
+      renderAppList(true)
 
       fireEvent.click(screen.getByText('explore.appCard.try'))
       expect(screen.getByTestId('try-app-panel')).toBeInTheDocument()
@@ -436,11 +417,11 @@ describe('AppList', () => {
         allList: [createApp()],
       };
       (fetchAppDetail as unknown as Mock).mockResolvedValue({ export_data: 'yaml', mode: AppModeEnum.CHAT })
-      mockHandleImportDSL.mockImplementation(async (_payload: unknown, options: { onSuccess?: (payload: { app_mode: AppModeEnum }) => void }) => {
-        options.onSuccess?.({ app_mode: AppModeEnum.CHAT })
+      mockHandleImportDSL.mockImplementation(async (_payload: unknown, options: { onSuccess?: () => void }) => {
+        options.onSuccess?.()
       })
 
-      renderAppList(true, undefined, undefined, { isCloudEdition: true })
+      renderAppList(true)
 
       fireEvent.click(screen.getByText('explore.appCard.try'))
       fireEvent.click(screen.getByTestId('try-app-create'))
@@ -448,9 +429,7 @@ describe('AppList', () => {
 
       await waitFor(() => {
         expect(mockTrackCreateApp).toHaveBeenCalledWith({
-          source: 'explore_template_preview',
           appMode: AppModeEnum.CHAT,
-          templateId: 'app-1',
         })
       })
     })
@@ -461,7 +440,7 @@ describe('AppList', () => {
         allList: [createApp()],
       }
 
-      renderAppList(true, undefined, undefined, { isCloudEdition: true })
+      renderAppList(true)
 
       fireEvent.click(screen.getByText('explore.appCard.try'))
       expect(screen.getByTestId('try-app-panel')).toBeInTheDocument()

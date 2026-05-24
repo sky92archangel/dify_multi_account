@@ -25,7 +25,6 @@ vi.mock('../form-fields', () => ({
     return (
       <div data-testid="config-form-fields">
         <div data-testid="payload-type">{String(props.tempPayload.type)}</div>
-        <div data-testid="payload-hide">{String(props.tempPayload.hide)}</div>
         <div data-testid="payload-label">{String(props.tempPayload.label ?? '')}</div>
         <div data-testid="payload-schema">{String(props.tempPayload.json_schema ?? '')}</div>
         <div data-testid="payload-default">{String(props.tempPayload.default ?? '')}</div>
@@ -116,7 +115,7 @@ describe('ConfigModal logic', () => {
   })
 
   it('should derive payload fields from mocked form-field callbacks', async () => {
-    renderConfigModal(createPayload({ hide: true }))
+    renderConfigModal()
 
     fireEvent.click(screen.getByTestId('valid-key-blur'))
     await waitFor(() => {
@@ -139,7 +138,6 @@ describe('ConfigModal logic', () => {
     fireEvent.click(screen.getByTestId('type-change'))
     await waitFor(() => {
       expect(screen.getByTestId('payload-type')).toHaveTextContent(InputVarType.singleFile)
-      expect(screen.getByTestId('payload-hide')).toHaveTextContent('false')
     })
 
     fireEvent.click(screen.getByTestId('file-payload-change'))

@@ -4,13 +4,14 @@ import { PlusIcon } from '@heroicons/react/20/solid'
 import { Button } from '@langgenius/dify-ui/button'
 import { cn } from '@langgenius/dify-ui/cn'
 import { RiInformation2Line } from '@remixicon/react'
+import { useSuspenseQuery } from '@tanstack/react-query'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useContextSelector } from 'use-context-selector'
 import { trackEvent } from '@/app/components/base/amplitude'
 import AppIcon from '@/app/components/base/app-icon'
-import { IS_CLOUD_EDITION } from '@/config'
 import AppListContext from '@/context/app-list-context'
+import { systemFeaturesQueryOptions } from '@/service/system-features'
 import { AppTypeIcon, AppTypeLabel } from '../../type-selector'
 
 type AppCardProps = {
@@ -26,14 +27,15 @@ const AppCard = ({
 }: AppCardProps) => {
   const { t } = useTranslation()
   const { app: appBasicInfo } = app
-  const canViewApp = IS_CLOUD_EDITION
+  const { data: systemFeatures } = useSuspenseQuery(systemFeaturesQueryOptions())
+  const isTrialApp = app.can_trial && systemFeatures.enable_trial_app
   const setShowTryAppPanel = useContextSelector(AppListContext, ctx => ctx.setShowTryAppPanel)
   const handleShowTryAppPanel = useCallback(() => {
     trackEvent('preview_template', {
       template_id: app.app_id,
       template_name: appBasicInfo.name,
       template_mode: appBasicInfo.mode,
-      template_categories: app.categories,
+      template_category: app.category,
       page: 'studio',
     })
     setShowTryAppPanel?.(true, { appId: app.app_id, app })
@@ -51,7 +53,7 @@ const AppCard = ({
           />
           <AppTypeIcon
             wrapperClassName="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-sm border border-divider-regular outline-solid outline-components-panel-on-panel-item-bg"
-            className="size-3"
+            className="h-3 w-3"
             type={appBasicInfo.mode}
           />
         </div>
@@ -67,21 +69,19 @@ const AppCard = ({
           {app.description}
         </div>
       </div>
-      {(canCreate || canViewApp) && (
+      {(canCreate || isTrialApp) && (
         <div className={cn('absolute right-0 bottom-0 left-0 hidden bg-linear-to-t from-components-panel-gradient-2 from-[60.27%] to-transparent p-4 pt-8 group-hover:flex')}>
-          <div className={cn('grid h-8 w-full grid-cols-1 items-center space-x-2', canCreate && canViewApp && 'grid-cols-2')}>
+          <div className={cn('grid h-8 w-full grid-cols-1 items-center space-x-2', canCreate && 'grid-cols-2')}>
             {canCreate && (
               <Button variant="primary" onClick={() => onCreate()}>
-                <PlusIcon className="mr-1 size-4" />
+                <PlusIcon className="mr-1 h-4 w-4" />
                 <span className="text-xs">{t('newApp.useTemplate', { ns: 'app' })}</span>
               </Button>
             )}
-            {canViewApp && (
-              <Button onClick={handleShowTryAppPanel}>
-                <RiInformation2Line className="mr-1 size-4" />
-                <span>{t('appCard.try', { ns: 'explore' })}</span>
-              </Button>
-            )}
+            <Button onClick={handleShowTryAppPanel}>
+              <RiInformation2Line className="mr-1 size-4" />
+              <span>{t('appCard.try', { ns: 'explore' })}</span>
+            </Button>
           </div>
         </div>
       )}

@@ -92,9 +92,9 @@ describe('human-input/delivery-method/email-configure-modal', () => {
 
     render(
       <EmailConfigureModal
-        open
+        isShow
         config={createEmailConfig()}
-        onOpenChange={vi.fn()}
+        onClose={vi.fn()}
         onConfirm={handleConfirm}
       />,
     )
@@ -127,8 +127,8 @@ describe('human-input/delivery-method/email-configure-modal', () => {
 
     render(
       <EmailConfigureModal
-        open
-        onOpenChange={vi.fn()}
+        isShow
+        onClose={vi.fn()}
         onConfirm={handleConfirm}
       />,
     )
@@ -162,12 +162,12 @@ describe('human-input/delivery-method/email-configure-modal', () => {
   })
 
   it('should close from both the icon trigger and the cancel button', () => {
-    const handleOpenChange = vi.fn()
+    const handleClose = vi.fn()
     render(
       <EmailConfigureModal
-        open
+        isShow
         config={createEmailConfig()}
-        onOpenChange={handleOpenChange}
+        onClose={handleClose}
         onConfirm={vi.fn()}
       />,
     )
@@ -175,7 +175,6 @@ describe('human-input/delivery-method/email-configure-modal', () => {
     fireEvent.click(screen.getByRole('dialog').querySelector('.absolute') as HTMLDivElement)
     fireEvent.click(screen.getByRole('button', { name: 'common.operation.cancel' }))
 
-    expect(handleOpenChange).toHaveBeenCalledTimes(2)
-    expect(handleOpenChange).toHaveBeenCalledWith(false)
+    expect(handleClose).toHaveBeenCalledTimes(2)
   })
 })

@@ -1,4 +1,4 @@
-import type { WorkflowHistoryEventMeta } from '../store/workflow/history-slice'
+import type { WorkflowHistoryEventMeta } from '../workflow-history-store'
 import { debounce } from 'es-toolkit/compat'
 import {
   useCallback,

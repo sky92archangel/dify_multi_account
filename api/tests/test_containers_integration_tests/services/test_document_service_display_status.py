@@ -2,7 +2,6 @@ import datetime
 from uuid import uuid4
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session
 
 from core.rag.index_processor.constant.index_type import IndexStructureType
 from models.dataset import Dataset, Document
@@ -59,7 +58,7 @@ def _create_document(
     return document
 
 
-def test_build_display_status_filters_available(db_session_with_containers: Session):
+def test_build_display_status_filters_available(db_session_with_containers):
     dataset = _create_dataset(db_session_with_containers)
     available_doc = _create_document(
         db_session_with_containers,
@@ -98,7 +97,7 @@ def test_build_display_status_filters_available(db_session_with_containers: Sess
     assert [row.id for row in rows] == [available_doc.id]
 
 
-def test_apply_display_status_filter_applies_when_status_present(db_session_with_containers: Session):
+def test_apply_display_status_filter_applies_when_status_present(db_session_with_containers):
     dataset = _create_dataset(db_session_with_containers)
     waiting_doc = _create_document(
         db_session_with_containers,
@@ -122,7 +121,7 @@ def test_apply_display_status_filter_applies_when_status_present(db_session_with
     assert [row.id for row in rows] == [waiting_doc.id]
 
 
-def test_apply_display_status_filter_returns_same_when_invalid(db_session_with_containers: Session):
+def test_apply_display_status_filter_returns_same_when_invalid(db_session_with_containers):
     dataset = _create_dataset(db_session_with_containers)
     doc1 = _create_document(
         db_session_with_containers,

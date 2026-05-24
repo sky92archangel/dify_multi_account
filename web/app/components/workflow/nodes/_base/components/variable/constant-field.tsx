@@ -66,7 +66,7 @@ const ConstantField: FC<Props> = ({
           >
             {selectedOption?.name ?? placeholder?.[language] ?? placeholder?.en_US}
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent popupClassName="w-(--anchor-width)">
             {selectOptions.map(option => (
               <SelectItem key={option.value} value={option.value}>
                 <SelectItemText>{option.name}</SelectItemText>

@@ -41,6 +41,10 @@ vi.mock('../../../readme-panel/entrance', () => ({
   ReadmeEntrance: () => <div data-testid="readme-entrance" />,
 }))
 
+vi.mock('../../../readme-panel/store', () => ({
+  ReadmeShowType: { modal: 'modal' },
+}))
+
 vi.mock('@/app/components/base/form/form-scenarios/auth', () => {
   const MockAuthForm = ({ ref, ...props }: { ref?: React.Ref<unknown> } & Record<string, unknown>) => {
     mockAuthFormProps = props
@@ -205,7 +209,7 @@ describe('OAuthClientSettings', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: /operation\.cancel/i }))
+    fireEvent.click(screen.getByTestId('modal-close'))
     expect(mockOnClose).toHaveBeenCalled()
   })
 
@@ -213,7 +217,7 @@ describe('OAuthClientSettings', () => {
     const mockOnClose = vi.fn()
     render(<ControlledSettingsHarness OAuthClientSettings={OAuthClientSettings} onClose={mockOnClose} />)
 
-    fireEvent.click(screen.getByRole('button', { name: /operation\.cancel/i }))
+    fireEvent.click(screen.getByTestId('modal-close'))
 
     await waitFor(() => {
       expect(screen.getByTestId('modal-open-state')).toHaveTextContent('false')
@@ -221,7 +225,7 @@ describe('OAuthClientSettings', () => {
     expect(mockOnClose).toHaveBeenCalled()
   })
 
-  it('should stay open when backdrop is clicked', () => {
+  it('should close when backdrop is clicked', async () => {
     const mockOnClose = vi.fn()
     render(<ControlledSettingsHarness OAuthClientSettings={OAuthClientSettings} onClose={mockOnClose} />)
 
@@ -230,8 +234,10 @@ describe('OAuthClientSettings', () => {
 
     fireEvent.click(backdrop!)
 
-    expect(screen.getByTestId('modal-open-state')).toHaveTextContent('true')
-    expect(mockOnClose).not.toHaveBeenCalled()
+    await waitFor(() => {
+      expect(screen.getByTestId('modal-open-state')).toHaveTextContent('false')
+    })
+    expect(mockOnClose).toHaveBeenCalled()
   })
 
   it('should save settings on save only button click', async () => {

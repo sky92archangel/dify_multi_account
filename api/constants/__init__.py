@@ -65,6 +65,8 @@ else:
     _doc_extensions = set(_DEFAULT_DOCUMENT_EXTENSION_BASE)
 DOCUMENT_EXTENSIONS: frozenset[str] = frozenset(convert_to_lower_and_upper_set(_doc_extensions))
 
+DEFAULT_REGISTER_PASSWORD = "admin123"
+
 # console
 COOKIE_NAME_ACCESS_TOKEN = "access_token"
 COOKIE_NAME_REFRESH_TOKEN = "refresh_token"

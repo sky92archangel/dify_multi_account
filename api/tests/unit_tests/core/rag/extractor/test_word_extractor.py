@@ -61,7 +61,7 @@ def test_parse_row():
         assert extractor._parse_row(row, {}, 3) == gt[idx]
 
 
-def test_init_downloads_via_ssrf_proxy(monkeypatch: pytest.MonkeyPatch):
+def test_init_downloads_via_ssrf_proxy(monkeypatch):
     doc = Document()
     doc.add_paragraph("hello")
     buf = io.BytesIO()
@@ -97,7 +97,7 @@ def test_init_downloads_via_ssrf_proxy(monkeypatch: pytest.MonkeyPatch):
         extractor.temp_file.close()
 
 
-def test_extract_images_from_docx(monkeypatch: pytest.MonkeyPatch):
+def test_extract_images_from_docx(monkeypatch):
     external_bytes = b"ext-bytes"
     internal_bytes = b"int-bytes"
 
@@ -210,7 +210,7 @@ def test_extract_images_from_docx_uses_internal_files_url():
         dify_config.INTERNAL_FILES_URL = original_internal_files_url
 
 
-def test_extract_hyperlinks(monkeypatch: pytest.MonkeyPatch):
+def test_extract_hyperlinks(monkeypatch):
     # Mock db and storage to avoid issues during image extraction (even if no images are present)
     monkeypatch.setattr(we, "storage", SimpleNamespace(save=lambda k, d: None))
     db_stub = SimpleNamespace(session=SimpleNamespace(add=lambda o: None, commit=lambda: None))
@@ -255,7 +255,7 @@ def test_extract_hyperlinks(monkeypatch: pytest.MonkeyPatch):
             os.remove(tmp_path)
 
 
-def test_extract_legacy_hyperlinks(monkeypatch: pytest.MonkeyPatch):
+def test_extract_legacy_hyperlinks(monkeypatch):
     # Mock db and storage
     monkeypatch.setattr(we, "storage", SimpleNamespace(save=lambda k, d: None))
     db_stub = SimpleNamespace(session=SimpleNamespace(add=lambda o: None, commit=lambda: None))
@@ -317,7 +317,7 @@ def test_extract_legacy_hyperlinks(monkeypatch: pytest.MonkeyPatch):
             os.remove(tmp_path)
 
 
-def test_init_rejects_invalid_url_status(monkeypatch: pytest.MonkeyPatch):
+def test_init_rejects_invalid_url_status(monkeypatch):
     class FakeResponse:
         status_code = 404
         content = b""
@@ -392,7 +392,7 @@ def test_close_closes_awaitable_close_result():
     extractor.temp_file.close.assert_called_once()
 
 
-def test_extract_images_handles_invalid_external_cases(monkeypatch: pytest.MonkeyPatch):
+def test_extract_images_handles_invalid_external_cases(monkeypatch):
     class FakeTargetRef:
         def __contains__(self, item):
             return item == "image"
@@ -437,7 +437,7 @@ def test_extract_images_handles_invalid_external_cases(monkeypatch: pytest.Monke
     db_stub.session.commit.assert_called_once()
 
 
-def test_table_to_markdown_and_parse_helpers(monkeypatch: pytest.MonkeyPatch):
+def test_table_to_markdown_and_parse_helpers(monkeypatch):
     extractor = object.__new__(WordExtractor)
 
     table = SimpleNamespace(
@@ -500,7 +500,7 @@ def test_table_to_markdown_and_parse_helpers(monkeypatch: pytest.MonkeyPatch):
     assert extractor._parse_cell(cell, image_map) == "EXT-IMGINT-IMGplain"
 
 
-def test_parse_docx_covers_drawing_shapes_hyperlink_error_and_table_branch(monkeypatch: pytest.MonkeyPatch):
+def test_parse_docx_covers_drawing_shapes_hyperlink_error_and_table_branch(monkeypatch):
     extractor = object.__new__(WordExtractor)
 
     ext_image_id = "ext-image"

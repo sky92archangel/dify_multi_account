@@ -37,7 +37,7 @@ const ViewTypeSelect: FC<Props> = ({
         }
         onClick={handleChange(ViewType.flat)}
       >
-        <RiSortAlphabetAsc className="size-4" />
+        <RiSortAlphabetAsc className="h-4 w-4" />
       </div>
       <div
         className={
@@ -47,7 +47,7 @@ const ViewTypeSelect: FC<Props> = ({
         }
         onClick={handleChange(ViewType.tree)}
       >
-        <RiNodeTree className="size-4" />
+        <RiNodeTree className="h-4 w-4" />
       </div>
     </div>
   )

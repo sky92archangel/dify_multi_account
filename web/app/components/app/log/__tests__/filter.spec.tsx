@@ -146,7 +146,7 @@ describe('Filter', () => {
 
       render(<Filter {...propsWithKeyword} />)
 
-      const clearButton = screen.getByRole('button', { name: 'operation.clear' })
+      const clearButton = screen.getByTestId('input-clear')
       fireEvent.click(clearButton)
 
       expect(mockSetQueryParams).toHaveBeenCalledWith({

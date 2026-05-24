@@ -1,33 +1,70 @@
 'use client'
+import type { Emoji } from '@/app/components/tools/types'
+import type { InputVar, Variable } from '@/app/components/workflow/types'
+import type { PublishWorkflowParams } from '@/types/workflow'
 import { Button } from '@langgenius/dify-ui/button'
 import { cn } from '@langgenius/dify-ui/cn'
+import { RiArrowRightUpLine, RiHammerLine } from '@remixicon/react'
 import { useTranslation } from 'react-i18next'
 import Loading from '@/app/components/base/loading'
 import Indicator from '@/app/components/header/indicator'
-import { useRouter } from '@/next/navigation'
+import WorkflowToolModal from '@/app/components/tools/workflow-tool'
 import Divider from '../../base/divider'
+import { useConfigureButton } from './hooks/use-configure-button'
 
 type Props = {
   disabled: boolean
   published: boolean
-  isLoading: boolean
-  outdated: boolean
-  isCurrentWorkspaceManager: boolean
-  onConfigure: () => void
+  detailNeedUpdate: boolean
+  workflowAppId: string
+  icon: Emoji
+  name: string
+  description: string
+  inputs?: InputVar[]
+  outputs?: Variable[]
+  handlePublish: (params?: PublishWorkflowParams) => Promise<void>
+  onRefreshData?: () => void
   disabledReason?: string
 }
 
 const WorkflowToolConfigureButton = ({
   disabled,
   published,
-  isLoading,
-  outdated,
-  isCurrentWorkspaceManager,
-  onConfigure,
+  detailNeedUpdate,
+  workflowAppId,
+  icon,
+  name,
+  description,
+  inputs,
+  outputs,
+  handlePublish,
+  onRefreshData,
   disabledReason,
 }: Props) => {
   const { t } = useTranslation()
-  const router = useRouter()
+  const {
+    showModal,
+    isLoading,
+    outdated,
+    payload,
+    isCurrentWorkspaceManager,
+    openModal,
+    closeModal,
+    handleCreate,
+    handleUpdate,
+    navigateToTools,
+  } = useConfigureButton({
+    published,
+    detailNeedUpdate,
+    workflowAppId,
+    icon,
+    name,
+    description,
+    inputs,
+    outputs,
+    handlePublish,
+    onRefreshData,
+  })
 
   return (
     <>
@@ -43,12 +80,9 @@ const WorkflowToolConfigureButton = ({
             ? (
                 <div
                   className="flex items-center justify-start gap-2 p-2 pl-2.5"
-                  onClick={() => {
-                    if (!disabled && !published)
-                      onConfigure()
-                  }}
+                  onClick={() => !disabled && !published && openModal()}
                 >
-                  <span className={cn('relative i-ri-hammer-line size-4 text-text-secondary', !disabled && !published && 'group-hover:text-text-accent')} />
+                  <RiHammerLine className={cn('relative h-4 w-4 text-text-secondary', !disabled && !published && 'group-hover:text-text-accent')} />
                   <div
                     title={t('common.workflowAsTool', { ns: 'workflow' }) || ''}
                     className={cn('shrink grow basis-0 truncate system-sm-medium text-text-secondary', !disabled && !published && 'group-hover:text-text-accent')}
@@ -66,7 +100,7 @@ const WorkflowToolConfigureButton = ({
                 <div
                   className="flex items-center justify-start gap-2 p-2 pl-2.5"
                 >
-                  <span className="i-ri-hammer-line size-4 text-text-tertiary" />
+                  <RiHammerLine className="h-4 w-4 text-text-tertiary" />
                   <div
                     title={t('common.workflowAsTool', { ns: 'workflow' }) || ''}
                     className="shrink grow basis-0 truncate system-sm-medium text-text-tertiary"
@@ -86,7 +120,7 @@ const WorkflowToolConfigureButton = ({
                 <Button
                   size="small"
                   className="w-[140px]"
-                  onClick={onConfigure}
+                  onClick={openModal}
                   disabled={!isCurrentWorkspaceManager || disabled}
                 >
                   {t('common.configure', { ns: 'workflow' })}
@@ -95,11 +129,11 @@ const WorkflowToolConfigureButton = ({
                 <Button
                   size="small"
                   className="w-[140px]"
-                  onClick={() => router.push('/tools?category=workflow')}
+                  onClick={navigateToTools}
                   disabled={disabled}
                 >
                   {t('common.manageInTools', { ns: 'workflow' })}
-                  <span className="ml-1 i-ri-arrow-right-up-line size-4" />
+                  <RiArrowRightUpLine className="ml-1 h-4 w-4" />
                 </Button>
               </div>
               {outdated && (
@@ -112,6 +146,15 @@ const WorkflowToolConfigureButton = ({
         </div>
       )}
       {published && isLoading && <div className="pt-2"><Loading type="app" /></div>}
+      {showModal && (
+        <WorkflowToolModal
+          isAdd={!published}
+          payload={payload}
+          onHide={closeModal}
+          onCreate={handleCreate}
+          onSave={handleUpdate}
+        />
+      )}
     </>
   )
 }

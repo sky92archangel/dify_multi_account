@@ -1,39 +1,52 @@
 'use client'
 
 import type { FC } from 'react'
-import type { AppListQuery } from '@/contract/console/apps'
-import { Checkbox } from '@langgenius/dify-ui/checkbox'
+import type { WorkflowOnlineUser } from '@/models/app'
 import { cn } from '@langgenius/dify-ui/cn'
-import { keepPreviousData, useInfiniteQuery, useSuspenseQuery } from '@tanstack/react-query'
-import { useDebounce } from 'ahooks'
+import { useSuspenseQuery } from '@tanstack/react-query'
+import { useDebounceFn } from 'ahooks'
+import { parseAsStringLiteral, useQueryState } from 'nuqs'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import Checkbox from '@/app/components/base/checkbox'
 import Input from '@/app/components/base/input'
 import TabSliderNew from '@/app/components/base/tab-slider-new'
+import TagFilter from '@/app/components/base/tag-management/filter'
+import { useStore as useTagStore } from '@/app/components/base/tag-management/store'
 import { NEED_REFRESH_APP_LIST_KEY } from '@/config'
 import { useAppContext } from '@/context/app-context'
-import { TagFilter } from '@/features/tag-management/components/tag-filter'
 import { CheckModal } from '@/hooks/use-pay'
 import dynamic from '@/next/dynamic'
-import { consoleQuery } from '@/service/client'
+import { fetchWorkflowOnlineUsers } from '@/service/apps'
 import { systemFeaturesQueryOptions } from '@/service/system-features'
-import { AppModeEnum } from '@/types/app'
+import { useInfiniteAppList } from '@/service/use-apps'
+import { AppModeEnum, AppModes } from '@/types/app'
 import AppCard from './app-card'
 import { AppCardSkeleton } from './app-card-skeleton'
-import { APP_LIST_SEARCH_DEBOUNCE_MS } from './constants'
 import Empty from './empty'
 import Footer from './footer'
-import { isAppListCategory, useAppsQueryState } from './hooks/use-apps-query-state'
+import useAppsQueryState from './hooks/use-apps-query-state'
 import { useDSLDragDrop } from './hooks/use-dsl-drag-drop'
-import { useWorkflowOnlineUsers } from './hooks/use-workflow-online-users'
 import NewAppCard from './new-app-card'
 
-const TagManagementModal = dynamic(() => import('@/features/tag-management/components/tag-management-modal').then(mod => mod.TagManagementModal), {
+const TagManagementModal = dynamic(() => import('@/app/components/base/tag-management'), {
   ssr: false,
 })
 const CreateFromDSLModal = dynamic(() => import('@/app/components/app/create-from-dsl-modal'), {
   ssr: false,
 })
+
+const APP_LIST_CATEGORY_VALUES = ['all', ...AppModes] as const
+type AppListCategory = typeof APP_LIST_CATEGORY_VALUES[number]
+const appListCategorySet = new Set<string>(APP_LIST_CATEGORY_VALUES)
+
+const isAppListCategory = (value: string): value is AppListCategory => {
+  return appListCategorySet.has(value)
+}
+
+const parseAsAppListCategory = parseAsStringLiteral(APP_LIST_CATEGORY_VALUES)
+  .withDefault('all')
+  .withOptions({ history: 'push' })
 
 type Props = {
   controlRefreshList?: number
@@ -44,21 +57,27 @@ const List: FC<Props> = ({
   const { t } = useTranslation()
   const { data: systemFeatures } = useSuspenseQuery(systemFeaturesQueryOptions())
   const { isCurrentWorkspaceEditor, isCurrentWorkspaceDatasetOperator, isLoadingCurrentWorkspace } = useAppContext()
+  const showTagManagementModal = useTagStore(s => s.showTagManagementModal)
+  const [activeTab, setActiveTab] = useQueryState(
+    'category',
+    parseAsAppListCategory,
+  )
 
-  // eslint-disable-next-line react/use-state -- custom URL query hook, not React.useState
-  const {
-    query: { category, tagIDs, keywords, isCreatedByMe },
-    setCategory,
-    setKeywords,
-    setTagIDs,
-    setIsCreatedByMe,
-  } = useAppsQueryState()
-  const debouncedKeywords = useDebounce(keywords, { wait: APP_LIST_SEARCH_DEBOUNCE_MS })
+  const { query: { tagIDs = [], keywords = '', isCreatedByMe: queryIsCreatedByMe = false }, setQuery } = useAppsQueryState()
+  const [isCreatedByMe, setIsCreatedByMe] = useState(queryIsCreatedByMe)
+  const [tagFilterValue, setTagFilterValue] = useState<string[]>(tagIDs)
+  const [searchKeywords, setSearchKeywords] = useState(keywords)
   const newAppCardRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const [showTagManagementModal, setShowTagManagementModal] = useState(false)
   const [showCreateFromDSLModal, setShowCreateFromDSLModal] = useState(false)
   const [droppedDSLFile, setDroppedDSLFile] = useState<File | undefined>()
+  const [workflowOnlineUsersMap, setWorkflowOnlineUsersMap] = useState<Record<string, WorkflowOnlineUser[]>>({})
+  const setKeywords = useCallback((keywords: string) => {
+    setQuery(prev => ({ ...prev, keywords }))
+  }, [setQuery])
+  const setTagIDs = useCallback((tagIDs: string[]) => {
+    setQuery(prev => ({ ...prev, tagIDs }))
+  }, [setQuery])
 
   const handleDSLFileDropped = useCallback((file: File) => {
     setDroppedDSLFile(file)
@@ -71,14 +90,14 @@ const List: FC<Props> = ({
     enabled: isCurrentWorkspaceEditor,
   })
 
-  const appListQuery = useMemo<AppListQuery>(() => ({
+  const appListQueryParams = {
     page: 1,
     limit: 30,
-    name: debouncedKeywords,
-    ...(tagIDs.length ? { tag_ids: tagIDs } : {}),
-    ...(isCreatedByMe ? { is_created_by_me: isCreatedByMe } : {}),
-    ...(category !== 'all' ? { mode: category } : {}),
-  }), [category, debouncedKeywords, isCreatedByMe, tagIDs])
+    name: searchKeywords,
+    tag_ids: tagIDs,
+    is_created_by_me: isCreatedByMe,
+    ...(activeTab !== 'all' ? { mode: activeTab } : {}),
+  }
 
   const {
     data,
@@ -89,27 +108,14 @@ const List: FC<Props> = ({
     hasNextPage,
     error,
     refetch,
-  } = useInfiniteQuery({
-    ...consoleQuery.apps.list.infiniteOptions({
-      input: pageParam => ({
-        query: {
-          ...appListQuery,
-          page: Number(pageParam),
-        },
-      }),
-      getNextPageParam: lastPage => lastPage.has_more ? lastPage.page + 1 : undefined,
-      initialPageParam: 1,
-      placeholderData: keepPreviousData,
-    }),
-    enabled: !isCurrentWorkspaceDatasetOperator,
-    refetchInterval: systemFeatures.enable_collaboration_mode ? 10000 : false,
-  })
+  } = useInfiniteAppList(appListQueryParams, { enabled: !isCurrentWorkspaceDatasetOperator })
 
   useEffect(() => {
     if (controlRefreshList > 0) {
       refetch()
     }
-  }, [controlRefreshList, refetch])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [controlRefreshList])
 
   const anchorRef = useRef<HTMLDivElement>(null)
   const options = [
@@ -158,28 +164,75 @@ const List: FC<Props> = ({
     return () => observer?.disconnect()
   }, [isLoading, isFetchingNextPage, fetchNextPage, error, hasNextPage, isCurrentWorkspaceDatasetOperator])
 
-  const handleCreatedByMeChange = useCallback((checked: boolean) => {
-    setIsCreatedByMe(checked)
-  }, [setIsCreatedByMe])
+  const { run: handleSearch } = useDebounceFn(() => {
+    setSearchKeywords(keywords)
+  }, { wait: 500 })
+  const handleKeywordsChange = (value: string) => {
+    setKeywords(value)
+    handleSearch()
+  }
+
+  const { run: handleTagsUpdate } = useDebounceFn(() => {
+    setTagIDs(tagFilterValue)
+  }, { wait: 500 })
+  const handleTagsChange = (value: string[]) => {
+    setTagFilterValue(value)
+    handleTagsUpdate()
+  }
+
+  const handleCreatedByMeChange = useCallback(() => {
+    const newValue = !isCreatedByMe
+    setIsCreatedByMe(newValue)
+    setQuery(prev => ({ ...prev, isCreatedByMe: newValue }))
+  }, [isCreatedByMe, setQuery])
 
   const pages = useMemo(() => data?.pages ?? [], [data?.pages])
-  const apps = useMemo(() => pages.flatMap(({ data: pageApps }) => pageApps), [pages])
-
-  const workflowOnlineUserAppIds = useMemo(() => {
-    const appIds = new Set<string>()
-    apps.forEach((app) => {
-      if (app.mode === AppModeEnum.WORKFLOW || app.mode === AppModeEnum.ADVANCED_CHAT)
-        appIds.add(app.id)
+  const appIds = useMemo(() => {
+    const ids = new Set<string>()
+    pages.forEach((page) => {
+      page.data?.forEach((app) => {
+        if (app.id)
+          ids.add(app.id)
+      })
     })
-    return Array.from(appIds)
-  }, [apps])
+    return Array.from(ids)
+  }, [pages])
 
-  const {
-    onlineUsersMap: workflowOnlineUsersMap,
-  } = useWorkflowOnlineUsers({
-    appIds: workflowOnlineUserAppIds,
-    enabled: systemFeatures.enable_collaboration_mode,
-  })
+  const refreshWorkflowOnlineUsers = useCallback(async () => {
+    if (!systemFeatures.enable_collaboration_mode) {
+      setWorkflowOnlineUsersMap({})
+      return
+    }
+
+    if (!appIds.length) {
+      setWorkflowOnlineUsersMap({})
+      return
+    }
+
+    try {
+      const onlineUsersMap = await fetchWorkflowOnlineUsers({ appIds })
+      setWorkflowOnlineUsersMap(onlineUsersMap)
+    }
+    catch {
+      setWorkflowOnlineUsersMap({})
+    }
+  }, [appIds, systemFeatures.enable_collaboration_mode])
+
+  useEffect(() => {
+    void refreshWorkflowOnlineUsers()
+  }, [refreshWorkflowOnlineUsers])
+
+  useEffect(() => {
+    if (!systemFeatures.enable_collaboration_mode)
+      return
+
+    const timer = window.setInterval(() => {
+      void refetch()
+      void refreshWorkflowOnlineUsers()
+    }, 10000)
+
+    return () => window.clearInterval(timer)
+  }, [refetch, refreshWorkflowOnlineUsers, systemFeatures.enable_collaboration_mode])
 
   const hasAnyApp = (pages[0]?.total ?? 0) > 0
   // Show skeleton during initial load or when refetching with no previous data
@@ -195,28 +248,28 @@ const List: FC<Props> = ({
 
         <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-y-2 bg-background-body px-12 pt-7 pb-5">
           <TabSliderNew
-            value={category}
+            value={activeTab}
             onChange={(nextValue) => {
               if (isAppListCategory(nextValue))
-                setCategory(nextValue)
+                setActiveTab(nextValue)
             }}
             options={options}
           />
           <div className="flex items-center gap-2">
             <label className="mr-2 flex h-7 items-center space-x-2">
-              <Checkbox checked={isCreatedByMe} onCheckedChange={handleCreatedByMeChange} />
+              <Checkbox checked={isCreatedByMe} onCheck={handleCreatedByMeChange} />
               <div className="text-sm font-normal text-text-secondary">
                 {t('showMyCreatedAppsOnly', { ns: 'app' })}
               </div>
             </label>
-            <TagFilter type="app" value={tagIDs} onChange={setTagIDs} onOpenTagManagement={() => setShowTagManagementModal(true)} />
+            <TagFilter type="app" value={tagFilterValue} onChange={handleTagsChange} />
             <Input
               showLeftIcon
               showClearIcon
               wrapperClassName="w-[200px]"
               value={keywords}
-              onChange={e => setKeywords(e.target.value)}
-              onClear={() => setKeywords('')}
+              onChange={e => handleKeywordsChange(e.target.value)}
+              onClear={() => handleKeywordsChange('')}
             />
           </div>
         </div>
@@ -230,23 +283,28 @@ const List: FC<Props> = ({
               ref={newAppCardRef}
               isLoading={isLoadingCurrentWorkspace}
               onSuccess={refetch}
-              selectedAppType={category}
+              selectedAppType={activeTab}
               className={cn(!hasAnyApp && 'z-10')}
             />
           )}
-          {showSkeleton
-            ? <AppCardSkeleton count={6} />
-            : hasAnyApp
-              ? apps.map(app => (
-                  <AppCard
-                    key={app.id}
-                    app={app}
-                    onlineUsers={workflowOnlineUsersMap[app.id] ?? []}
-                    onRefresh={refetch}
-                    onOpenTagManagement={() => setShowTagManagementModal(true)}
-                  />
-                ))
-              : <Empty />}
+          {(() => {
+            if (showSkeleton)
+              return <AppCardSkeleton count={6} />
+
+            if (hasAnyApp) {
+              return pages.flatMap(({ data: apps }) => apps).map(app => (
+                <AppCard
+                  key={app.id}
+                  app={app}
+                  onlineUsers={workflowOnlineUsersMap[app.id] ?? []}
+                  onRefresh={refetch}
+                />
+              ))
+            }
+
+            // No apps - show empty state
+            return <Empty />
+          })()}
           {isFetchingNextPage && (
             <AppCardSkeleton count={3} />
           )}
@@ -258,7 +316,7 @@ const List: FC<Props> = ({
             role="region"
             aria-label={t('newApp.dropDSLToCreateApp', { ns: 'app' })}
           >
-            <span className="i-ri-drag-drop-line size-4" />
+            <span className="i-ri-drag-drop-line h-4 w-4" />
             <span className="system-xs-regular">{t('newApp.dropDSLToCreateApp', { ns: 'app' })}</span>
           </div>
         )}
@@ -267,12 +325,9 @@ const List: FC<Props> = ({
         )}
         <CheckModal />
         <div ref={anchorRef} className="h-0"> </div>
-        <TagManagementModal
-          type="app"
-          show={showTagManagementModal}
-          onClose={() => setShowTagManagementModal(false)}
-          onTagsChange={refetch}
-        />
+        {showTagManagementModal && (
+          <TagManagementModal type="app" show={showTagManagementModal} />
+        )}
       </div>
 
       {showCreateFromDSLModal && (

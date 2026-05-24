@@ -9,7 +9,6 @@ type MockSwitchProps = {
 }
 
 type MockSliderProps = {
-  label: string
   value: number
   min: number
   max: number
@@ -109,7 +108,6 @@ describe('list-operator/limit-config', () => {
       min: 1,
       max: 20,
       readonly: true,
-      label: 'workflow.nodes.listFilter.limit',
     })
 
     fireEvent.click(screen.getByRole('button', { name: 'slider:6:true' }))

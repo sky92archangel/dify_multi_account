@@ -31,13 +31,13 @@ describe('VersionMismatchModal', () => {
     it('should render dialog when isShow is true', () => {
       render(<VersionMismatchModal {...defaultProps} />)
 
-      expect(screen.getByRole('alertdialog')).toBeInTheDocument()
+      expect(screen.getByRole('dialog')).toBeInTheDocument()
     })
 
     it('should not render dialog when isShow is false', () => {
       render(<VersionMismatchModal {...defaultProps} isShow={false} />)
 
-      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     })
 
     it('should render error title', () => {

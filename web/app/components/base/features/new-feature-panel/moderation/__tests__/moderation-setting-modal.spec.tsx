@@ -1,6 +1,5 @@
 import type { ModerationConfig } from '@/models/debug'
 import { act, fireEvent, render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import * as i18n from 'react-i18next'
 import ModerationSettingModal from '../moderation-setting-modal'
 
@@ -53,7 +52,7 @@ vi.mock('@/app/components/header/account-setting/constants', () => ({
 }))
 
 vi.mock('@/app/components/header/account-setting/api-based-extension-page/selector', () => ({
-  ApiBasedExtensionSelector: ({ onChange }: { value: string, onChange: (v: string) => void }) => (
+  default: ({ onChange }: { value: string, onChange: (v: string) => void }) => (
     <div data-testid="api-selector">
       <button data-testid="select-api" onClick={() => onChange('api-ext-1')}>Select API</button>
     </div>
@@ -182,10 +181,10 @@ describe('ModerationSettingModal', () => {
       />,
     )
 
-    const user = userEvent.setup()
-    const closeButton = screen.getByRole('button', { name: 'common.operation.close' })
+    const closeButton = document.querySelector('div[role="button"][tabindex="0"]') as HTMLElement
+    expect(closeButton)!.toBeInTheDocument()
     closeButton.focus()
-    await user.keyboard('{Enter}')
+    fireEvent.keyDown(closeButton, { key: 'Enter' })
 
     expect(onCancel).toHaveBeenCalledTimes(1)
   })
@@ -200,10 +199,10 @@ describe('ModerationSettingModal', () => {
       />,
     )
 
-    const user = userEvent.setup()
-    const closeButton = screen.getByRole('button', { name: 'common.operation.close' })
+    const closeButton = document.querySelector('div[role="button"][tabindex="0"]') as HTMLElement
+    expect(closeButton)!.toBeInTheDocument()
     closeButton.focus()
-    await user.keyboard(' ')
+    fireEvent.keyDown(closeButton, { key: ' ' })
 
     expect(onCancel).toHaveBeenCalledTimes(1)
   })
@@ -218,7 +217,8 @@ describe('ModerationSettingModal', () => {
       />,
     )
 
-    const closeButton = screen.getByRole('button', { name: 'common.operation.close' })
+    const closeButton = document.querySelector('div[role="button"][tabindex="0"]') as HTMLElement
+    expect(closeButton)!.toBeInTheDocument()
     closeButton.focus()
     fireEvent.keyDown(closeButton, { key: 'Escape' })
 

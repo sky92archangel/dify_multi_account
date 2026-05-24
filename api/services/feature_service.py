@@ -6,35 +6,31 @@ from configs import dify_config
 from constants.dsl_version import CURRENT_APP_DSL_VERSION
 from enums.cloud_plan import CloudPlan
 from enums.hosted_provider import HostedTrialProvider
-from services.billing_service import BillingInfo, BillingService
+from services.billing_service import BillingService
 from services.enterprise.enterprise_service import EnterpriseService
 
 
-class FeatureResponseModel(BaseModel):
-    model_config = ConfigDict(json_schema_serialization_defaults_required=True, protected_namespaces=())
-
-
-class SubscriptionModel(FeatureResponseModel):
+class SubscriptionModel(BaseModel):
     plan: str = CloudPlan.SANDBOX
     interval: str = ""
 
 
-class BillingModel(FeatureResponseModel):
+class BillingModel(BaseModel):
     enabled: bool = False
     subscription: SubscriptionModel = SubscriptionModel()
 
 
-class EducationModel(FeatureResponseModel):
+class EducationModel(BaseModel):
     enabled: bool = False
     activated: bool = False
 
 
-class LimitationModel(FeatureResponseModel):
+class LimitationModel(BaseModel):
     size: int = 0
     limit: int = 0
 
 
-class LicenseLimitationModel(FeatureResponseModel):
+class LicenseLimitationModel(BaseModel):
     """
     - enabled: whether this limit is enforced
     - size: current usage count
@@ -60,7 +56,7 @@ class LicenseLimitationModel(FeatureResponseModel):
         return (self.limit - self.size) >= required
 
 
-class Quota(FeatureResponseModel):
+class Quota(BaseModel):
     usage: int = 0
     limit: int = 0
     reset_date: int = -1
@@ -75,13 +71,13 @@ class LicenseStatus(StrEnum):
     LOST = "lost"
 
 
-class LicenseModel(FeatureResponseModel):
+class LicenseModel(BaseModel):
     status: LicenseStatus = LicenseStatus.NONE
     expired_at: str = ""
     workspaces: LicenseLimitationModel = LicenseLimitationModel(enabled=False, size=0, limit=0)
 
 
-class BrandingModel(FeatureResponseModel):
+class BrandingModel(BaseModel):
     enabled: bool = False
     application_title: str = ""
     login_page_logo: str = ""
@@ -89,11 +85,11 @@ class BrandingModel(FeatureResponseModel):
     favicon: str = ""
 
 
-class WebAppAuthSSOModel(FeatureResponseModel):
+class WebAppAuthSSOModel(BaseModel):
     protocol: str = ""
 
 
-class WebAppAuthModel(FeatureResponseModel):
+class WebAppAuthModel(BaseModel):
     enabled: bool = False
     allow_sso: bool = False
     sso_config: WebAppAuthSSOModel = WebAppAuthSSOModel()
@@ -101,7 +97,7 @@ class WebAppAuthModel(FeatureResponseModel):
     allow_email_password_login: bool = False
 
 
-class KnowledgePipeline(FeatureResponseModel):
+class KnowledgePipeline(BaseModel):
     publish_enabled: bool = False
 
 
@@ -112,7 +108,7 @@ class PluginInstallationScope(StrEnum):
     ALL = "all"
 
 
-class PluginInstallationPermissionModel(FeatureResponseModel):
+class PluginInstallationPermissionModel(BaseModel):
     # Plugin installation scope – possible values:
     #   none: prohibit all plugin installations
     #   official_only: allow only Dify official plugins
@@ -125,7 +121,7 @@ class PluginInstallationPermissionModel(FeatureResponseModel):
     restrict_to_marketplace_only: bool = False
 
 
-class FeatureModel(FeatureResponseModel):
+class FeatureModel(BaseModel):
     billing: BillingModel = BillingModel()
     education: EducationModel = EducationModel()
     members: LimitationModel = LimitationModel(size=0, limit=1)
@@ -145,21 +141,23 @@ class FeatureModel(FeatureResponseModel):
     api_rate_limit: Quota = Quota(usage=0, limit=5000, reset_date=0)
     # Controls whether email delivery is allowed for HumanInput nodes.
     human_input_email_delivery_enabled: bool = False
+    # pydantic configs
+    model_config = ConfigDict(protected_namespaces=())
     knowledge_pipeline: KnowledgePipeline = KnowledgePipeline()
     next_credit_reset_date: int = 0
 
 
-class KnowledgeRateLimitModel(FeatureResponseModel):
+class KnowledgeRateLimitModel(BaseModel):
     enabled: bool = False
     limit: int = 10
     subscription_plan: str = ""
 
 
-class PluginManagerModel(FeatureResponseModel):
+class PluginManagerModel(BaseModel):
     enabled: bool = False
 
 
-class SystemFeatureModel(FeatureResponseModel):
+class SystemFeatureModel(BaseModel):
     app_dsl_version: str = ""
     sso_enforced_for_signin: bool = False
     sso_enforced_for_signin_protocol: str = ""
@@ -168,7 +166,7 @@ class SystemFeatureModel(FeatureResponseModel):
     enable_email_code_login: bool = False
     enable_email_password_login: bool = True
     enable_social_oauth_login: bool = False
-    enable_collaboration_mode: bool = True
+    enable_collaboration_mode: bool = False
     is_allow_register: bool = False
     is_allow_create_workspace: bool = False
     is_email_setup: bool = False
@@ -186,17 +184,13 @@ class SystemFeatureModel(FeatureResponseModel):
 
 class FeatureService:
     @classmethod
-    def get_features(cls, tenant_id: str, exclude_vector_space: bool = False) -> FeatureModel:
+    def get_features(cls, tenant_id: str) -> FeatureModel:
         features = FeatureModel()
 
         cls._fulfill_params_from_env(features)
 
         if dify_config.BILLING_ENABLED and tenant_id:
-            cls._fulfill_params_from_billing_api(
-                features,
-                tenant_id,
-                exclude_vector_space=exclude_vector_space,
-            )
+            cls._fulfill_params_from_billing_api(features, tenant_id)
 
         if dify_config.ENTERPRISE_ENABLED:
             features.webapp_copyright_enabled = True
@@ -209,18 +203,6 @@ class FeatureService:
         )
 
         return features
-
-    @classmethod
-    def get_vector_space(cls, tenant_id: str) -> LimitationModel:
-        vector_space = LimitationModel(size=0, limit=5)
-        if dify_config.BILLING_ENABLED and tenant_id:
-            billing_vector_space = BillingService.get_vector_space(tenant_id)
-            # NOTE: billing API returns vector_space.size as float (e.g. 0.0),
-            # but feature API keeps LimitationModel.size as int for compatibility.
-            vector_space.size = int(billing_vector_space["size"])
-            vector_space.limit = billing_vector_space["limit"]
-
-        return vector_space
 
     @classmethod
     def get_knowledge_rate_limit(cls, tenant_id: str):
@@ -305,16 +287,8 @@ class FeatureService:
             features.workspace_members.enabled = workspace_info["WorkspaceMembers"]["enabled"]
 
     @classmethod
-    def _fulfill_params_from_billing_api(
-        cls,
-        features: FeatureModel,
-        tenant_id: str,
-        exclude_vector_space: bool = False,
-    ):
-        if exclude_vector_space:
-            billing_info = BillingService.get_info(tenant_id, exclude_vector_space=True)
-        else:
-            billing_info = BillingService.get_info(tenant_id)
+    def _fulfill_params_from_billing_api(cls, features: FeatureModel, tenant_id: str):
+        billing_info = BillingService.get_info(tenant_id)
 
         features_usage_info = BillingService.get_quota_info(tenant_id)
 
@@ -346,8 +320,12 @@ class FeatureService:
             features.apps.size = billing_info["apps"]["size"]
             features.apps.limit = billing_info["apps"]["limit"]
 
-        if not exclude_vector_space:
-            cls._fulfill_vector_space_from_billing_info(features.vector_space, billing_info)
+        if "vector_space" in billing_info:
+            # NOTE (hj24): billing API returns vector_space.size as float (e.g. 0.0)
+            # but LimitationModel.size is int; truncate here for compatibility
+            features.vector_space.size = int(billing_info["vector_space"]["size"])
+            # NOTE END
+            features.vector_space.limit = billing_info["vector_space"]["limit"]
 
         if "documents_upload_quota" in billing_info:
             features.documents_upload_quota.size = billing_info["documents_upload_quota"]["size"]
@@ -378,16 +356,6 @@ class FeatureService:
 
         if "next_credit_reset_date" in billing_info:
             features.next_credit_reset_date = billing_info["next_credit_reset_date"]
-
-    @classmethod
-    def _fulfill_vector_space_from_billing_info(cls, vector_space: LimitationModel, billing_info: BillingInfo):
-        if "vector_space" not in billing_info:
-            return
-
-        # NOTE: billing API returns vector_space.size as float (e.g. 0.0),
-        # but feature API keeps LimitationModel.size as int for compatibility.
-        vector_space.size = int(billing_info["vector_space"]["size"])
-        vector_space.limit = billing_info["vector_space"]["limit"]
 
     @classmethod
     def _fulfill_params_from_enterprise(cls, features: SystemFeatureModel, is_authenticated: bool = False):

@@ -1,5 +1,6 @@
 import { createFormHook, createFormHookContexts } from '@tanstack/react-form'
 import CheckboxField from './components/field/checkbox'
+import CustomSelectField from './components/field/custom-select'
 import FileTypesField from './components/field/file-types'
 import FileUploaderField from './components/field/file-uploader'
 import InputTypeSelectField from './components/field/input-type-select'
@@ -25,6 +26,7 @@ export const { useAppForm, withForm } = createFormHook({
     NumberInputField,
     CheckboxField,
     SelectField,
+    CustomSelectField,
     OptionsField,
     InputTypeSelectField,
     FileTypesField,

@@ -21,10 +21,10 @@ def make_features(
 
 
 @pytest.fixture
-def mock_installer(monkeypatch: pytest.MonkeyPatch):
+def mock_installer(monkeypatch):
     """Patch PluginInstaller at the service import site."""
     mock = MagicMock()
-    monkeypatch.setattr("core.plugin.plugin_service.PluginInstaller", lambda: mock)
+    monkeypatch.setattr("services.plugin.plugin_service.PluginInstaller", lambda: mock)
     return mock
 
 
@@ -34,6 +34,6 @@ def mock_features():
     from unittest.mock import patch
 
     features = make_features()
-    with patch("core.plugin.plugin_service.FeatureService") as mock_fs:
+    with patch("services.plugin.plugin_service.FeatureService") as mock_fs:
         mock_fs.get_system_features.return_value = features
         yield features

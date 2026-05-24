@@ -27,17 +27,12 @@ vi.mock('@langgenius/dify-ui/dropdown-menu', async () => {
       render,
     }: {
       children: React.ReactNode
-      render?: React.ReactElement<{ children?: React.ReactNode }>
+      render?: React.ReactElement
     }) => {
       const { open, setOpen } = useDropdownMenuContext()
 
-      if (render) {
-        return React.cloneElement(
-          render,
-          { onClick: () => setOpen(!open) } as Record<string, unknown>,
-          children ?? render.props.children,
-        )
-      }
+      if (render)
+        return React.cloneElement(render, { onClick: () => setOpen(!open) } as Record<string, unknown>, children)
 
       return <button type="button" onClick={() => setOpen(!open)}>{children}</button>
     },

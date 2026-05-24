@@ -4,8 +4,7 @@ import secrets
 from flask import request
 from flask_restx import Resource
 
-from controllers.common.fields import SimpleResultDataResponse, SimpleResultResponse, VerificationTokenResponse
-from controllers.common.schema import register_response_schema_models, register_schema_models
+from controllers.common.schema import register_schema_models
 from controllers.console.auth.error import (
     AuthenticationFailedError,
     InvalidEmailError,
@@ -27,12 +26,6 @@ from services.entities.auth_entities import (
 )
 
 register_schema_models(web_ns, ForgotPasswordSendPayload, ForgotPasswordCheckPayload, ForgotPasswordResetPayload)
-register_response_schema_models(
-    web_ns,
-    SimpleResultDataResponse,
-    SimpleResultResponse,
-    VerificationTokenResponse,
-)
 
 
 @web_ns.route("/forgot-password")
@@ -51,7 +44,6 @@ class ForgotPasswordSendEmailApi(Resource):
             429: "Too many requests - rate limit exceeded",
         }
     )
-    @web_ns.response(200, "Password reset email sent successfully", web_ns.models[SimpleResultDataResponse.__name__])
     def post(self):
         payload = ForgotPasswordSendPayload.model_validate(web_ns.payload or {})
 
@@ -104,7 +96,6 @@ class ForgotPasswordCheckApi(Resource):
         if user_email != normalized_token_email:
             raise InvalidEmailError()
 
-        # 直接返回成功，跳过验证码验证
         return {"is_valid": True, "email": normalized_token_email, "token": payload.token}
 
 
@@ -124,7 +115,6 @@ class ForgotPasswordResetApi(Resource):
             404: "Account not found",
         }
     )
-    @web_ns.response(200, "Password reset successfully", web_ns.models[SimpleResultResponse.__name__])
     def post(self):
         payload = ForgotPasswordResetPayload.model_validate(web_ns.payload or {})
 
@@ -135,9 +125,6 @@ class ForgotPasswordResetApi(Resource):
         # Validate token and get reset data
         reset_data = AccountService.get_reset_password_data(payload.token)
         if not reset_data:
-            raise InvalidTokenError()
-        # Must use token in reset phase
-        if reset_data.get("phase", "") != "reset":
             raise InvalidTokenError()
 
         # Revoke token to prevent reuse

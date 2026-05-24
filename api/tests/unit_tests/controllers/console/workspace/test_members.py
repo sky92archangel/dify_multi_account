@@ -1,7 +1,6 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from flask import Flask
 from werkzeug.exceptions import HTTPException
 
 import services
@@ -35,7 +34,7 @@ def unwrap(func):
 
 
 class TestMemberListApi:
-    def test_get_success(self, app: Flask):
+    def test_get_success(self, app):
         api = MemberListApi()
         method = unwrap(api.get)
 
@@ -60,7 +59,7 @@ class TestMemberListApi:
         assert status == 200
         assert len(result["accounts"]) == 1
 
-    def test_get_no_tenant(self, app: Flask):
+    def test_get_no_tenant(self, app):
         api = MemberListApi()
         method = unwrap(api.get)
 
@@ -75,7 +74,7 @@ class TestMemberListApi:
 
 
 class TestMemberInviteEmailApi:
-    def test_invite_success(self, app: Flask):
+    def test_invite_success(self, app):
         api = MemberInviteEmailApi()
         method = unwrap(api.post)
 
@@ -102,7 +101,7 @@ class TestMemberInviteEmailApi:
         assert status == 201
         assert result["result"] == "success"
 
-    def test_invite_limit_exceeded(self, app: Flask):
+    def test_invite_limit_exceeded(self, app):
         api = MemberInviteEmailApi()
         method = unwrap(api.post)
 
@@ -124,7 +123,7 @@ class TestMemberInviteEmailApi:
             with pytest.raises(WorkspaceMembersLimitExceeded):
                 method(api)
 
-    def test_invite_already_member(self, app: Flask):
+    def test_invite_already_member(self, app):
         api = MemberInviteEmailApi()
         method = unwrap(api.post)
 
@@ -152,7 +151,7 @@ class TestMemberInviteEmailApi:
 
         assert result["invitation_results"][0]["status"] == "success"
 
-    def test_invite_invalid_role(self, app: Flask):
+    def test_invite_invalid_role(self, app):
         api = MemberInviteEmailApi()
         method = unwrap(api.post)
 
@@ -167,7 +166,7 @@ class TestMemberInviteEmailApi:
         assert status == 400
         assert result["code"] == "invalid-role"
 
-    def test_invite_generic_exception(self, app: Flask):
+    def test_invite_generic_exception(self, app):
         api = MemberInviteEmailApi()
         method = unwrap(api.post)
 
@@ -197,7 +196,7 @@ class TestMemberInviteEmailApi:
 
 
 class TestMemberCancelInviteApi:
-    def test_cancel_success(self, app: Flask):
+    def test_cancel_success(self, app):
         api = MemberCancelInviteApi()
         method = unwrap(api.delete)
 
@@ -217,7 +216,7 @@ class TestMemberCancelInviteApi:
         assert status == 200
         assert result["result"] == "success"
 
-    def test_cancel_not_found(self, app: Flask):
+    def test_cancel_not_found(self, app):
         api = MemberCancelInviteApi()
         method = unwrap(api.delete)
 
@@ -234,7 +233,7 @@ class TestMemberCancelInviteApi:
             with pytest.raises(HTTPException):
                 method(api, "x")
 
-    def test_cancel_cannot_operate_self(self, app: Flask):
+    def test_cancel_cannot_operate_self(self, app):
         api = MemberCancelInviteApi()
         method = unwrap(api.delete)
 
@@ -256,7 +255,7 @@ class TestMemberCancelInviteApi:
 
         assert status == 400
 
-    def test_cancel_no_permission(self, app: Flask):
+    def test_cancel_no_permission(self, app):
         api = MemberCancelInviteApi()
         method = unwrap(api.delete)
 
@@ -278,7 +277,7 @@ class TestMemberCancelInviteApi:
 
         assert status == 403
 
-    def test_cancel_member_not_in_tenant(self, app: Flask):
+    def test_cancel_member_not_in_tenant(self, app):
         api = MemberCancelInviteApi()
         method = unwrap(api.delete)
 
@@ -302,7 +301,7 @@ class TestMemberCancelInviteApi:
 
 
 class TestMemberUpdateRoleApi:
-    def test_update_success(self, app: Flask):
+    def test_update_success(self, app):
         api = MemberUpdateRoleApi()
         method = unwrap(api.put)
 
@@ -325,7 +324,7 @@ class TestMemberUpdateRoleApi:
 
         assert result["result"] == "success"
 
-    def test_update_invalid_role(self, app: Flask):
+    def test_update_invalid_role(self, app):
         api = MemberUpdateRoleApi()
         method = unwrap(api.put)
 
@@ -336,7 +335,7 @@ class TestMemberUpdateRoleApi:
 
         assert status == 400
 
-    def test_update_member_not_found(self, app: Flask):
+    def test_update_member_not_found(self, app):
         api = MemberUpdateRoleApi()
         method = unwrap(api.put)
 
@@ -355,7 +354,7 @@ class TestMemberUpdateRoleApi:
 
 
 class TestDatasetOperatorMemberListApi:
-    def test_get_success(self, app: Flask):
+    def test_get_success(self, app):
         api = DatasetOperatorMemberListApi()
         method = unwrap(api.get)
 
@@ -382,7 +381,7 @@ class TestDatasetOperatorMemberListApi:
         assert status == 200
         assert len(result["accounts"]) == 1
 
-    def test_get_no_tenant(self, app: Flask):
+    def test_get_no_tenant(self, app):
         api = DatasetOperatorMemberListApi()
         method = unwrap(api.get)
 
@@ -397,7 +396,7 @@ class TestDatasetOperatorMemberListApi:
 
 
 class TestSendOwnerTransferEmailApi:
-    def test_send_success(self, app: Flask):
+    def test_send_success(self, app):
         api = SendOwnerTransferEmailApi()
         method = unwrap(api.post)
 
@@ -420,7 +419,7 @@ class TestSendOwnerTransferEmailApi:
 
         assert result["result"] == "success"
 
-    def test_send_ip_limit(self, app: Flask):
+    def test_send_ip_limit(self, app):
         api = SendOwnerTransferEmailApi()
         method = unwrap(api.post)
 
@@ -434,7 +433,7 @@ class TestSendOwnerTransferEmailApi:
             with pytest.raises(EmailSendIpLimitError):
                 method(api)
 
-    def test_send_not_owner(self, app: Flask):
+    def test_send_not_owner(self, app):
         api = SendOwnerTransferEmailApi()
         method = unwrap(api.post)
 
@@ -453,7 +452,7 @@ class TestSendOwnerTransferEmailApi:
 
 
 class TestOwnerTransferCheckApi:
-    def test_check_invalid_code(self, app: Flask):
+    def test_check_invalid_code(self, app):
         api = OwnerTransferCheckApi()
         method = unwrap(api.post)
 
@@ -478,7 +477,7 @@ class TestOwnerTransferCheckApi:
             with pytest.raises(EmailCodeError):
                 method(api)
 
-    def test_rate_limited(self, app: Flask):
+    def test_rate_limited(self, app):
         api = OwnerTransferCheckApi()
         method = unwrap(api.post)
 
@@ -499,7 +498,7 @@ class TestOwnerTransferCheckApi:
             with pytest.raises(OwnerTransferLimitError):
                 method(api)
 
-    def test_invalid_token(self, app: Flask):
+    def test_invalid_token(self, app):
         api = OwnerTransferCheckApi()
         method = unwrap(api.post)
 
@@ -521,7 +520,7 @@ class TestOwnerTransferCheckApi:
             with pytest.raises(InvalidTokenError):
                 method(api)
 
-    def test_invalid_email(self, app: Flask):
+    def test_invalid_email(self, app):
         api = OwnerTransferCheckApi()
         method = unwrap(api.post)
 
@@ -548,7 +547,7 @@ class TestOwnerTransferCheckApi:
 
 
 class TestOwnerTransferApi:
-    def test_transfer_self(self, app: Flask):
+    def test_transfer_self(self, app):
         api = OwnerTransfer()
         method = unwrap(api.post)
 
@@ -565,7 +564,7 @@ class TestOwnerTransferApi:
             with pytest.raises(CannotTransferOwnerToSelfError):
                 method(api, "1")
 
-    def test_invalid_token(self, app: Flask):
+    def test_invalid_token(self, app):
         api = OwnerTransfer()
         method = unwrap(api.post)
 
@@ -583,7 +582,7 @@ class TestOwnerTransferApi:
             with pytest.raises(InvalidTokenError):
                 method(api, "2")
 
-    def test_member_not_in_tenant(self, app: Flask):
+    def test_member_not_in_tenant(self, app):
         api = OwnerTransfer()
         method = unwrap(api.post)
 

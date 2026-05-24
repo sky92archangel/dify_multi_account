@@ -1,8 +1,6 @@
 import type { ComponentProps } from 'react'
 import type { CredentialFormSchema, FormOption } from '@/app/components/header/account-setting/model-provider-page/declarations'
-import type { AppSelectorValue } from '@/app/components/plugins/plugin-detail-panel/app-selector'
 import { fireEvent, screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { FormTypeEnum } from '@/app/components/header/account-setting/model-provider-page/declarations'
 import { PluginCategoryEnum } from '@/app/components/plugins/types'
 import { renderWorkflowFlowComponent } from '@/app/components/workflow/__tests__/workflow-test-env'
@@ -47,8 +45,8 @@ vi.mock('@/app/components/workflow/hooks', () => ({
 }))
 
 vi.mock('@/app/components/plugins/plugin-detail-panel/app-selector', () => ({
-  AppSelector: ({ onSelect }: { onSelect: (value: AppSelectorValue) => void }) => (
-    <button onClick={() => onSelect({ app_id: 'app-1', inputs: {}, files: [] })}>app-selector</button>
+  default: ({ onSelect }: { onSelect: (value: string) => void }) => (
+    <button onClick={() => onSelect('app-1')}>app-selector</button>
   ),
 }))
 
@@ -208,8 +206,7 @@ describe('FormInputItem branches', () => {
     })
   })
 
-  it('should render static multi-select values and update selected labels', async () => {
-    const user = userEvent.setup()
+  it('should render static multi-select values and update selected labels', () => {
     const { onChange } = renderFormInputItem({
       schema: createSchema({
         multiple: true,
@@ -228,8 +225,8 @@ describe('FormInputItem branches', () => {
     })
 
     expect(screen.getByText('alpha')).toBeInTheDocument()
-    await user.click(screen.getByRole('combobox', { name: 'alpha' }))
-    await user.click(await screen.findByRole('option', { name: 'beta' }))
+    fireEvent.click(screen.getByText('alpha').closest('button') as HTMLButtonElement)
+    fireEvent.click(screen.getByText('beta'))
 
     expect(onChange).toHaveBeenCalledWith({
       field: {
@@ -344,11 +341,7 @@ describe('FormInputItem branches', () => {
     expect(app.onChange).toHaveBeenCalledWith({
       field: {
         type: VarKindType.constant,
-        value: {
-          app_id: 'app-1',
-          inputs: {},
-          files: [],
-        },
+        value: 'app-1',
       },
     })
 

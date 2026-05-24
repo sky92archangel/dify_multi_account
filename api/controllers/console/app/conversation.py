@@ -29,12 +29,17 @@ from fields.conversation_fields import (
 from fields.conversation_fields import (
     ConversationWithSummaryPagination as ConversationWithSummaryPaginationResponse,
 )
+from fields.conversation_fields import (
+    ResultResponse,
+)
 from libs.datetime_utils import naive_utc_now, parse_time_range
 from libs.login import current_account_with_tenant, login_required
 from models import Conversation, EndUser, Message, MessageAnnotation
 from models.model import AppMode
 from services.conversation_service import ConversationService
 from services.errors.conversation import ConversationNotExistsError
+
+DEFAULT_REF_TEMPLATE_SWAGGER_2_0 = "#/definitions/{model}"
 
 
 class BaseConversationQuery(BaseModel):
@@ -65,6 +70,15 @@ class ChatConversationQuery(BaseConversationQuery):
     )
 
 
+console_ns.schema_model(
+    CompletionConversationQuery.__name__,
+    CompletionConversationQuery.model_json_schema(ref_template=DEFAULT_REF_TEMPLATE_SWAGGER_2_0),
+)
+console_ns.schema_model(
+    ChatConversationQuery.__name__,
+    ChatConversationQuery.model_json_schema(ref_template=DEFAULT_REF_TEMPLATE_SWAGGER_2_0),
+)
+
 register_schema_models(
     console_ns,
     CompletionConversationQuery,
@@ -74,8 +88,7 @@ register_schema_models(
     ConversationMessageDetailResponse,
     ConversationWithSummaryPaginationResponse,
     ConversationDetailResponse,
-    CompletionConversationQuery,
-    ChatConversationQuery,
+    ResultResponse,
 )
 
 
@@ -94,7 +107,7 @@ class CompletionConversationApi(Resource):
     @edit_permission_required
     def get(self, app_model):
         current_user, _ = current_account_with_tenant()
-        args = CompletionConversationQuery.model_validate(request.args.to_dict(flat=True))
+        args = CompletionConversationQuery.model_validate(request.args.to_dict(flat=True))  # type: ignore
 
         query = sa.select(Conversation).where(
             Conversation.app_id == app_model.id, Conversation.mode == "completion", Conversation.is_deleted.is_(False)
@@ -190,7 +203,7 @@ class CompletionConversationDetailApi(Resource):
         except ConversationNotExistsError:
             raise NotFound("Conversation Not Exists.")
 
-        return "", 204
+        return ResultResponse(result="success").model_dump(mode="json"), 204
 
 
 @console_ns.route("/apps/<uuid:app_id>/chat-conversations")
@@ -208,7 +221,7 @@ class ChatConversationApi(Resource):
     @edit_permission_required
     def get(self, app_model):
         current_user, _ = current_account_with_tenant()
-        args = ChatConversationQuery.model_validate(request.args.to_dict(flat=True))
+        args = ChatConversationQuery.model_validate(request.args.to_dict(flat=True))  # type: ignore
 
         subquery = (
             sa.select(Conversation.id.label("conversation_id"), EndUser.session_id.label("from_end_user_session_id"))
@@ -343,7 +356,7 @@ class ChatConversationDetailApi(Resource):
         except ConversationNotExistsError:
             raise NotFound("Conversation Not Exists.")
 
-        return "", 204
+        return ResultResponse(result="success").model_dump(mode="json"), 204
 
 
 def _get_conversation(app_model, conversation_id):

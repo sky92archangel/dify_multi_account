@@ -6,7 +6,6 @@ import type {
 } from '../declarations'
 import { Button } from '@langgenius/dify-ui/button'
 import { cn } from '@langgenius/dify-ui/cn'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@langgenius/dify-ui/tooltip'
 import { RiArrowDownSLine } from '@remixicon/react'
 import {
   memo,
@@ -14,6 +13,7 @@ import {
 } from 'react'
 import { useTranslation } from 'react-i18next'
 import Badge from '@/app/components/base/badge'
+import Tooltip from '@/app/components/base/tooltip'
 import { ConfigurationMethodEnum, ModelModalModeEnum } from '@/app/components/header/account-setting/model-provider-page/declarations'
 import Indicator from '@/app/components/header/indicator'
 import Authorized from './authorized'
@@ -84,16 +84,16 @@ const SwitchCredentialInLoadBalancing = ({
             <Badge className="ml-2">Enterprise</Badge>
           )
         }
-        <RiArrowDownSLine className="size-4" />
+        <RiArrowDownSLine className="h-4 w-4" />
       </Button>
     )
     if (empty && notAllowCustomCredential) {
       return (
-        <Tooltip>
-          <TooltipTrigger render={Item} />
-          <TooltipContent>
-            {t('auth.credentialUnavailable', { ns: 'plugin' })}
-          </TooltipContent>
+        <Tooltip
+          asChild
+          popupContent={t('auth.credentialUnavailable', { ns: 'plugin' })}
+        >
+          {Item}
         </Tooltip>
       )
     }

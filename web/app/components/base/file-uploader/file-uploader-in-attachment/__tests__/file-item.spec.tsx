@@ -186,13 +186,13 @@ describe('FileInAttachmentItem', () => {
     const buttons = screen.getAllByRole('button')
     fireEvent.click(buttons[0]!)
 
-    // ImagePreview renders through Dialog with class "image-preview-container"
+    // ImagePreview renders via createPortal with class "image-preview-container"
     const previewContainer = document.querySelector('.image-preview-container')!
     expect(previewContainer)!.toBeInTheDocument()
 
     // Close button is the last clickable div with an SVG in the preview container
-    const closeIcon = screen.getByRole('button', { name: 'common.operation.cancel' })
-    fireEvent.click(closeIcon)
+    const closeIcon = screen.getByTestId('image-preview-close-button')
+    fireEvent.click(closeIcon.parentElement!)
 
     // Preview should be removed
     // Preview should be removed

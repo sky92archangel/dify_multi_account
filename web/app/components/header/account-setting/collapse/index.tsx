@@ -26,31 +26,22 @@ const Collapse = ({
 
   return (
     <div className={cn('overflow-hidden rounded-xl bg-background-section-burn', wrapperClassName)}>
-      <button
-        type="button"
-        className="flex w-full cursor-pointer items-center justify-between border-none bg-transparent px-3 py-2 text-left text-xs leading-[18px] font-medium text-text-secondary focus-visible:ring-1 focus-visible:ring-components-input-border-active focus-visible:outline-hidden"
-        onClick={toggle}
-      >
+      <div className="flex cursor-pointer items-center justify-between px-3 py-2 text-xs leading-[18px] font-medium text-text-secondary" onClick={toggle}>
         {title}
         {
           open
-            ? <ChevronDownIcon className="size-3 text-components-button-tertiary-text" aria-hidden="true" />
-            : <ChevronRightIcon className="size-3 text-components-button-tertiary-text" aria-hidden="true" />
+            ? <ChevronDownIcon className="h-3 w-3 text-components-button-tertiary-text" />
+            : <ChevronRightIcon className="h-3 w-3 text-components-button-tertiary-text" />
         }
-      </button>
+      </div>
       {
         open && (
           <div className="mx-1 mb-1 rounded-lg border-t border-divider-subtle bg-components-panel-on-panel-item-bg py-1">
             {
               items.map(item => (
-                <button
-                  key={item.key}
-                  type="button"
-                  className="block w-full border-none bg-transparent p-0 text-left"
-                  onClick={() => onSelect?.(item)}
-                >
+                <div key={item.key} onClick={() => onSelect?.(item)}>
                   {renderItem(item)}
-                </button>
+                </div>
               ))
             }
           </div>

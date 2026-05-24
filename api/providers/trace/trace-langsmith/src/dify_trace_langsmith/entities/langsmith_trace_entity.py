@@ -65,18 +65,35 @@ class LangSmithRunModel(LangSmithTokenUsage, LangSmithMultiModel):
         }
         file_list = values.get("file_list", [])
         if isinstance(v, str):
-            match field_name:
-                case "inputs":
-                    return {
-                        "messages": {
-                            "role": "user",
-                            "content": v,
-                            "usage_metadata": usage_metadata,
-                            "file_list": file_list,
-                        },
+            if field_name == "inputs":
+                return {
+                    "messages": {
+                        "role": "user",
+                        "content": v,
+                        "usage_metadata": usage_metadata,
+                        "file_list": file_list,
+                    },
+                }
+            elif field_name == "outputs":
+                return {
+                    "choices": {
+                        "role": "ai",
+                        "content": v,
+                        "usage_metadata": usage_metadata,
+                        "file_list": file_list,
+                    },
+                }
+        elif isinstance(v, list):
+            data = {}
+            if len(v) > 0 and isinstance(v[0], dict):
+                # rename text to content
+                v = replace_text_with_content(data=v)
+                if field_name == "inputs":
+                    data = {
+                        "messages": v,
                     }
-                case "outputs":
-                    return {
+                elif field_name == "outputs":
+                    data = {
                         "choices": {
                             "role": "ai",
                             "content": v,
@@ -84,29 +101,6 @@ class LangSmithRunModel(LangSmithTokenUsage, LangSmithMultiModel):
                             "file_list": file_list,
                         },
                     }
-                case _:
-                    pass
-        elif isinstance(v, list):
-            data = {}
-            if len(v) > 0 and isinstance(v[0], dict):
-                # rename text to content
-                v = replace_text_with_content(data=v)
-                match field_name:
-                    case "inputs":
-                        data = {
-                            "messages": v,
-                        }
-                    case "outputs":
-                        data = {
-                            "choices": {
-                                "role": "ai",
-                                "content": v,
-                                "usage_metadata": usage_metadata,
-                                "file_list": file_list,
-                            },
-                        }
-                    case _:
-                        pass
                 return data
             else:
                 return {

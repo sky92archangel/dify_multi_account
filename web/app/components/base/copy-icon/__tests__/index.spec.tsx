@@ -21,24 +21,29 @@ describe('copy icon component', () => {
 
   it('renders normally', () => {
     render(<CopyIcon content="this is some test content for the copy icon component" />)
-    expect(screen.getByRole('button', { name: 'appOverview.overview.appInfo.embedded.copy' })).toBeInTheDocument()
+    const icon = screen.getByTestId('copy-icon')
+    expect(icon).toBeInTheDocument()
   })
 
   it('shows copy check icon when copied', () => {
     copied = true
     render(<CopyIcon content="this is some test content for the copy icon component" />)
-    expect(screen.getByRole('button', { name: 'appOverview.overview.appInfo.embedded.copied' })).toBeInTheDocument()
+    const icon = screen.getByTestId('copied-icon')
+    expect(icon).toBeInTheDocument()
   })
 
   it('handles copy when clicked', () => {
     render(<CopyIcon content="this is some test content for the copy icon component" />)
-    fireEvent.click(screen.getByRole('button', { name: 'appOverview.overview.appInfo.embedded.copy' }))
+    const icon = screen.getByTestId('copy-icon')
+    fireEvent.click(icon as Element)
     expect(copy).toBeCalledTimes(1)
   })
 
   it('resets on mouse leave', () => {
     render(<CopyIcon content="this is some test content for the copy icon component" />)
-    fireEvent.mouseLeave(screen.getByRole('button', { name: 'appOverview.overview.appInfo.embedded.copy' }))
+    const icon = screen.getByTestId('copy-icon')
+    const div = icon?.parentElement as HTMLElement
+    fireEvent.mouseLeave(div)
     expect(reset).toBeCalledTimes(1)
   })
 })

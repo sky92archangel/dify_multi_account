@@ -3,10 +3,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { useDownloadPlugin } from '@/service/use-plugins'
 import OperationDropdown from '../action'
 
 const mockDownloadBlob = vi.fn()
-const mockDownloadPlugin = vi.fn()
+const mockRemoveQueries = vi.fn()
 
 vi.mock('next-themes', () => ({
   useTheme: () => ({
@@ -14,15 +15,8 @@ vi.mock('next-themes', () => ({
   }),
 }))
 
-vi.mock('@/service/client', () => ({
-  marketplaceQuery: {
-    downloadPlugin: {
-      mutationOptions: (options = {}) => ({
-        mutationFn: (input: unknown) => mockDownloadPlugin(input),
-        ...options,
-      }),
-    },
-  },
+vi.mock('@/service/use-plugins', () => ({
+  useDownloadPlugin: vi.fn(),
 }))
 
 vi.mock('@/utils/download', () => ({
@@ -43,6 +37,9 @@ const createQueryClient = () => new QueryClient({
 
 const renderComponent = (props?: Partial<ComponentProps<typeof OperationDropdown>>) => {
   const queryClient = createQueryClient()
+  vi.spyOn(queryClient, 'removeQueries').mockImplementation(((...args) => {
+    return mockRemoveQueries(...args)
+  }) as typeof queryClient.removeQueries)
 
   return render(
     <QueryClientProvider client={queryClient}>
@@ -61,7 +58,10 @@ const renderComponent = (props?: Partial<ComponentProps<typeof OperationDropdown
 describe('OperationDropdown', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockDownloadPlugin.mockResolvedValue(new Blob(['plugin zip'], { type: 'application/zip' }))
+    vi.mocked(useDownloadPlugin).mockImplementation((_, enabled) => ({
+      data: enabled ? null : null,
+      isLoading: false,
+    }) as unknown as ReturnType<typeof useDownloadPlugin>)
   })
 
   it('should render download and view details actions when opened', async () => {
@@ -78,35 +78,28 @@ describe('OperationDropdown', () => {
     await userEvent.setup().click(screen.getByText('common.operation.download'))
 
     expect(onOpenChange).toHaveBeenCalledWith(false)
-    await waitFor(() => {
-      expect(mockDownloadPlugin).toHaveBeenCalledWith({
-        params: {
-          organization: 'langgenius',
-          pluginName: 'test-plugin',
-          version: '1.0.0',
-        },
-      })
-    })
+    expect(mockRemoveQueries).toHaveBeenCalled()
   })
 
-  it('should skip duplicate downloads while pending', async () => {
-    mockDownloadPlugin.mockReturnValue(new Promise(() => {}))
+  it('should skip download when already loading', async () => {
+    vi.mocked(useDownloadPlugin).mockReturnValue({
+      data: null,
+      isLoading: true,
+    } as unknown as ReturnType<typeof useDownloadPlugin>)
 
     renderComponent({ open: true })
 
-    const user = userEvent.setup()
-    await user.click(screen.getByText('common.operation.download'))
+    await userEvent.setup().click(screen.getByText('common.operation.download'))
 
-    await waitFor(() => {
-      expect(mockDownloadPlugin).toHaveBeenCalledTimes(1)
-    })
-
-    await user.click(screen.getByText('common.operation.download'))
-
-    expect(mockDownloadPlugin).toHaveBeenCalledTimes(1)
+    expect(mockRemoveQueries).not.toHaveBeenCalled()
   })
 
-  it('should download the blob when the request returns data', async () => {
+  it('should download the blob when the hook returns data', async () => {
+    vi.mocked(useDownloadPlugin).mockImplementation((_, enabled) => ({
+      data: enabled ? new Blob(['plugin zip'], { type: 'application/zip' }) : null,
+      isLoading: false,
+    }) as unknown as ReturnType<typeof useDownloadPlugin>)
+
     renderComponent({ open: true })
 
     await userEvent.setup().click(screen.getByText('common.operation.download'))
@@ -117,6 +110,7 @@ describe('OperationDropdown', () => {
         fileName: 'langgenius-test-plugin_1.0.0.zip',
       })
     })
+    expect(mockRemoveQueries).toHaveBeenCalled()
   })
 
   it('should link to the marketplace detail page', () => {

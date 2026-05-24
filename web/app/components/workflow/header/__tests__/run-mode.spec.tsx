@@ -37,13 +37,9 @@ vi.mock('@/app/components/workflow/hooks', () => ({
   }),
 }))
 
-vi.mock('@/app/components/workflow/store/workflow', () => ({
+vi.mock('@/app/components/workflow/store', () => ({
   useStore: (selector: (state: { workflowRunningData?: unknown, isListening: boolean }) => unknown) =>
     selector({ workflowRunningData: mockWorkflowRunningData, isListening: mockIsListening }),
-}))
-
-vi.mock('@/app/components/workflow/shortcuts/use-workflow-hotkeys', () => ({
-  useWorkflowShortcut: vi.fn(),
 }))
 
 vi.mock('../../hooks/use-dynamic-test-run-options', () => ({

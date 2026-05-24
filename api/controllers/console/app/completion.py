@@ -7,8 +7,6 @@ from pydantic import BaseModel, Field, field_validator
 from werkzeug.exceptions import InternalServerError, NotFound
 
 import services
-from controllers.common.fields import SimpleResultResponse
-from controllers.common.schema import register_response_schema_models, register_schema_models
 from controllers.console import console_ns
 from controllers.console.app.error import (
     AppUnavailableError,
@@ -39,6 +37,7 @@ from services.app_task_service import AppTaskService
 from services.errors.llm import InvokeRateLimitError
 
 logger = logging.getLogger(__name__)
+DEFAULT_REF_TEMPLATE_SWAGGER_2_0 = "#/definitions/{model}"
 
 
 class BaseMessagePayload(BaseModel):
@@ -66,8 +65,13 @@ class ChatMessagePayload(BaseMessagePayload):
         return uuid_value(value)
 
 
-register_schema_models(console_ns, CompletionMessagePayload, ChatMessagePayload)
-register_response_schema_models(console_ns, SimpleResultResponse)
+console_ns.schema_model(
+    CompletionMessagePayload.__name__,
+    CompletionMessagePayload.model_json_schema(ref_template=DEFAULT_REF_TEMPLATE_SWAGGER_2_0),
+)
+console_ns.schema_model(
+    ChatMessagePayload.__name__, ChatMessagePayload.model_json_schema(ref_template=DEFAULT_REF_TEMPLATE_SWAGGER_2_0)
+)
 
 
 # define completion message api for user
@@ -126,7 +130,7 @@ class CompletionMessageStopApi(Resource):
     @console_ns.doc("stop_completion_message")
     @console_ns.doc(description="Stop a running completion message generation")
     @console_ns.doc(params={"app_id": "Application ID", "task_id": "Task ID to stop"})
-    @console_ns.response(200, "Task stopped successfully", console_ns.models[SimpleResultResponse.__name__])
+    @console_ns.response(200, "Task stopped successfully")
     @setup_required
     @login_required
     @account_initialization_required
@@ -207,7 +211,7 @@ class ChatMessageStopApi(Resource):
     @console_ns.doc("stop_chat_message")
     @console_ns.doc(description="Stop a running chat message generation")
     @console_ns.doc(params={"app_id": "Application ID", "task_id": "Task ID to stop"})
-    @console_ns.response(200, "Task stopped successfully", console_ns.models[SimpleResultResponse.__name__])
+    @console_ns.response(200, "Task stopped successfully")
     @setup_required
     @login_required
     @account_initialization_required

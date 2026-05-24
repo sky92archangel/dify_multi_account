@@ -74,6 +74,11 @@ vi.mock('@/utils/var', () => ({
   basePath: '',
 }))
 
+vi.mock('@/app/components/base/drawer', () => ({
+  default: ({ children, isOpen }: { children: React.ReactNode, isOpen: boolean }) =>
+    isOpen ? <div data-testid="drawer">{children}</div> : null,
+}))
+
 const mockToastSuccess = vi.hoisted(() => vi.fn())
 const mockToastError = vi.hoisted(() => vi.fn())
 vi.mock('@langgenius/dify-ui/toast', () => ({
@@ -128,8 +133,8 @@ vi.mock('@/app/components/tools/setting/build-in/config-credentials', () => ({
 }))
 
 vi.mock('@/app/components/tools/workflow-tool', () => ({
-  WorkflowToolDrawer: ({ onHide, onSave, onRemove }: { onHide: () => void, onSave: (data: unknown) => void, onRemove: () => void }) => (
-    <div data-testid="workflow-tool-drawer">
+  default: ({ onHide, onSave, onRemove }: { onHide: () => void, onSave: (data: unknown) => void, onRemove: () => void }) => (
+    <div data-testid="workflow-tool-modal">
       <button data-testid="wf-save" onClick={() => onSave({ name: 'test' })}>Save</button>
       <button data-testid="wf-remove" onClick={onRemove}>Remove</button>
       <button data-testid="wf-close" onClick={onHide}>Close</button>
@@ -576,7 +581,7 @@ describe('ProviderDetail', () => {
       })
     })
 
-    it('saves workflow tool via workflow drawer', async () => {
+    it('saves workflow tool via workflow modal', async () => {
       render(
         <ProviderDetail
           collection={createMockCollection({ type: CollectionType.workflow })}
@@ -588,7 +593,7 @@ describe('ProviderDetail', () => {
         expect(screen.getByText('tools.createTool.editAction'))!.toBeInTheDocument()
       })
       fireEvent.click(screen.getByText('tools.createTool.editAction'))
-      expect(screen.getByTestId('workflow-tool-drawer'))!.toBeInTheDocument()
+      expect(screen.getByTestId('workflow-tool-modal'))!.toBeInTheDocument()
       await act(async () => {
         fireEvent.click(screen.getByTestId('wf-save'))
       })
@@ -622,7 +627,7 @@ describe('ProviderDetail', () => {
     })
   })
 
-  describe('Overlay Close Actions', () => {
+  describe('Modal Close Actions', () => {
     it('closes ConfigCredential when cancel is clicked', async () => {
       render(
         <ProviderDetail
@@ -660,7 +665,7 @@ describe('ProviderDetail', () => {
       expect(screen.queryByTestId('edit-custom-modal')).not.toBeInTheDocument()
     })
 
-    it('closes WorkflowToolDrawer via onHide', async () => {
+    it('closes WorkflowToolModal via onHide', async () => {
       render(
         <ProviderDetail
           collection={createMockCollection({ type: CollectionType.workflow })}
@@ -672,9 +677,9 @@ describe('ProviderDetail', () => {
         expect(screen.getByText('tools.createTool.editAction'))!.toBeInTheDocument()
       })
       fireEvent.click(screen.getByText('tools.createTool.editAction'))
-      expect(screen.getByTestId('workflow-tool-drawer'))!.toBeInTheDocument()
+      expect(screen.getByTestId('workflow-tool-modal'))!.toBeInTheDocument()
       fireEvent.click(screen.getByTestId('wf-close'))
-      expect(screen.queryByTestId('workflow-tool-drawer')).not.toBeInTheDocument()
+      expect(screen.queryByTestId('workflow-tool-modal')).not.toBeInTheDocument()
     })
   })
 

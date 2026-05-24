@@ -63,12 +63,12 @@ describe('DatasetsLayout', () => {
 
     render((
       <DatasetsLayout>
-        <div>datasets</div>
+        <div data-testid="datasets-content">datasets</div>
       </DatasetsLayout>
     ))
 
     expect(screen.getByRole('status')).toBeInTheDocument()
-    expect(screen.queryByText('datasets')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('datasets-content')).not.toBeInTheDocument()
     expect(mockReplace).not.toHaveBeenCalled()
   })
 
@@ -80,11 +80,11 @@ describe('DatasetsLayout', () => {
 
     render((
       <DatasetsLayout>
-        <div>datasets</div>
+        <div data-testid="datasets-content">datasets</div>
       </DatasetsLayout>
     ))
 
-    expect(screen.queryByText('datasets')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('datasets-content')).not.toBeInTheDocument()
     await waitFor(() => {
       expect(mockReplace).toHaveBeenCalledWith('/apps')
     })
@@ -98,11 +98,11 @@ describe('DatasetsLayout', () => {
 
     render((
       <DatasetsLayout>
-        <div>datasets</div>
+        <div data-testid="datasets-content">datasets</div>
       </DatasetsLayout>
     ))
 
-    expect(screen.getByText('datasets')).toBeInTheDocument()
+    expect(screen.getByTestId('datasets-content')).toBeInTheDocument()
     expect(mockReplace).not.toHaveBeenCalled()
   })
 })

@@ -1,14 +1,13 @@
 'use client'
 
-import { Checkbox } from '@langgenius/dify-ui/checkbox'
-import { CheckboxGroup } from '@langgenius/dify-ui/checkbox-group'
+import { useTranslation } from '#i18n'
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@langgenius/dify-ui/popover'
 import { useState } from 'react'
-import { useTranslation } from '#i18n'
+import Checkbox from '@/app/components/base/checkbox'
 import Input from '@/app/components/base/input'
 import { useTags } from '@/app/components/plugins/hooks'
 import MarketplaceTrigger from './trigger/marketplace'
@@ -29,6 +28,12 @@ const TagsFilter = ({
   const [searchText, setSearchText] = useState('')
   const { tags: options, tagsMap } = useTags()
   const filteredOptions = options.filter(option => option.label.toLowerCase().includes(searchText.toLowerCase()))
+  const handleCheck = (id: string) => {
+    if (tags.includes(id))
+      onTagsChange(tags.filter((tag: string) => tag !== id))
+    else
+      onTagsChange([...tags, id])
+  }
   const selectedTagsLength = tags.length
 
   return (
@@ -80,29 +85,25 @@ const TagsFilter = ({
               placeholder={t('searchTags', { ns: 'pluginTags' }) || ''}
             />
           </div>
-          <CheckboxGroup
-            aria-label={t('allTags', { ns: 'pluginTags' })}
-            value={tags}
-            onValueChange={nextTags => onTagsChange(nextTags)}
-            className="max-h-[448px] overflow-y-auto p-1"
-          >
+          <div className="max-h-[448px] overflow-y-auto p-1">
             {
               filteredOptions.map(option => (
-                <label
+                <div
                   key={option.name}
                   className="flex h-7 cursor-pointer items-center rounded-lg px-2 py-1.5 select-none hover:bg-state-base-hover"
+                  onClick={() => handleCheck(option.name)}
                 >
                   <Checkbox
                     className="mr-1"
-                    value={option.name}
+                    checked={tags.includes(option.name)}
                   />
                   <div className="px-1 system-sm-medium text-text-secondary">
                     {option.label}
                   </div>
-                </label>
+                </div>
               ))
             }
-          </CheckboxGroup>
+          </div>
         </div>
       </PopoverContent>
     </Popover>

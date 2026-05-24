@@ -13,7 +13,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import ApiServer from '@/app/components/develop/ApiServer'
 
-// ---------- fake timers (modal transitions) ----------
+// ---------- fake timers (HeadlessUI Dialog transitions) ----------
 beforeEach(() => {
   vi.useFakeTimers({ shouldAdvanceTime: true })
 })
@@ -100,7 +100,7 @@ describe('API Key management flow', () => {
     })
     await flushUI()
 
-    // SecretKeyModal should render with real modal content
+    // SecretKeyModal should render with real HeadlessUI Dialog
     await waitFor(() => {
       expect(screen.getByText('appApi.apiKeyModal.apiSecretKey')).toBeInTheDocument()
       expect(screen.getByText('appApi.apiKeyModal.apiSecretKeyTips')).toBeInTheDocument()

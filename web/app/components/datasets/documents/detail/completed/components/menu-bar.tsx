@@ -1,10 +1,12 @@
 'use client'
-import { Checkbox } from '@langgenius/dify-ui/checkbox'
+import type { FC } from 'react'
+import { cn } from '@langgenius/dify-ui/cn'
 import { Select, SelectContent, SelectItem, SelectItemIndicator, SelectItemText, SelectTrigger } from '@langgenius/dify-ui/select'
-import { useTranslation } from 'react-i18next'
+import Checkbox from '@/app/components/base/checkbox'
 import Divider from '@/app/components/base/divider'
 import Input from '@/app/components/base/input'
 import DisplayToggle from '../display-toggle'
+import StatusItem from '../status-item'
 import s from '../style.module.css'
 
 type Item = {
@@ -13,7 +15,9 @@ type Item = {
 } & Record<string, unknown>
 
 type MenuBarProps = {
-  hasSelectableSegments: boolean
+  isAllSelected: boolean
+  isSomeSelected: boolean
+  onSelectedAll: () => void
   isLoading: boolean
   totalText: string
   statusList: Item[]
@@ -25,8 +29,10 @@ type MenuBarProps = {
   toggleCollapsed: () => void
 }
 
-function MenuBar({
-  hasSelectableSegments,
+const MenuBar: FC<MenuBarProps> = ({
+  isAllSelected,
+  isSomeSelected,
+  onSelectedAll,
   isLoading,
   totalText,
   statusList,
@@ -36,24 +42,18 @@ function MenuBar({
   onInputChange,
   isCollapsed,
   toggleCollapsed,
-}: MenuBarProps) {
-  const { t } = useTranslation()
+}) => {
   const selectedStatus = statusList.find(item => item.value === selectDefaultValue) ?? null
 
   return (
     <div className={s.docSearchWrapper}>
-      {hasSelectableSegments
-        ? (
-            <Checkbox
-              className="shrink-0"
-              parent
-              aria-label={t('operation.selectAll', { ns: 'common' })}
-              disabled={isLoading}
-            />
-          )
-        : (
-            <span className="size-4 shrink-0" aria-hidden />
-          )}
+      <Checkbox
+        className="shrink-0"
+        checked={isAllSelected}
+        indeterminate={!isAllSelected && isSomeSelected}
+        onCheck={onSelectedAll}
+        disabled={isLoading}
+      />
       <div className="flex-1 pl-5 system-sm-semibold-uppercase text-text-secondary">{totalText}</div>
       <Select
         value={selectedStatus ? String(selectedStatus.value) : null}
@@ -65,14 +65,15 @@ function MenuBar({
             onChangeStatus(nextItem)
         }}
       >
-        <SelectTrigger className="mr-2 w-[100px] shrink-0 shadow-none">
+        <SelectTrigger className={cn(s.select, 'mr-2 h-fit')}>
           {selectedStatus?.name ?? ''}
         </SelectTrigger>
         <SelectContent popupClassName="w-[160px]">
           {statusList.map(item => (
-            <SelectItem key={item.value} value={String(item.value)}>
-              <SelectItemText>{item.name}</SelectItemText>
-              <SelectItemIndicator />
+            <SelectItem key={item.value} value={String(item.value)} className="h-auto p-0">
+              <SelectItemText className="sr-only m-0 p-0">{item.name}</SelectItemText>
+              <StatusItem item={item} selected={item.value === selectDefaultValue} />
+              {item.value === selectDefaultValue && <SelectItemIndicator className="hidden" />}
             </SelectItem>
           ))}
         </SelectContent>

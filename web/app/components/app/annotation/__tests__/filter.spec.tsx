@@ -1,7 +1,7 @@
-import type { AnnotationCountResponse } from '@dify/contracts/api/console/apps/types.gen'
 import type { UseQueryResult } from '@tanstack/react-query'
 import type { Mock } from 'vitest'
 import type { QueryParam } from '../filter'
+import type { AnnotationsCountResponse } from '@/models/log'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen } from '@testing-library/react'
 import * as React from 'react'
@@ -69,7 +69,7 @@ describe('Filter', () => {
     it('should render nothing when data is loading', () => {
       // Arrange
       mockUseAnnotationsCount.mockReturnValue(
-        createMockQueryResult<AnnotationCountResponse>({ isLoading: true }),
+        createMockQueryResult<AnnotationsCountResponse>({ isLoading: true }),
       )
 
       // Act
@@ -90,7 +90,7 @@ describe('Filter', () => {
     it('should render nothing when data is undefined', () => {
       // Arrange
       mockUseAnnotationsCount.mockReturnValue(
-        createMockQueryResult<AnnotationCountResponse>({ data: undefined, isLoading: false }),
+        createMockQueryResult<AnnotationsCountResponse>({ data: undefined, isLoading: false }),
       )
 
       // Act
@@ -111,7 +111,7 @@ describe('Filter', () => {
     it('should render filter and children when data is available', () => {
       // Arrange
       mockUseAnnotationsCount.mockReturnValue(
-        createMockQueryResult<AnnotationCountResponse>({
+        createMockQueryResult<AnnotationsCountResponse>({
           data: { count: 20 },
           isLoading: false,
         }),
@@ -141,7 +141,7 @@ describe('Filter', () => {
     it('should call useAnnotationsCount with appId', () => {
       // Arrange
       mockUseAnnotationsCount.mockReturnValue(
-        createMockQueryResult<AnnotationCountResponse>({
+        createMockQueryResult<AnnotationsCountResponse>({
           data: { count: 10 },
           isLoading: false,
         }),
@@ -165,7 +165,7 @@ describe('Filter', () => {
     it('should display keyword value in input', () => {
       // Arrange
       mockUseAnnotationsCount.mockReturnValue(
-        createMockQueryResult<AnnotationCountResponse>({
+        createMockQueryResult<AnnotationsCountResponse>({
           data: { count: 10 },
           isLoading: false,
         }),
@@ -195,7 +195,7 @@ describe('Filter', () => {
     it('should call setQueryParams when typing in search input', () => {
       // Arrange
       mockUseAnnotationsCount.mockReturnValue(
-        createMockQueryResult<AnnotationCountResponse>({
+        createMockQueryResult<AnnotationsCountResponse>({
           data: { count: 20 },
           isLoading: false,
         }),
@@ -224,7 +224,7 @@ describe('Filter', () => {
     it('should call setQueryParams with empty keyword when clearing input', () => {
       // Arrange
       mockUseAnnotationsCount.mockReturnValue(
-        createMockQueryResult<AnnotationCountResponse>({
+        createMockQueryResult<AnnotationsCountResponse>({
           data: { count: 20 },
           isLoading: false,
         }),
@@ -243,7 +243,10 @@ describe('Filter', () => {
       )
 
       // Act
-      fireEvent.click(screen.getByRole('button', { name: 'common.operation.clear' }))
+      const input = screen.getByPlaceholderText('common.operation.search')
+      const clearButton = input.parentElement?.querySelector('div.cursor-pointer')
+      if (clearButton)
+        fireEvent.click(clearButton)
 
       // Assert
       expect(setQueryParams).toHaveBeenCalledWith({ ...queryParams, keyword: '' })
@@ -257,7 +260,7 @@ describe('Filter', () => {
     it('should handle empty keyword in queryParams', () => {
       // Arrange
       mockUseAnnotationsCount.mockReturnValue(
-        createMockQueryResult<AnnotationCountResponse>({
+        createMockQueryResult<AnnotationsCountResponse>({
           data: { count: 5 },
           isLoading: false,
         }),
@@ -281,7 +284,7 @@ describe('Filter', () => {
     it('should handle undefined keyword in queryParams', () => {
       // Arrange
       mockUseAnnotationsCount.mockReturnValue(
-        createMockQueryResult<AnnotationCountResponse>({
+        createMockQueryResult<AnnotationsCountResponse>({
           data: { count: 5 },
           isLoading: false,
         }),
@@ -305,7 +308,7 @@ describe('Filter', () => {
     it('should handle zero count', () => {
       // Arrange
       mockUseAnnotationsCount.mockReturnValue(
-        createMockQueryResult<AnnotationCountResponse>({
+        createMockQueryResult<AnnotationsCountResponse>({
           data: { count: 0 },
           isLoading: false,
         }),

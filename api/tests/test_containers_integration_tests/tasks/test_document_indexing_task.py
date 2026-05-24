@@ -3,12 +3,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from faker import Faker
-from sqlalchemy.orm import Session
 
 from core.entities.document_task import DocumentTask
 from core.rag.index_processor.constant.index_type import IndexTechniqueType
 from enums.cloud_plan import CloudPlan
-from models import Account, AccountStatus, Tenant, TenantAccountJoin, TenantAccountRole, TenantStatus
+from models import Account, Tenant, TenantAccountJoin, TenantAccountRole
 from models.dataset import Dataset, Document
 from models.enums import DataSourceType, DocumentCreatedFrom, IndexingStatus
 from tasks.document_indexing_task import (
@@ -52,7 +51,7 @@ class TestDocumentIndexingTasks:
             }
 
     def _create_test_dataset_and_documents(
-        self, db_session_with_containers: Session, mock_external_service_dependencies, document_count=3
+        self, db_session_with_containers, mock_external_service_dependencies, document_count=3
     ):
         """
         Helper method to create a test dataset and documents for testing.
@@ -72,14 +71,14 @@ class TestDocumentIndexingTasks:
             email=fake.email(),
             name=fake.name(),
             interface_language="en-US",
-            status=AccountStatus.ACTIVE,
+            status="active",
         )
         db_session_with_containers.add(account)
         db_session_with_containers.commit()
 
         tenant = Tenant(
             name=fake.company(),
-            status=TenantStatus.NORMAL,
+            status="normal",
         )
         db_session_with_containers.add(tenant)
         db_session_with_containers.commit()
@@ -134,7 +133,7 @@ class TestDocumentIndexingTasks:
         return dataset, documents
 
     def _create_test_dataset_with_billing_features(
-        self, db_session_with_containers: Session, mock_external_service_dependencies, billing_enabled=True
+        self, db_session_with_containers, mock_external_service_dependencies, billing_enabled=True
     ):
         """
         Helper method to create a test dataset with billing features configured.
@@ -154,14 +153,14 @@ class TestDocumentIndexingTasks:
             email=fake.email(),
             name=fake.name(),
             interface_language="en-US",
-            status=AccountStatus.ACTIVE,
+            status="active",
         )
         db_session_with_containers.add(account)
         db_session_with_containers.commit()
 
         tenant = Tenant(
             name=fake.company(),
-            status=TenantStatus.NORMAL,
+            status="normal",
         )
         db_session_with_containers.add(tenant)
         db_session_with_containers.commit()
@@ -222,9 +221,7 @@ class TestDocumentIndexingTasks:
 
         return dataset, documents
 
-    def test_document_indexing_task_success(
-        self, db_session_with_containers: Session, mock_external_service_dependencies
-    ):
+    def test_document_indexing_task_success(self, db_session_with_containers, mock_external_service_dependencies):
         """
         Test successful document indexing with multiple documents.
 
@@ -265,7 +262,7 @@ class TestDocumentIndexingTasks:
         assert len(processed_documents) == 3
 
     def test_document_indexing_task_dataset_not_found(
-        self, db_session_with_containers: Session, mock_external_service_dependencies
+        self, db_session_with_containers, mock_external_service_dependencies
     ):
         """
         Test handling of non-existent dataset.
@@ -289,7 +286,7 @@ class TestDocumentIndexingTasks:
         mock_external_service_dependencies["indexing_runner_instance"].run.assert_not_called()
 
     def test_document_indexing_task_document_not_found_in_dataset(
-        self, db_session_with_containers: Session, mock_external_service_dependencies
+        self, db_session_with_containers, mock_external_service_dependencies
     ):
         """
         Test handling when some documents don't exist in the dataset.
@@ -335,7 +332,7 @@ class TestDocumentIndexingTasks:
         assert len(processed_documents) == 2  # Only existing documents
 
     def test_document_indexing_task_indexing_runner_exception(
-        self, db_session_with_containers: Session, mock_external_service_dependencies
+        self, db_session_with_containers, mock_external_service_dependencies
     ):
         """
         Test handling of IndexingRunner exceptions.
@@ -376,7 +373,7 @@ class TestDocumentIndexingTasks:
             assert updated_document.processing_started_at is not None
 
     def test_document_indexing_task_mixed_document_states(
-        self, db_session_with_containers: Session, mock_external_service_dependencies
+        self, db_session_with_containers, mock_external_service_dependencies
     ):
         """
         Test processing documents with mixed initial states.
@@ -459,7 +456,7 @@ class TestDocumentIndexingTasks:
         assert len(processed_documents) == 4
 
     def test_document_indexing_task_billing_sandbox_plan_batch_limit(
-        self, db_session_with_containers: Session, mock_external_service_dependencies
+        self, db_session_with_containers, mock_external_service_dependencies
     ):
         """
         Test billing validation for sandbox plan batch upload limit.
@@ -521,7 +518,7 @@ class TestDocumentIndexingTasks:
         mock_external_service_dependencies["indexing_runner"].assert_not_called()
 
     def test_document_indexing_task_billing_disabled_success(
-        self, db_session_with_containers: Session, mock_external_service_dependencies
+        self, db_session_with_containers, mock_external_service_dependencies
     ):
         """
         Test successful processing when billing is disabled.
@@ -557,7 +554,7 @@ class TestDocumentIndexingTasks:
             assert updated_document.processing_started_at is not None
 
     def test_document_indexing_task_document_is_paused_error(
-        self, db_session_with_containers: Session, mock_external_service_dependencies
+        self, db_session_with_containers, mock_external_service_dependencies
     ):
         """
         Test handling of DocumentIsPausedError from IndexingRunner.
@@ -600,9 +597,7 @@ class TestDocumentIndexingTasks:
             assert updated_document.processing_started_at is not None
 
     # ==================== NEW TESTS FOR REFACTORED FUNCTIONS ====================
-    def test_old_document_indexing_task_success(
-        self, db_session_with_containers: Session, mock_external_service_dependencies
-    ):
+    def test_old_document_indexing_task_success(self, db_session_with_containers, mock_external_service_dependencies):
         """
         Test document_indexing_task basic functionality.
 
@@ -624,7 +619,7 @@ class TestDocumentIndexingTasks:
         mock_external_service_dependencies["indexing_runner_instance"].run.assert_called_once()
 
     def test_normal_document_indexing_task_success(
-        self, db_session_with_containers: Session, mock_external_service_dependencies
+        self, db_session_with_containers, mock_external_service_dependencies
     ):
         """
         Test normal_document_indexing_task basic functionality.
@@ -648,7 +643,7 @@ class TestDocumentIndexingTasks:
         mock_external_service_dependencies["indexing_runner_instance"].run.assert_called_once()
 
     def test_priority_document_indexing_task_success(
-        self, db_session_with_containers: Session, mock_external_service_dependencies
+        self, db_session_with_containers, mock_external_service_dependencies
     ):
         """
         Test priority_document_indexing_task basic functionality.
@@ -672,7 +667,7 @@ class TestDocumentIndexingTasks:
         mock_external_service_dependencies["indexing_runner_instance"].run.assert_called_once()
 
     def test_document_indexing_with_tenant_queue_success(
-        self, db_session_with_containers: Session, mock_external_service_dependencies
+        self, db_session_with_containers, mock_external_service_dependencies
     ):
         """
         Test _document_indexing_with_tenant_queue function with no waiting tasks.
@@ -722,7 +717,7 @@ class TestDocumentIndexingTasks:
         mock_task_func.delay.assert_not_called()
 
     def test_document_indexing_with_tenant_queue_with_waiting_tasks(
-        self, db_session_with_containers: Session, mock_external_service_dependencies
+        self, db_session_with_containers, mock_external_service_dependencies
     ):
         """
         Test _document_indexing_with_tenant_queue function with waiting tasks in queue using real Redis.
@@ -781,7 +776,7 @@ class TestDocumentIndexingTasks:
         assert len(remaining_tasks) == 1
 
     def test_document_indexing_with_tenant_queue_error_handling(
-        self, db_session_with_containers: Session, mock_external_service_dependencies
+        self, db_session_with_containers, mock_external_service_dependencies
     ):
         """
         Test error handling in _document_indexing_with_tenant_queue using real Redis.
@@ -853,7 +848,7 @@ class TestDocumentIndexingTasks:
         assert len(remaining_tasks) == 0
 
     def test_document_indexing_with_tenant_queue_tenant_isolation(
-        self, db_session_with_containers: Session, mock_external_service_dependencies
+        self, db_session_with_containers, mock_external_service_dependencies
     ):
         """
         Test tenant isolation in _document_indexing_with_tenant_queue using real Redis.

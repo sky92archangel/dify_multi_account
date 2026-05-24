@@ -5,7 +5,6 @@ from enum import StrEnum
 import pytest
 from flask import Response
 from pydantic import ValidationError
-from pytest_mock import MockerFixture
 
 from core.plugin.entities.endpoint import EndpointEntityWithInstance
 from core.plugin.entities.marketplace import MarketplacePluginDeclaration, MarketplacePluginSnapshot
@@ -35,7 +34,7 @@ from graphon.model_runtime.entities.message_entities import (
 
 
 class TestEndpointEntity:
-    def test_endpoint_entity_with_instance_renders_url(self, mocker: MockerFixture):
+    def test_endpoint_entity_with_instance_renders_url(self, mocker):
         mocker.patch("core.plugin.entities.endpoint.dify_config.ENDPOINT_URL_TEMPLATE", "https://dify.test/{hook_id}")
         now = datetime.datetime.now(datetime.UTC)
 

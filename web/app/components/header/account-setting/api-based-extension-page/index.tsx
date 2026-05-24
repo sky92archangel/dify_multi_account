@@ -1,58 +1,39 @@
-import type { ApiBasedExtensionResponse } from '@dify/contracts/api/console/api-based-extension/types.gen'
 import { Button } from '@langgenius/dify-ui/button'
-import { useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
+import {
+  RiAddLine,
+} from '@remixicon/react'
 import { useTranslation } from 'react-i18next'
-import { consoleQuery } from '@/service/client'
-import { Empty } from './empty'
-import { Item } from './item'
-import { ApiBasedExtensionModal } from './modal'
+import { useModalContext } from '@/context/modal-context'
+import { useApiBasedExtensions } from '@/service/use-common'
+import Empty from './empty'
+import Item from './item'
 
-type ApiBasedExtensionDialogState = {
-  mode: 'create'
-} | {
-  mode: 'edit'
-  apiBasedExtension: ApiBasedExtensionResponse
-} | null
-
-export function ApiBasedExtensionPage() {
+const ApiBasedExtensionPage = () => {
   const { t } = useTranslation()
-  const { data: apiBasedExtensions = [], isPending: isLoading } = useQuery(consoleQuery.apiBasedExtension.get.queryOptions())
-  const [dialogState, setDialogState] = useState<ApiBasedExtensionDialogState>(null)
+  const { setShowApiBasedExtensionModal } = useModalContext()
+  const { data, refetch: mutate, isPending: isLoading } = useApiBasedExtensions()
 
   const handleOpenApiBasedExtensionModal = () => {
-    setDialogState({
-      mode: 'create',
+    setShowApiBasedExtensionModal({
+      payload: {},
+      onSaveCallback: () => mutate(),
     })
-  }
-  const handleEditApiBasedExtension = (apiBasedExtension: ApiBasedExtensionResponse) => {
-    setDialogState({
-      mode: 'edit',
-      apiBasedExtension,
-    })
-  }
-  const handleApiBasedExtensionSaved = () => {
-    setDialogState(null)
-  }
-  const handleApiBasedExtensionModalOpenChange = (open: boolean) => {
-    if (!open)
-      setDialogState(null)
   }
 
   return (
     <div>
       {
-        !isLoading && !apiBasedExtensions.length && (
+        !isLoading && !data?.length && (
           <Empty />
         )
       }
       {
-        !isLoading && !!apiBasedExtensions.length && (
-          apiBasedExtensions.map(item => (
+        !isLoading && !!data?.length && (
+          data.map(item => (
             <Item
               key={item.id}
-              apiBasedExtension={item}
-              onEdit={handleEditApiBasedExtension}
+              data={item}
+              onUpdate={() => mutate()}
             />
           ))
         )
@@ -62,30 +43,11 @@ export function ApiBasedExtensionPage() {
         className="w-full"
         onClick={handleOpenApiBasedExtensionModal}
       >
-        <span className="mr-1 i-ri-add-line size-4" aria-hidden="true" />
+        <RiAddLine className="mr-1 h-4 w-4" />
         {t('apiBasedExtension.add', { ns: 'common' })}
       </Button>
-      {
-        dialogState?.mode === 'create' && (
-          <ApiBasedExtensionModal
-            open
-            mode="create"
-            onOpenChange={handleApiBasedExtensionModalOpenChange}
-            onSaved={handleApiBasedExtensionSaved}
-          />
-        )
-      }
-      {
-        dialogState?.mode === 'edit' && (
-          <ApiBasedExtensionModal
-            open
-            mode="edit"
-            apiBasedExtension={dialogState.apiBasedExtension}
-            onOpenChange={handleApiBasedExtensionModalOpenChange}
-            onSaved={handleApiBasedExtensionSaved}
-          />
-        )
-      }
     </div>
   )
 }
+
+export default ApiBasedExtensionPage

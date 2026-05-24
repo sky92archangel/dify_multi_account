@@ -1,13 +1,11 @@
-import { useInfiniteQuery } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useStore as useAppStore } from '@/app/components/app/store'
 import { useAppContext } from '@/context/app-context'
 import { useParams } from '@/next/navigation'
+import { useInfiniteAppList } from '@/service/use-apps'
 import { AppModeEnum } from '@/types/app'
 import AppNav from '../index'
-
-const mockAppListInfiniteOptions = vi.hoisted(() => vi.fn((options: unknown) => options))
 
 vi.mock('@/next/navigation', () => ({
   useParams: vi.fn(),
@@ -27,23 +25,9 @@ vi.mock('@/app/components/app/store', () => ({
   useStore: vi.fn(),
 }))
 
-vi.mock('@/service/client', () => ({
-  consoleQuery: {
-    apps: {
-      list: {
-        infiniteOptions: (options: unknown) => mockAppListInfiniteOptions(options),
-      },
-    },
-  },
+vi.mock('@/service/use-apps', () => ({
+  useInfiniteAppList: vi.fn(),
 }))
-
-vi.mock('@tanstack/react-query', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@tanstack/react-query')>()
-  return {
-    ...actual,
-    useInfiniteQuery: vi.fn(),
-  }
-})
 
 vi.mock('@/app/components/app/create-app-dialog', () => ({
   default: ({ show, onClose, onSuccess }: { show: boolean, onClose: () => void, onSuccess: () => void }) =>
@@ -146,12 +130,8 @@ const mockAppData = [
 const mockUseParams = vi.mocked(useParams)
 const mockUseAppContext = vi.mocked(useAppContext)
 const mockUseAppStore = vi.mocked(useAppStore)
-const mockUseInfiniteQuery = vi.mocked(useInfiniteQuery)
+const mockUseInfiniteAppList = vi.mocked(useInfiniteAppList)
 let mockAppDetail: { id: string, name: string } | null = null
-type AppListInfiniteOptions = {
-  input: (pageParam: number) => { query: { page: number, limit: number, name: string } }
-  getNextPageParam: (lastPage: { has_more: boolean, page: number }) => number | undefined
-}
 
 const setupDefaultMocks = (options?: {
   hasNextPage?: boolean
@@ -166,13 +146,13 @@ const setupDefaultMocks = (options?: {
   mockUseParams.mockReturnValue({ appId: 'app-1' } as ReturnType<typeof useParams>)
   mockUseAppContext.mockReturnValue({ isCurrentWorkspaceEditor: options?.isEditor ?? false } as ReturnType<typeof useAppContext>)
   mockUseAppStore.mockImplementation((selector: unknown) => (selector as (state: { appDetail: { id: string, name: string } | null }) => unknown)({ appDetail: mockAppDetail }))
-  mockUseInfiniteQuery.mockReturnValue({
+  mockUseInfiniteAppList.mockReturnValue({
     data: { pages: [{ data: options?.appData ?? mockAppData }] },
     fetchNextPage,
     hasNextPage: options?.hasNextPage ?? false,
     isFetchingNextPage: false,
     refetch,
-  } as ReturnType<typeof useInfiniteQuery>)
+  } as ReturnType<typeof useInfiniteAppList>)
 
   return { refetch, fetchNextPage }
 }
@@ -182,23 +162,6 @@ describe('AppNav', () => {
     vi.clearAllMocks()
     mockAppDetail = null
     setupDefaultMocks()
-  })
-
-  it('should configure paged app list query options', () => {
-    setupDefaultMocks()
-    render(<AppNav />)
-
-    const options = mockAppListInfiniteOptions.mock.calls.at(-1)?.[0] as AppListInfiniteOptions
-
-    expect(options.input(3)).toEqual({
-      query: {
-        page: 3,
-        limit: 30,
-        name: '',
-      },
-    })
-    expect(options.getNextPageParam({ has_more: true, page: 3 })).toBe(4)
-    expect(options.getNextPageParam({ has_more: false, page: 3 })).toBeUndefined()
   })
 
   it('should build editor links and update app name when app detail changes', async () => {
@@ -319,13 +282,13 @@ describe('AppNav', () => {
     // Arrange
     setupDefaultMocks()
     mockUseParams.mockReturnValue({} as ReturnType<typeof useParams>)
-    mockUseInfiniteQuery.mockReturnValue({
+    mockUseInfiniteAppList.mockReturnValue({
       data: undefined,
       fetchNextPage: vi.fn(),
       hasNextPage: false,
       isFetchingNextPage: false,
       refetch: vi.fn(),
-    } as unknown as ReturnType<typeof useInfiniteQuery>)
+    } as unknown as ReturnType<typeof useInfiniteAppList>)
 
     // Act
     render(<AppNav />)

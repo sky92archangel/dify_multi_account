@@ -5,9 +5,7 @@ from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 import pytest
-from flask import Flask
 from sqlalchemy.engine import Engine
-from sqlalchemy.orm import Session
 
 from configs import dify_config
 from core.workflow.human_input_adapter import (
@@ -90,7 +88,7 @@ class TestDeliveryTestRegistry:
         with pytest.raises(DeliveryTestUnsupportedError, match="Delivery method does not support test send."):
             registry.dispatch(context=context, method=method)
 
-    def test_default(self, flask_app_with_containers: Flask, db_session_with_containers: Session):
+    def test_default(self, flask_app_with_containers, db_session_with_containers):
         registry = DeliveryTestRegistry.default()
         assert len(registry._handlers) == 1
         assert isinstance(registry._handlers[0], EmailDeliveryTestHandler)
@@ -123,7 +121,7 @@ class TestEmailDeliveryTestHandler:
         with pytest.raises(DeliveryTestUnsupportedError):
             handler.send_test(context=MagicMock(), method=MagicMock())
 
-    def test_send_test_feature_disabled(self, monkeypatch: pytest.MonkeyPatch):
+    def test_send_test_feature_disabled(self, monkeypatch):
         monkeypatch.setattr(
             service_module.FeatureService,
             "get_features",
@@ -138,7 +136,7 @@ class TestEmailDeliveryTestHandler:
         with pytest.raises(DeliveryTestError, match="Email delivery is not available"):
             handler.send_test(context=context, method=method)
 
-    def test_send_test_mail_not_inited(self, monkeypatch: pytest.MonkeyPatch):
+    def test_send_test_mail_not_inited(self, monkeypatch):
         monkeypatch.setattr(
             service_module.FeatureService,
             "get_features",
@@ -155,7 +153,7 @@ class TestEmailDeliveryTestHandler:
         with pytest.raises(DeliveryTestError, match="Mail client is not initialized."):
             handler.send_test(context=context, method=method)
 
-    def test_send_test_no_recipients(self, monkeypatch: pytest.MonkeyPatch):
+    def test_send_test_no_recipients(self, monkeypatch):
         monkeypatch.setattr(
             service_module.FeatureService,
             "get_features",
@@ -174,7 +172,7 @@ class TestEmailDeliveryTestHandler:
         with pytest.raises(DeliveryTestError, match="No recipients configured"):
             handler.send_test(context=context, method=method)
 
-    def test_send_test_success(self, monkeypatch: pytest.MonkeyPatch):
+    def test_send_test_success(self, monkeypatch):
         monkeypatch.setattr(
             service_module.FeatureService,
             "get_features",
@@ -210,7 +208,7 @@ class TestEmailDeliveryTestHandler:
         assert kwargs["to"] == "test@example.com"
         assert "RENDERED_Subj" in kwargs["subject"]
 
-    def test_send_test_sanitizes_subject(self, monkeypatch: pytest.MonkeyPatch):
+    def test_send_test_sanitizes_subject(self, monkeypatch):
         monkeypatch.setattr(
             service_module.FeatureService,
             "get_features",
@@ -262,7 +260,7 @@ class TestEmailDeliveryTestHandler:
         )
         assert handler._resolve_recipients(tenant_id="t1", method=method) == ["ext@example.com"]
 
-    def test_resolve_recipients_member(self, flask_app_with_containers: Flask, db_session_with_containers: Session):
+    def test_resolve_recipients_member(self, flask_app_with_containers, db_session_with_containers):
         tenant_id = str(uuid4())
         account = Account(name="Test User", email="member@example.com")
         db_session_with_containers.add(account)
@@ -284,9 +282,7 @@ class TestEmailDeliveryTestHandler:
         )
         assert handler._resolve_recipients(tenant_id=tenant_id, method=method) == ["member@example.com"]
 
-    def test_resolve_recipients_whole_workspace(
-        self, flask_app_with_containers: Flask, db_session_with_containers: Session
-    ):
+    def test_resolve_recipients_whole_workspace(self, flask_app_with_containers, db_session_with_containers):
         tenant_id = str(uuid4())
         account1 = Account(name="User 1", email=f"u1-{uuid4()}@example.com")
         account2 = Account(name="User 2", email=f"u2-{uuid4()}@example.com")

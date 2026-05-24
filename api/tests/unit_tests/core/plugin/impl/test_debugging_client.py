@@ -1,12 +1,10 @@
 from types import SimpleNamespace
 
-from pytest_mock import MockerFixture
-
 from core.plugin.impl.debugging import PluginDebuggingClient
 
 
 class TestPluginDebuggingClient:
-    def test_get_debugging_key(self, mocker: MockerFixture):
+    def test_get_debugging_key(self, mocker):
         client = PluginDebuggingClient()
         request_mock = mocker.patch.object(
             client,

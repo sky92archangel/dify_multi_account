@@ -1,5 +1,4 @@
 import pytest
-from pytest_mock import MockerFixture
 
 import core.app.apps.pipeline.pipeline_queue_manager as module
 from core.app.apps.base_app_queue_manager import PublishFrom
@@ -17,7 +16,7 @@ from core.app.entities.queue_entities import (
 from graphon.model_runtime.entities.llm_entities import LLMResult
 
 
-def test_publish_sets_stop_listen_and_raises_on_stopped(mocker: MockerFixture):
+def test_publish_sets_stop_listen_and_raises_on_stopped(mocker):
     manager = PipelineQueueManager(task_id="t", user_id="u", invoke_from=InvokeFrom.WEB_APP, app_mode="rag")
     manager._q = mocker.MagicMock()
     manager.stop_listen = mocker.MagicMock()
@@ -29,7 +28,7 @@ def test_publish_sets_stop_listen_and_raises_on_stopped(mocker: MockerFixture):
     manager.stop_listen.assert_called_once()
 
 
-def test_publish_stop_events_trigger_stop_listen(mocker: MockerFixture):
+def test_publish_stop_events_trigger_stop_listen(mocker):
     manager = PipelineQueueManager(task_id="t", user_id="u", invoke_from=InvokeFrom.WEB_APP, app_mode="rag")
     manager._q = mocker.MagicMock()
     manager.stop_listen = mocker.MagicMock()
@@ -47,7 +46,7 @@ def test_publish_stop_events_trigger_stop_listen(mocker: MockerFixture):
         manager.stop_listen.assert_called_once()
 
 
-def test_publish_non_stop_event_no_stop_listen(mocker: MockerFixture):
+def test_publish_non_stop_event_no_stop_listen(mocker):
     manager = PipelineQueueManager(task_id="t", user_id="u", invoke_from=InvokeFrom.WEB_APP, app_mode="rag")
     manager._q = mocker.MagicMock()
     manager.stop_listen = mocker.MagicMock()

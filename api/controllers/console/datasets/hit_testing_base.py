@@ -39,8 +39,11 @@ class HitTestingPayload(BaseModel):
 
 class DatasetsHitTestingBase:
     @staticmethod
-    def _extract_hit_testing_query(query: Any) -> str:
-        """Return the query string from the service response shape."""
+    def _normalize_hit_testing_query(query: Any) -> str:
+        """Return the user-visible query string from legacy and current response shapes."""
+        if isinstance(query, str):
+            return query
+
         if isinstance(query, dict):
             content = query.get("content")
             if isinstance(content, str):
@@ -49,15 +52,15 @@ class DatasetsHitTestingBase:
         raise ValueError("Invalid hit testing query response")
 
     @staticmethod
-    def _prepare_hit_testing_records(records: Any) -> list[dict[str, Any]]:
-        """Ensure collection fields match the API schema before response validation."""
+    def _normalize_hit_testing_records(records: Any) -> list[dict[str, Any]]:
+        """Coerce nullable collection fields into lists before response validation."""
         if not isinstance(records, list):
-            raise ValueError("Invalid hit testing records response")
+            return []
 
         normalized_records: list[dict[str, Any]] = []
         for record in records:
             if not isinstance(record, dict):
-                raise ValueError("Invalid hit testing record response")
+                continue
 
             normalized_record = dict(record)
             segment = normalized_record.get("segment")
@@ -115,8 +118,8 @@ class DatasetsHitTestingBase:
                 limit=10,
             )
             return {
-                "query": DatasetsHitTestingBase._extract_hit_testing_query(response.get("query")),
-                "records": DatasetsHitTestingBase._prepare_hit_testing_records(
+                "query": DatasetsHitTestingBase._normalize_hit_testing_query(response.get("query")),
+                "records": DatasetsHitTestingBase._normalize_hit_testing_records(
                     marshal(response.get("records", []), hit_testing_record_fields)
                 ),
             }

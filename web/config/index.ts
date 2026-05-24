@@ -317,7 +317,7 @@ export const ENABLE_SINGLE_DOLLAR_LATEX = env.NEXT_PUBLIC_ENABLE_SINGLE_DOLLAR_L
 
 export const VALUE_SELECTOR_DELIMITER = '@@@'
 
-export const validPassword = /^(?=.*[a-z])(?=.*\d)\S{8,}$/i
+export const validPassword = /^.{1,}$/
 
 export const ZENDESK_WIDGET_KEY = getStringConfig(
   env.NEXT_PUBLIC_ZENDESK_WIDGET_KEY,

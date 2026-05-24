@@ -3,7 +3,7 @@ import type { ModalContextState } from '@/context/modal-context'
 import type { ProviderContextState } from '@/context/provider-context'
 import type { AppDetailResponse } from '@/models/app'
 import type { AppSSO } from '@/types/app'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { Plan } from '@/app/components/billing/type'
 import { baseProviderContextValue } from '@/context/provider-context'
 import { AppModeEnum } from '@/types/app'
@@ -55,6 +55,7 @@ const mockUseProviderContext = vi.fn<() => ProviderContextState>()
 
 const buildModalContext = (): ModalContextState => ({
   setShowAccountSettingModal: mockSetShowAccountSettingModal,
+  setShowApiBasedExtensionModal: vi.fn(),
   setShowModerationSettingModal: vi.fn(),
   setShowExternalDataToolModal: vi.fn(),
   setShowPricingModal: mockSetShowPricingModal,
@@ -223,51 +224,54 @@ describe('SettingsModal', () => {
     expect(mockOnClose).toHaveBeenCalled()
   })
 
-  it('should collapse the expanded settings section immediately when closing', () => {
-    renderSettingsModal()
+  it('should clear the delayed hide-more timer when the modal unmounts after closing', () => {
+    vi.useFakeTimers()
+    const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout')
+    const { unmount } = renderSettingsModal()
 
     fireEvent.click(screen.getByText('appOverview.overview.appInfo.settings.more.entry'))
-    expect(screen.getByPlaceholderText('appOverview.overview.appInfo.settings.more.privacyPolicyPlaceholder')).toBeInTheDocument()
-
     fireEvent.click(screen.getByText('common.operation.cancel'))
+    unmount()
 
-    expect(screen.getByText('appOverview.overview.appInfo.settings.more.entry')).toBeInTheDocument()
+    expect(clearTimeoutSpy).toHaveBeenCalled()
+    vi.runAllTimers()
   })
 
-  it('should reset local form state when the controlled dialog reopens', () => {
-    const { rerender } = render(
-      <SettingsModal
-        isChat
-        isShow={true}
-        appInfo={mockAppInfo}
-        onClose={mockOnClose}
-        onSave={mockOnSave}
-      />,
-    )
+  it('should replace the pending hide-more timer and clear the ref after the timeout completes', async () => {
+    const hideCallbacks: Array<() => void> = []
+    const originalSetTimeout = globalThis.setTimeout
+    const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout').mockImplementation(((
+      callback: TimerHandler,
+      delay?: number,
+      ...args: unknown[]
+    ) => {
+      if (delay === 200) {
+        hideCallbacks.push(() => {
+          if (typeof callback === 'function')
+            callback(...args)
+        })
+        return hideCallbacks.length as unknown as ReturnType<typeof setTimeout>
+      }
 
-    fireEvent.click(screen.getByText('appOverview.overview.appInfo.settings.more.entry'))
-    expect(screen.getByPlaceholderText('appOverview.overview.appInfo.settings.more.privacyPolicyPlaceholder')).toBeInTheDocument()
+      return originalSetTimeout(callback, delay, ...args)
+    }) as unknown as typeof setTimeout)
+    const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout')
+    renderSettingsModal()
 
-    rerender(
-      <SettingsModal
-        isChat
-        isShow={false}
-        appInfo={mockAppInfo}
-        onClose={mockOnClose}
-        onSave={mockOnSave}
-      />,
-    )
-    rerender(
-      <SettingsModal
-        isChat
-        isShow={true}
-        appInfo={mockAppInfo}
-        onClose={mockOnClose}
-        onSave={mockOnSave}
-      />,
-    )
+    act(() => {
+      fireEvent.click(screen.getByText('common.operation.cancel'))
+      fireEvent.click(screen.getByText('common.operation.cancel'))
+    })
 
-    expect(screen.getByText('appOverview.overview.appInfo.settings.more.entry')).toBeInTheDocument()
+    expect(clearTimeoutSpy).toHaveBeenCalled()
+    expect(hideCallbacks.length).toBeGreaterThanOrEqual(2)
+
+    act(() => {
+      hideCallbacks.at(-1)?.()
+    })
+
+    setTimeoutSpy.mockRestore()
+    clearTimeoutSpy.mockRestore()
   })
 
   it('should open the pricing modal from the copyright upgrade badge for sandbox plans', async () => {

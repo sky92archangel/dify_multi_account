@@ -25,26 +25,29 @@ describe('AudioPreview', () => {
   it('should render close button with icon', () => {
     render(<AudioPreview url="https://example.com/audio.mp3" title="Test Audio" onCancel={vi.fn()} />)
 
-    expect(screen.getByRole('button', { name: 'common.operation.close' })).toBeInTheDocument()
+    const closeIcon = screen.getByTestId('close-btn')
+    expect(closeIcon).toBeInTheDocument()
   })
 
   it('should call onCancel when close button is clicked', () => {
     const onCancel = vi.fn()
     render(<AudioPreview url="https://example.com/audio.mp3" title="Test Audio" onCancel={onCancel} />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'common.operation.close' }))
+    const closeIcon = screen.getByTestId('close-btn')
+    fireEvent.click(closeIcon.parentElement!)
 
     expect(onCancel).toHaveBeenCalled()
   })
 
-  it('should not close when backdrop is clicked', () => {
-    const onCancel = vi.fn()
-    render(<AudioPreview url="https://example.com/audio.mp3" title="Test Audio" onCancel={onCancel} />)
+  it('should stop propagation when backdrop is clicked', () => {
+    const { baseElement } = render(<AudioPreview url="https://example.com/audio.mp3" title="Test Audio" onCancel={vi.fn()} />)
 
-    const dialog = screen.getByRole('dialog')
-    fireEvent.click(dialog)
+    const backdrop = baseElement.querySelector('[tabindex="-1"]')
+    const event = new MouseEvent('click', { bubbles: true })
+    const stopPropagation = vi.spyOn(event, 'stopPropagation')
+    backdrop!.dispatchEvent(event)
 
-    expect(onCancel).not.toHaveBeenCalled()
+    expect(stopPropagation).toHaveBeenCalled()
   })
 
   it('should call onCancel when Escape key is pressed', () => {
@@ -61,6 +64,6 @@ describe('AudioPreview', () => {
     render(<AudioPreview url="https://example.com/audio.mp3" title="Test Audio" onCancel={vi.fn()} />)
 
     const audio = document.querySelector('audio')
-    expect(audio?.closest('[data-base-ui-portal]')?.parentElement).toBe(document.body)
+    expect(audio?.closest('[tabindex="-1"]')?.parentElement).toBe(document.body)
   })
 })

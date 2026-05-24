@@ -36,7 +36,6 @@ const NumberSliderField = ({
         )}
       </div>
       <InputNumberWithSlider
-        label={label}
         value={field.state.value}
         onChange={value => field.handleChange(value)}
         {...InputNumberWithSliderProps}

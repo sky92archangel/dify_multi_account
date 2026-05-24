@@ -17,20 +17,6 @@ vi.mock('@/app/components/base/amplitude', () => ({
   trackEvent: vi.fn(),
 }))
 
-const mockConfig = vi.hoisted(() => ({
-  isCloudEdition: true,
-}))
-
-vi.mock('@/config', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/config')>()
-  return {
-    ...actual,
-    get IS_CLOUD_EDITION() {
-      return mockConfig.isCloudEdition
-    },
-  }
-})
-
 const mockApp: App = {
   can_trial: true,
   app: {
@@ -49,7 +35,7 @@ const mockApp: App = {
   copyright: 'Test Corp',
   privacy_policy: null,
   custom_disclaimer: null,
-  categories: ['Assistant'],
+  category: 'Assistant',
   position: 1,
   is_listed: true,
   install_count: 100,
@@ -84,7 +70,6 @@ describe('AppCard', () => {
   }
 
   beforeEach(() => {
-    mockConfig.isCloudEdition = true
     vi.clearAllMocks()
   })
 
@@ -268,20 +253,13 @@ describe('AppCard', () => {
         template_id: mockApp.app_id,
         template_name: mockApp.app.name,
         template_mode: mockApp.app.mode,
-        template_categories: mockApp.categories,
+        template_category: mockApp.category,
         page: 'studio',
       })
       expect(mockSetShowTryAppPanel).toHaveBeenCalledWith(true, {
         appId: mockApp.app_id,
         app: mockApp,
       })
-    })
-
-    it('should hide try button outside cloud edition', () => {
-      mockConfig.isCloudEdition = false
-      renderWithProvider(<AppCard {...defaultProps} />)
-
-      expect(screen.queryByRole('button', { name: /explore\.appCard\.try/ })).not.toBeInTheDocument()
     })
   })
 

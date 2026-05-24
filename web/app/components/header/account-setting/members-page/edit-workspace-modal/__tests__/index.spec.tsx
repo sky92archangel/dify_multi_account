@@ -11,8 +11,6 @@ const toastMocks = vi.hoisted(() => ({
   mockNotify: vi.fn(),
 }))
 
-const getSaveButton = () => screen.getByRole('button', { name: /operation\.(save|saving)/i })
-
 vi.mock('@/context/app-context')
 vi.mock('@/service/common')
 vi.mock('@langgenius/dify-ui/toast', () => ({
@@ -59,7 +57,7 @@ describe('EditWorkspaceModal', () => {
   it('should render on the dify-ui overlay layer', async () => {
     renderModal()
 
-    expect(await screen.findByRole('dialog')).toHaveClass('z-50')
+    expect(await screen.findByRole('dialog')).toHaveClass('z-1002')
   })
 
   it('should let user edit workspace name', async () => {
@@ -85,7 +83,7 @@ describe('EditWorkspaceModal', () => {
     const input = screen.getByLabelText(/account\.workspaceName/i)
     await user.clear(input)
     await user.type(input, 'Renamed Workspace')
-    await user.click(getSaveButton())
+    await user.click(screen.getByTestId('edit-workspace-save'))
 
     await waitFor(() => {
       expect(updateWorkspaceInfo).toHaveBeenCalledWith({
@@ -108,7 +106,7 @@ describe('EditWorkspaceModal', () => {
     const input = screen.getByLabelText(/account\.workspaceName/i)
     await user.clear(input)
     await user.type(input, 'Broken Workspace')
-    await user.click(getSaveButton())
+    await user.click(screen.getByTestId('edit-workspace-save'))
 
     await waitFor(() => {
       expect(mockNotify).toHaveBeenCalledWith(expect.objectContaining({
@@ -120,7 +118,7 @@ describe('EditWorkspaceModal', () => {
   it('should disable save button when there are no changes', async () => {
     renderModal()
 
-    expect(getSaveButton()).toBeDisabled()
+    expect(screen.getByTestId('edit-workspace-save')).toBeDisabled()
   })
 
   it('should disable save button and show error when the name is empty', async () => {
@@ -131,7 +129,7 @@ describe('EditWorkspaceModal', () => {
     const input = screen.getByLabelText(/account\.workspaceName/i)
     await user.clear(input)
 
-    expect(getSaveButton()).toBeDisabled()
+    expect(screen.getByTestId('edit-workspace-save')).toBeDisabled()
     expect(input).toHaveAttribute('aria-invalid', 'true')
     expect(screen.getByTestId('edit-workspace-error')).toBeInTheDocument()
   })
@@ -139,7 +137,7 @@ describe('EditWorkspaceModal', () => {
   it('should not submit when the form is submitted while save is disabled', async () => {
     renderModal()
 
-    const saveButton = getSaveButton()
+    const saveButton = screen.getByTestId('edit-workspace-save')
     const form = saveButton.closest('form')
 
     expect(saveButton).toBeDisabled()
@@ -159,14 +157,14 @@ describe('EditWorkspaceModal', () => {
 
     renderModal()
 
-    expect(getSaveButton()).toBeDisabled()
+    expect(screen.getByTestId('edit-workspace-save')).toBeDisabled()
   })
 
   it('should call onCancel when close icon is clicked', async () => {
     const user = userEvent.setup()
     renderModal()
 
-    await user.click(screen.getByRole('button', { name: /Close|operation.close/ }))
+    await user.click(screen.getByTestId('edit-workspace-close'))
     expect(mockOnCancel).toHaveBeenCalled()
   })
 
@@ -174,7 +172,7 @@ describe('EditWorkspaceModal', () => {
     const user = userEvent.setup()
     renderModal()
 
-    await user.click(screen.getByRole('button', { name: /operation\.cancel/i }))
+    await user.click(screen.getByTestId('edit-workspace-cancel'))
     expect(mockOnCancel).toHaveBeenCalled()
   })
 

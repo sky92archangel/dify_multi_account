@@ -420,7 +420,7 @@ function getDescriptionTextarea() {
 }
 
 // Helper to find the AppIcon span in PublishAsKnowledgePipelineModal
-// The modal renders via portal to document.body, so we search the full document.
+// HeadlessUI Dialog renders via portal to document.body, so we search the full document
 function getAppIcon() {
   const emoji = document.querySelector('em-emoji')
   return emoji?.closest('span') as HTMLElement
@@ -687,7 +687,7 @@ describe('PublishAsKnowledgePipelineModal', () => {
       render(<PublishAsKnowledgePipelineModal {...defaultProps} />)
 
       // Real AppIcon renders an em-emoji custom element inside a span
-      // The modal renders via portal, so search the full document.
+      // HeadlessUI Dialog renders via portal, so search the full document
       expect(document.querySelector('em-emoji')).toBeInTheDocument()
     })
 
@@ -729,7 +729,7 @@ describe('PublishAsKnowledgePipelineModal', () => {
     it('should call onCancel when close icon is clicked', () => {
       render(<PublishAsKnowledgePipelineModal {...defaultProps} />)
 
-      fireEvent.click(screen.getByRole('button', { name: 'common.operation.close' }))
+      fireEvent.click(screen.getByTestId('publish-modal-close-btn'))
 
       expect(mockOnCancel).toHaveBeenCalledTimes(1)
     })
@@ -845,7 +845,7 @@ describe('PublishAsKnowledgePipelineModal', () => {
       const { rerender } = render(<PublishAsKnowledgePipelineModal {...defaultProps} />)
 
       rerender(<PublishAsKnowledgePipelineModal {...defaultProps} />)
-      // The modal renders via portal, so search the full document.
+      // HeadlessUI Dialog renders via portal, so search the full document
       expect(document.querySelector('em-emoji')).toBeInTheDocument()
     })
   })

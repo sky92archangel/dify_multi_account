@@ -1,5 +1,4 @@
 import type { OnlineDriveFile } from '@/models/pipeline'
-import { RadioGroup } from '@langgenius/dify-ui/radio-group'
 import { RiLoader2Line } from '@remixicon/react'
 import * as React from 'react'
 import { useEffect, useRef } from 'react'
@@ -54,25 +53,6 @@ const List = ({
   const isPartialLoading = isLoading && fileList.length > 0
   const isEmptyFolder = !isLoading && fileList.length === 0 && keywords.length === 0
   const isSearchResultEmpty = !isLoading && fileList.length === 0 && keywords.length > 0
-  const selectedFileId = selectedFileIds[0]
-  const handleRadioChange = (fileId: string) => {
-    const selectedFile = fileList.find(file => file.id === fileId)
-    if (selectedFile)
-      handleSelectFile(selectedFile)
-  }
-  const fileItems = fileList.map((file) => {
-    const isSelected = selectedFileIds.includes(file.id)
-    return (
-      <Item
-        key={file.id}
-        file={file}
-        isSelected={isSelected}
-        onSelect={handleSelectFile}
-        onOpen={handleOpenFolder}
-        isMultipleChoice={supportBatchUpload}
-      />
-    )
-  })
 
   return (
     <div className="grow overflow-hidden p-1 pt-0">
@@ -93,18 +73,21 @@ const List = ({
       }
       {fileList.length > 0 && (
         <div className="flex h-full flex-col gap-y-px overflow-y-auto rounded-[10px] bg-background-section px-1 py-1.5">
-          {supportBatchUpload
-            ? fileItems
-            : (
-                <RadioGroup
-                  aria-label={t('onlineDrive.breadcrumbs.allFiles', { ns: 'datasetPipeline' })}
-                  value={selectedFileId}
-                  onValueChange={handleRadioChange}
-                  className="contents"
-                >
-                  {fileItems}
-                </RadioGroup>
-              )}
+          {
+            fileList.map((file) => {
+              const isSelected = selectedFileIds.includes(file.id)
+              return (
+                <Item
+                  key={file.id}
+                  file={file}
+                  isSelected={isSelected}
+                  onSelect={handleSelectFile}
+                  onOpen={handleOpenFolder}
+                  isMultipleChoice={supportBatchUpload}
+                />
+              )
+            })
+          }
           {
             isPartialLoading && (
               <div

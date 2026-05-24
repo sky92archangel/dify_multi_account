@@ -33,7 +33,7 @@ const AuthorizedInDataSourceNode = ({
       }
       <RiEqualizer2Line
         className={cn(
-          'size-3.5 text-components-button-ghost-text',
+          'h-3.5 w-3.5 text-components-button-ghost-text',
         )}
       />
     </Button>

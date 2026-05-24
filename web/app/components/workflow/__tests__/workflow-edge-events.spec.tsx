@@ -27,12 +27,6 @@ const reactFlowBridge = vi.hoisted(() => ({
 const collaborationBridge = vi.hoisted(() => ({
   graphImportHandler: null as null | ((payload: { nodes: Node[], edges: Edge[] }) => void),
   historyActionHandler: null as null | ((payload: unknown) => void),
-  restoreIntentHandler: null as null | ((payload: {
-    versionId: string
-    versionName?: string
-    initiatorUserId: string
-    initiatorName: string
-  }) => void),
 }))
 
 const toastInfoMock = vi.hoisted(() => vi.fn())
@@ -186,10 +180,6 @@ vi.mock('../collaboration/core/collaboration-manager', () => ({
       collaborationBridge.historyActionHandler = handler
       return vi.fn()
     },
-    onRestoreIntent: (handler: typeof collaborationBridge.restoreIntentHandler) => {
-      collaborationBridge.restoreIntentHandler = handler
-      return vi.fn()
-    },
   },
 }))
 
@@ -261,23 +251,17 @@ vi.mock('../hooks/use-workflow-comment', () => ({
 vi.mock('../base/confirm', () => ({
   default: ({
     isShow,
-    title,
-    desc,
     onConfirm,
     onCancel,
   }: {
     isShow: boolean
-    title?: string
-    desc?: string
     onConfirm: () => void
     onCancel: () => void
   }) => isShow
     ? (
-        <div role="alertdialog" data-testid="confirm-dialog">
-          {title && <div>{title}</div>}
-          {desc && <div>{desc}</div>}
-          <button type="button" onClick={onConfirm}>common.operation.confirm</button>
-          <button type="button" onClick={onCancel}>common.operation.cancel</button>
+        <div data-testid="confirm-dialog">
+          <button type="button" onClick={onConfirm}>confirm</button>
+          <button type="button" onClick={onCancel}>cancel</button>
         </div>
       )
     : null,
@@ -299,6 +283,14 @@ vi.mock('../custom-edge', () => ({
 }))
 
 vi.mock('../help-line', () => ({
+  default: () => null,
+}))
+
+vi.mock('../edge-contextmenu', () => ({
+  default: () => null,
+}))
+
+vi.mock('../node-contextmenu', () => ({
   default: () => null,
 }))
 
@@ -330,17 +322,20 @@ vi.mock('../operator/control', () => ({
   default: () => null,
 }))
 
+vi.mock('../panel-contextmenu', () => ({
+  default: () => null,
+}))
+
+vi.mock('../selection-contextmenu', () => ({
+  default: () => null,
+}))
+
 vi.mock('../simple-node', () => ({
   default: () => null,
 }))
 
 vi.mock('../syncing-data-modal', () => ({
   default: () => null,
-}))
-
-vi.mock('../shortcuts/use-workflow-hotkeys', () => ({
-  useWorkflowHotkeys: workflowHookMocks.useShortcuts,
-  useWorkflowShortcut: vi.fn(),
 }))
 
 vi.mock('../hooks', () => ({
@@ -351,10 +346,6 @@ vi.mock('../hooks', () => ({
     handleEdgeContextMenu: workflowHookMocks.handleEdgeContextMenu,
   }),
   useNodesInteractions: () => ({
-    handleNodesCopy: vi.fn(),
-    handleNodesDelete: vi.fn(),
-    handleNodesDuplicate: vi.fn(),
-    handleNodesPaste: vi.fn(),
     handleNodeDragStart: workflowHookMocks.handleNodeDragStart,
     handleNodeDrag: workflowHookMocks.handleNodeDrag,
     handleNodeDragStop: workflowHookMocks.handleNodeDragStop,
@@ -378,11 +369,8 @@ vi.mock('../hooks', () => ({
   }),
   usePanelInteractions: () => ({
     handlePaneContextMenu: workflowHookMocks.handlePaneContextMenu,
+    handleEdgeContextmenuCancel: vi.fn(),
   }),
-  useDSL: () => ({
-    exportCheck: vi.fn(),
-  }),
-  useIsChatMode: () => false,
   useSelectionInteractions: () => ({
     handleSelectionStart: workflowHookMocks.handleSelectionStart,
     handleSelectionChange: workflowHookMocks.handleSelectionChange,
@@ -399,16 +387,10 @@ vi.mock('../hooks', () => ({
   useWorkflowReadOnly: () => ({
     workflowReadOnly: false,
   }),
-  useWorkflowMoveMode: () => ({
-    isCommentModeAvailable: false,
-  }),
   useWorkflowRefreshDraft: () => ({
     handleRefreshWorkflowDraft: vi.fn(),
   }),
-  useWorkflowStartRun: () => ({
-    handleStartWorkflowRun: vi.fn(),
-    handleWorkflowStartRunInChatflow: vi.fn(),
-  }),
+  useLeaderRestoreListener: vi.fn(),
 }))
 
 vi.mock('../hooks/use-workflow-search', () => ({
@@ -486,7 +468,6 @@ describe('Workflow edge event wiring', () => {
     reactFlowBridge.store = null
     collaborationBridge.graphImportHandler = null
     collaborationBridge.historyActionHandler = null
-    collaborationBridge.restoreIntentHandler = null
     workflowCommentState.comments = []
     workflowCommentState.pendingComment = null
     workflowCommentState.activeComment = null
@@ -549,10 +530,14 @@ describe('Workflow edge event wiring', () => {
     ]))
   })
 
-  it('should clear context menu target when workflow data updates', () => {
+  it('should clear edgeMenu when workflow data updates remove the current edge', () => {
     const { store } = renderSubject({
       initialStoreState: {
-        contextMenuTarget: { type: 'edge', edgeId: 'edge-1' },
+        edgeMenu: {
+          clientX: 320,
+          clientY: 180,
+          edgeId: 'edge-1',
+        },
       },
     })
 
@@ -566,7 +551,7 @@ describe('Workflow edge event wiring', () => {
       })
     })
 
-    expect(store.getState().contextMenuTarget).toBeUndefined()
+    expect(store.getState().edgeMenu).toBeUndefined()
   })
 
   it('should render confirm description and clear showConfirm when cancelled', async () => {
@@ -627,25 +612,6 @@ describe('Workflow edge event wiring', () => {
     await waitFor(() => {
       expect(screen.getByText('Workflow node node-3')).toBeInTheDocument()
       expect(toastInfoMock).toHaveBeenCalledTimes(1)
-    })
-  })
-
-  it('should show restore intent toast when another collaborator restores a workflow version', async () => {
-    renderSubject()
-
-    act(() => {
-      collaborationBridge.restoreIntentHandler?.({
-        versionId: 'version-1',
-        versionName: 'Version One',
-        initiatorUserId: 'user-1',
-        initiatorName: 'Alice',
-      })
-    })
-
-    await waitFor(() => {
-      expect(toastInfoMock).toHaveBeenCalledWith(
-        'workflow.versionHistory.action.restoreInProgress:{"userName":"Alice","versionName":"Version One"}',
-      )
     })
   })
 

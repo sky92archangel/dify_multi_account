@@ -137,7 +137,7 @@ describe('useOAuthClientState', () => {
   const defaultParams = {
     oauthConfig: createMockOAuthConfig(),
     providerName: 'test-provider',
-    onOpenChange: vi.fn(),
+    onClose: vi.fn(),
     showOAuthCreateModal: vi.fn(),
   }
 
@@ -310,20 +310,20 @@ describe('useOAuthClientState', () => {
       )
     })
 
-    it('should call onOpenChange and show success toast on success', () => {
+    it('should call onClose and show success toast on success', () => {
       mockDeleteOAuth.mockImplementation((provider, { onSuccess }) => onSuccess())
 
-      const onOpenChange = vi.fn()
+      const onClose = vi.fn()
       const { result } = renderHook(() => useOAuthClientState({
         ...defaultParams,
-        onOpenChange,
+        onClose,
       }))
 
       act(() => {
         result.current.handleRemove()
       })
 
-      expect(onOpenChange).toHaveBeenCalledWith(false)
+      expect(onClose).toHaveBeenCalled()
       expect(mockToastNotify).toHaveBeenCalledWith({
         type: 'success',
         message: 'pluginTrigger.modal.oauth.remove.success',
@@ -398,20 +398,20 @@ describe('useOAuthClientState', () => {
       )
     })
 
-    it('should show success toast and call onOpenChange when needAuth is false', () => {
+    it('should show success toast and call onClose when needAuth is false', () => {
       mockConfigureOAuth.mockImplementation((params, { onSuccess }) => onSuccess())
-      const onOpenChange = vi.fn()
+      const onClose = vi.fn()
 
       const { result } = renderHook(() => useOAuthClientState({
         ...defaultParams,
-        onOpenChange,
+        onClose,
       }))
 
       act(() => {
         result.current.handleSave(false)
       })
 
-      expect(onOpenChange).toHaveBeenCalledWith(false)
+      expect(onClose).toHaveBeenCalled()
       expect(mockToastNotify).toHaveBeenCalledWith({
         type: 'success',
         message: 'pluginTrigger.modal.oauth.save.success',
@@ -495,8 +495,8 @@ describe('useOAuthClientState', () => {
       })
     })
 
-    it('should call onOpenChange and showOAuthCreateModal on callback success', () => {
-      const onOpenChange = vi.fn()
+    it('should call onClose and showOAuthCreateModal on callback success', () => {
+      const onClose = vi.fn()
       const showOAuthCreateModal = vi.fn()
       const builder = createMockSubscriptionBuilder()
 
@@ -513,7 +513,7 @@ describe('useOAuthClientState', () => {
 
       const { result } = renderHook(() => useOAuthClientState({
         ...defaultParams,
-        onOpenChange,
+        onClose,
         showOAuthCreateModal,
       }))
 
@@ -521,7 +521,7 @@ describe('useOAuthClientState', () => {
         result.current.handleSave(true)
       })
 
-      expect(onOpenChange).toHaveBeenCalledWith(false)
+      expect(onClose).toHaveBeenCalled()
       expect(showOAuthCreateModal).toHaveBeenCalledWith(builder)
       expect(mockToastNotify).toHaveBeenCalledWith({
         type: 'success',
@@ -530,7 +530,7 @@ describe('useOAuthClientState', () => {
     })
 
     it('should not call callbacks when OAuth callback returns falsy', () => {
-      const onOpenChange = vi.fn()
+      const onClose = vi.fn()
       const showOAuthCreateModal = vi.fn()
 
       mockConfigureOAuth.mockImplementation((params, { onSuccess }) => onSuccess())
@@ -546,7 +546,7 @@ describe('useOAuthClientState', () => {
 
       const { result } = renderHook(() => useOAuthClientState({
         ...defaultParams,
-        onOpenChange,
+        onClose,
         showOAuthCreateModal,
       }))
 
@@ -554,7 +554,7 @@ describe('useOAuthClientState', () => {
         result.current.handleSave(true)
       })
 
-      expect(onOpenChange).not.toHaveBeenCalled()
+      expect(onClose).not.toHaveBeenCalled()
       expect(showOAuthCreateModal).not.toHaveBeenCalled()
     })
   })

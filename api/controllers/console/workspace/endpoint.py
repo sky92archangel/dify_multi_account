@@ -20,6 +20,8 @@ from graphon.model_runtime.utils.encoders import jsonable_encoder
 from libs.login import current_account_with_tenant, login_required
 from services.plugin.endpoint_service import EndpointService
 
+DEFAULT_REF_TEMPLATE_SWAGGER_2_0 = "#/definitions/{model}"
+
 
 class EndpointCreatePayload(BaseModel):
     plugin_unique_identifier: str
@@ -76,6 +78,10 @@ class EndpointEnableResponse(BaseModel):
 
 class EndpointDisableResponse(BaseModel):
     success: bool = Field(description="Operation success")
+
+
+def reg(cls: type[BaseModel]):
+    console_ns.schema_model(cls.__name__, cls.model_json_schema(ref_template=DEFAULT_REF_TEMPLATE_SWAGGER_2_0))
 
 
 register_schema_models(
@@ -209,7 +215,7 @@ class EndpointListApi(Resource):
     def get(self):
         user, tenant_id = current_account_with_tenant()
 
-        args = EndpointListQuery.model_validate(request.args.to_dict(flat=True))
+        args = EndpointListQuery.model_validate(request.args.to_dict(flat=True))  # type: ignore
 
         page = args.page
         page_size = args.page_size
@@ -242,7 +248,7 @@ class EndpointListForSinglePluginApi(Resource):
     def get(self):
         user, tenant_id = current_account_with_tenant()
 
-        args = EndpointListForPluginQuery.model_validate(request.args.to_dict(flat=True))
+        args = EndpointListForPluginQuery.model_validate(request.args.to_dict(flat=True))  # type: ignore
 
         page = args.page
         page_size = args.page_size

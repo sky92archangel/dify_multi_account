@@ -66,6 +66,15 @@ describe('useDatasetCardState', () => {
   })
 
   describe('Initial State', () => {
+    it('should return tags from dataset', () => {
+      const dataset = createMockDataset()
+      const { result } = renderHook(() =>
+        useDatasetCardState({ dataset, onSuccess: vi.fn() }),
+      )
+
+      expect(result.current.tags).toEqual(dataset.tags)
+    })
+
     it('should have initial modal state closed', () => {
       const dataset = createMockDataset()
       const { result } = renderHook(() =>
@@ -84,6 +93,36 @@ describe('useDatasetCardState', () => {
       )
 
       expect(result.current.exporting).toBe(false)
+    })
+  })
+
+  describe('Tags State', () => {
+    it('should update tags when setTags is called', () => {
+      const dataset = createMockDataset()
+      const { result } = renderHook(() =>
+        useDatasetCardState({ dataset, onSuccess: vi.fn() }),
+      )
+
+      act(() => {
+        result.current.setTags([{ id: 'tag-2', name: 'Tag 2', type: 'knowledge', binding_count: 0 }])
+      })
+
+      expect(result.current.tags).toEqual([{ id: 'tag-2', name: 'Tag 2', type: 'knowledge', binding_count: 0 }])
+    })
+
+    it('should sync tags when dataset tags change', () => {
+      const dataset = createMockDataset()
+      const { result, rerender } = renderHook(
+        ({ dataset }) => useDatasetCardState({ dataset, onSuccess: vi.fn() }),
+        { initialProps: { dataset } },
+      )
+
+      const newTags = [{ id: 'tag-3', name: 'Tag 3', type: 'knowledge', binding_count: 0 }]
+      const updatedDataset = createMockDataset({ tags: newTags })
+
+      rerender({ dataset: updatedDataset })
+
+      expect(result.current.tags).toEqual(newTags)
     })
   })
 
@@ -240,6 +279,15 @@ describe('useDatasetCardState', () => {
   })
 
   describe('Edge Cases', () => {
+    it('should handle empty tags array', () => {
+      const dataset = createMockDataset({ tags: [] })
+      const { result } = renderHook(() =>
+        useDatasetCardState({ dataset, onSuccess: vi.fn() }),
+      )
+
+      expect(result.current.tags).toEqual([])
+    })
+
     it('should handle undefined onSuccess', async () => {
       const dataset = createMockDataset()
       const { result } = renderHook(() =>

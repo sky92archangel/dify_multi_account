@@ -6,7 +6,6 @@ from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 import pytest
-from flask import Flask
 from sqlalchemy.orm import Session
 
 from controllers.console import console_ns
@@ -27,10 +26,10 @@ def unwrap(func):
 
 class TestPipelineTemplateListApi:
     @pytest.fixture
-    def app(self, flask_app_with_containers: Flask):
+    def app(self, flask_app_with_containers):
         return flask_app_with_containers
 
-    def test_get_success(self, app: Flask):
+    def test_get_success(self, app):
         api = PipelineTemplateListApi()
         method = unwrap(api.get)
 
@@ -51,10 +50,10 @@ class TestPipelineTemplateListApi:
 
 class TestPipelineTemplateDetailApi:
     @pytest.fixture
-    def app(self, flask_app_with_containers: Flask):
+    def app(self, flask_app_with_containers):
         return flask_app_with_containers
 
-    def test_get_success(self, app: Flask):
+    def test_get_success(self, app):
         api = PipelineTemplateDetailApi()
         method = unwrap(api.get)
 
@@ -75,7 +74,7 @@ class TestPipelineTemplateDetailApi:
         assert status == 200
         assert response == template
 
-    def test_get_returns_404_when_template_not_found(self, app: Flask):
+    def test_get_returns_404_when_template_not_found(self, app):
         api = PipelineTemplateDetailApi()
         method = unwrap(api.get)
 
@@ -94,7 +93,7 @@ class TestPipelineTemplateDetailApi:
         assert status == 404
         assert "error" in response
 
-    def test_get_returns_404_for_customized_type_not_found(self, app: Flask):
+    def test_get_returns_404_for_customized_type_not_found(self, app):
         api = PipelineTemplateDetailApi()
         method = unwrap(api.get)
 
@@ -116,10 +115,10 @@ class TestPipelineTemplateDetailApi:
 
 class TestCustomizedPipelineTemplateApi:
     @pytest.fixture
-    def app(self, flask_app_with_containers: Flask):
+    def app(self, flask_app_with_containers):
         return flask_app_with_containers
 
-    def test_patch_success(self, app: Flask):
+    def test_patch_success(self, app):
         api = CustomizedPipelineTemplateApi()
         method = unwrap(api.patch)
 
@@ -141,7 +140,7 @@ class TestCustomizedPipelineTemplateApi:
         update_mock.assert_called_once()
         assert response == 200
 
-    def test_delete_success(self, app: Flask):
+    def test_delete_success(self, app):
         api = CustomizedPipelineTemplateApi()
         method = unwrap(api.delete)
 
@@ -156,7 +155,7 @@ class TestCustomizedPipelineTemplateApi:
         delete_mock.assert_called_once_with("tpl-1")
         assert response == 200
 
-    def test_post_success(self, app: Flask, db_session_with_containers: Session):
+    def test_post_success(self, app, db_session_with_containers: Session):
         api = CustomizedPipelineTemplateApi()
         method = unwrap(api.post)
 
@@ -183,7 +182,7 @@ class TestCustomizedPipelineTemplateApi:
         assert status == 200
         assert response == {"data": "yaml-data"}
 
-    def test_post_template_not_found(self, app: Flask):
+    def test_post_template_not_found(self, app):
         api = CustomizedPipelineTemplateApi()
         method = unwrap(api.post)
 
@@ -194,10 +193,10 @@ class TestCustomizedPipelineTemplateApi:
 
 class TestPublishCustomizedPipelineTemplateApi:
     @pytest.fixture
-    def app(self, flask_app_with_containers: Flask):
+    def app(self, flask_app_with_containers):
         return flask_app_with_containers
 
-    def test_post_success(self, app: Flask):
+    def test_post_success(self, app):
         api = PublishCustomizedPipelineTemplateApi()
         method = unwrap(api.post)
 

@@ -45,7 +45,7 @@ const PluginVersionPicker: FC<Props> = ({
   trigger,
   placement = 'bottom-start',
   sideOffset = 4,
-  alignOffset = 0,
+  alignOffset = -16,
   onSelect,
 }) => {
   const { t } = useTranslation()

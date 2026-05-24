@@ -60,7 +60,7 @@ describe('VersionHistoryItem', () => {
           currentVersion={null}
           latestVersionId="latest-version"
           onClick={onClick}
-          handleClickActionMenuItem={vi.fn()}
+          handleClickMenuItem={vi.fn()}
           isLast={false}
         />,
       )
@@ -81,7 +81,7 @@ describe('VersionHistoryItem', () => {
   describe('Published Items', () => {
     it('should open the context menu for a latest named version and forward restore', async () => {
       const user = userEvent.setup()
-      const handleClickActionMenuItem = vi.fn()
+      const handleClickMenuItem = vi.fn()
       const onClick = vi.fn()
 
       render(
@@ -90,7 +90,7 @@ describe('VersionHistoryItem', () => {
           currentVersion={null}
           latestVersionId="version-1"
           onClick={onClick}
-          handleClickActionMenuItem={handleClickActionMenuItem}
+          handleClickMenuItem={handleClickMenuItem}
           isLast={false}
         />,
       )
@@ -120,8 +120,8 @@ describe('VersionHistoryItem', () => {
 
       fireEvent.click(restoreItem)
 
-      expect(handleClickActionMenuItem).toHaveBeenCalledTimes(1)
-      expect(handleClickActionMenuItem).toHaveBeenCalledWith(
+      expect(handleClickMenuItem).toHaveBeenCalledTimes(1)
+      expect(handleClickMenuItem).toHaveBeenCalledWith(
         VersionHistoryContextMenuOptions.restore,
         VersionHistoryContextMenuOptions.restore,
       )
@@ -138,7 +138,7 @@ describe('VersionHistoryItem', () => {
           currentVersion={item}
           latestVersionId="other-version"
           onClick={onClick}
-          handleClickActionMenuItem={vi.fn()}
+          handleClickMenuItem={vi.fn()}
           isLast
         />,
       )

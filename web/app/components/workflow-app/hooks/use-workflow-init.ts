@@ -124,7 +124,7 @@ export const useWorkflowInit = () => {
           return acc
         }, {} as Record<string, any>),
       })
-      workflowStore.getState().setPublishedAt(publishedWorkflow?.created_at ?? 0)
+      workflowStore.getState().setPublishedAt(publishedWorkflow?.created_at)
       const graph = publishedWorkflow?.graph
       workflowStore.getState().setLastPublishedHasUserInput(
         hasConnectedUserInput(graph?.nodes, graph?.edges),

@@ -10,6 +10,11 @@ import {
 } from '@langgenius/dify-ui/alert-dialog'
 import { Button } from '@langgenius/dify-ui/button'
 import { cn } from '@langgenius/dify-ui/cn'
+import {
+  RiEditBoxLine,
+  RiExpandRightLine,
+  RiLayoutLeft2Line,
+} from '@remixicon/react'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import {
   useCallback,
@@ -30,7 +35,7 @@ type Props = {
   panelVisible?: boolean
 }
 
-const Sidebar = ({ isPanel }: Props) => {
+const Sidebar = ({ isPanel, panelVisible }: Props) => {
   const { t } = useTranslation()
   const {
     isInstalledApp,
@@ -107,18 +112,18 @@ const Sidebar = ({ isPanel }: Props) => {
         <div className={cn('grow truncate system-md-semibold text-text-secondary')}>{appData?.site.title}</div>
         {!isMobile && isSidebarCollapsed && (
           <ActionButton size="l" onClick={() => handleSidebarCollapse(false)}>
-            <span aria-hidden className="i-ri-expand-right-line h-[18px] w-[18px]" />
+            <RiExpandRightLine className="h-[18px] w-[18px]" />
           </ActionButton>
         )}
         {!isMobile && !isSidebarCollapsed && (
           <ActionButton size="l" onClick={() => handleSidebarCollapse(true)}>
-            <span aria-hidden className="i-ri-layout-left-2-line h-[18px] w-[18px]" />
+            <RiLayoutLeft2Line className="h-[18px] w-[18px]" />
           </ActionButton>
         )}
       </div>
       <div className="shrink-0 px-3 py-4">
         <Button variant="secondary-accent" disabled={isResponding} className="w-full justify-center" onClick={handleNewConversation}>
-          <span aria-hidden className="mr-1 i-ri-edit-box-line size-4" />
+          <RiEditBoxLine className="mr-1 h-4 w-4" />
           {t('chat.newChat', { ns: 'share' })}
         </Button>
       </div>
@@ -151,6 +156,7 @@ const Sidebar = ({ isPanel }: Props) => {
           hideLogout={isInstalledApp}
           placement="top-start"
           data={appData?.site}
+          forceClose={isPanel && !panelVisible}
         />
         {/* powered by */}
         <div className="shrink-0">

@@ -133,7 +133,7 @@ const AppOperations = ({
             data-targetid={operation.id}
             size="small"
             variant="secondary"
-            className="gap-px focus-visible:ring-inset"
+            className="gap-px"
             tabIndex={-1}
           >
             {cloneElement(operation.icon, { className: 'h-3.5 w-3.5 text-components-button-secondary-text' })}
@@ -146,10 +146,10 @@ const AppOperations = ({
           id="more-measure"
           size="small"
           variant="secondary"
-          className="gap-px focus-visible:ring-inset"
+          className="gap-px"
           tabIndex={-1}
         >
-          <RiMoreLine className="size-3.5 text-components-button-secondary-text" />
+          <RiMoreLine className="h-3.5 w-3.5 text-components-button-secondary-text" />
           <span className="system-xs-medium text-components-button-secondary-text">
             {t('operation.more', { ns: 'common' })}
           </span>
@@ -162,7 +162,7 @@ const AppOperations = ({
             data-targetid={operation.id}
             size="small"
             variant="secondary"
-            className="gap-px focus-visible:ring-inset"
+            className="gap-px"
             onClick={operation.onClick}
           >
             {cloneElement(operation.icon, { className: 'h-3.5 w-3.5 text-components-button-secondary-text' })}
@@ -178,12 +178,12 @@ const AppOperations = ({
                 <Button
                   size="small"
                   variant="secondary"
-                  className="gap-px focus-visible:ring-inset"
+                  className="gap-px"
                 />
               )}
             >
               <>
-                <RiMoreLine className="size-3.5 text-components-button-secondary-text" />
+                <RiMoreLine className="h-3.5 w-3.5 text-components-button-secondary-text" />
                 <span className="system-xs-medium text-components-button-secondary-text">
                   {t('operation.more', { ns: 'common' })}
                 </span>

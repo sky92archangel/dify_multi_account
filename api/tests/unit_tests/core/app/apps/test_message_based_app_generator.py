@@ -85,7 +85,7 @@ def _make_chat_generate_entity(app_config: EasyUIBasedAppConfig) -> ChatAppGener
 
 
 @pytest.fixture(autouse=True)
-def _mock_db_session(monkeypatch: pytest.MonkeyPatch):
+def _mock_db_session(monkeypatch):
     session = MagicMock()
 
     def refresh_side_effect(obj):
@@ -130,7 +130,7 @@ def test_init_generate_records_sets_conversation_fields_for_chat_entity():
 
 
 class TestMessageBasedAppGeneratorExtras:
-    def test_handle_response_closed_file_raises_stopped(self, monkeypatch: pytest.MonkeyPatch):
+    def test_handle_response_closed_file_raises_stopped(self, monkeypatch):
         generator = MessageBasedAppGenerator()
 
         class _Pipeline:
@@ -155,7 +155,7 @@ class TestMessageBasedAppGeneratorExtras:
                 stream=False,
             )
 
-    def test_get_app_model_config_requires_valid_config(self, monkeypatch: pytest.MonkeyPatch):
+    def test_get_app_model_config_requires_valid_config(self, monkeypatch):
         generator = MessageBasedAppGenerator()
         app_model = SimpleNamespace(id="app", app_model_config_id=None, app_model_config=None)
 

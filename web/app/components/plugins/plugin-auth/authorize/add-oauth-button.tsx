@@ -93,7 +93,7 @@ const AddOAuthButton = ({
       <div className="w-full">
         <div className="mb-4 flex rounded-xl bg-background-section-burn p-4">
           <div className="mr-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border-[0.5px] border-components-card-border bg-components-card-bg shadow-lg">
-            <span className="i-ri-information-2-fill size-5 text-text-accent" />
+            <span className="i-ri-information-2-fill h-5 w-5 text-text-accent" />
           </div>
           <div className="w-0 grow">
             <div className="mb-1.5 system-sm-regular">
@@ -109,7 +109,7 @@ const AddOAuthButton = ({
                       navigator.clipboard.writeText(redirect_uri || '')
                     }}
                   >
-                    <span className="i-ri-clipboard-line size-4" />
+                    <span className="i-ri-clipboard-line h-4 w-4" />
                   </ActionButton>
                 </div>
               )
@@ -187,15 +187,19 @@ const AddOAuthButton = ({
     <>
       {
         isConfigured && (
-          <div className={cn('flex w-full', className)}>
-            <Button
-              variant={buttonVariant}
-              className={cn(
-                'h-8 min-w-0 flex-1 rounded-r-none p-0 hover:bg-components-button-primary-bg-hover',
-                buttonLeftClassName,
-              )}
-              disabled={disabled}
-              onClick={handleOAuth}
+          <Button
+            variant={buttonVariant}
+            className={cn(
+              'w-full px-0 py-0 hover:bg-components-button-primary-bg',
+              className,
+            )}
+            disabled={disabled}
+            onClick={handleOAuth}
+          >
+            <div className={cn(
+              'flex h-full w-0 grow items-center justify-center rounded-l-lg pl-0.5 hover:bg-components-button-primary-bg-hover',
+              buttonLeftClassName,
+            )}
             >
               <div
                 className="truncate"
@@ -215,28 +219,27 @@ const AddOAuthButton = ({
                   </Badge>
                 )
               }
-            </Button>
+            </div>
             <div className={cn(
-              'h-4 w-px shrink-0 self-center bg-text-primary-on-surface opacity-[0.15]',
+              'h-4 w-px shrink-0 bg-text-primary-on-surface opacity-[0.15]',
               dividerClassName,
             )}
             >
             </div>
-            <Button
-              variant={buttonVariant}
-              aria-label={t('auth.oauthClientSettings', { ns: 'plugin' })}
+            <div
+              data-testid="oauth-settings-button"
               className={cn(
-                'size-8 shrink-0 rounded-l-none p-0 hover:bg-components-button-primary-bg-hover',
+                'flex h-full w-8 shrink-0 items-center justify-center rounded-r-lg hover:bg-components-button-primary-bg-hover',
                 buttonRightClassName,
               )}
-              disabled={disabled}
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation()
                 openOAuthSettings()
               }}
             >
-              <span className="i-ri-equalizer-2-line size-4" aria-hidden="true" />
-            </Button>
-          </div>
+              <span className="i-ri-equalizer-2-line h-4 w-4" />
+            </div>
+          </Button>
         )
       }
       {
@@ -247,7 +250,7 @@ const AddOAuthButton = ({
             disabled={disabled}
             className="w-full"
           >
-            <span className="mr-0.5 i-ri-equalizer-2-line size-4" />
+            <span className="mr-0.5 i-ri-equalizer-2-line h-4 w-4" />
             {t('auth.setupOAuth', { ns: 'plugin' })}
           </Button>
         )

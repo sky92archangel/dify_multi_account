@@ -3,6 +3,7 @@ import type { ScheduleTriggerNodeType } from '../../types'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import FrequencySelector from '../frequency-selector'
+import ModeSwitcher from '../mode-switcher'
 import ModeToggle from '../mode-toggle'
 import MonthlyDaysSelector from '../monthly-days-selector'
 import NextExecutionTimes from '../next-execution-times'
@@ -50,6 +51,16 @@ describe('trigger-schedule components', () => {
       await waitFor(() => {
         expect(onChange).toHaveBeenCalledWith('weekly')
       })
+    })
+
+    it('should switch between visual and cron modes', async () => {
+      const user = userEvent.setup()
+      const onChange = vi.fn()
+      render(<ModeSwitcher mode="visual" onChange={onChange} />)
+
+      await user.click(screen.getByText('workflow.nodes.triggerSchedule.modeCron'))
+
+      expect(onChange).toHaveBeenCalledWith('cron')
     })
 
     it('should toggle the mode from visual to cron', async () => {

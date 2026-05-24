@@ -88,9 +88,7 @@ export const createPayloadForType = (payload: InputVar, type: InputVarType) => {
       draft.default = undefined
 
     if ([InputVarType.singleFile, InputVarType.multiFiles].includes(type)) {
-      draft.hide = false
-      const fileUploadSettingKeys = Object.keys(DEFAULT_FILE_UPLOAD_SETTING) as Array<keyof typeof DEFAULT_FILE_UPLOAD_SETTING>
-      fileUploadSettingKeys.forEach((key) => {
+      (Object.keys(DEFAULT_FILE_UPLOAD_SETTING) as Array<keyof typeof DEFAULT_FILE_UPLOAD_SETTING>).forEach((key) => {
         if (key !== 'max_length')
           draft[key] = DEFAULT_FILE_UPLOAD_SETTING[key] as never
       })
@@ -160,41 +158,38 @@ export const validateConfigModalPayload = ({
   checkVariableName,
   t,
 }: ValidateConfigModalPayloadOptions): ValidateConfigModalPayloadResult => {
-  const normalizedTempPayload = [InputVarType.singleFile, InputVarType.multiFiles].includes(tempPayload.type)
-    ? { ...tempPayload, hide: false }
-    : tempPayload
   const jsonSchemaValue = tempPayload.json_schema
   const schemaEmpty = isJsonSchemaEmpty(jsonSchemaValue)
   const normalizedJsonSchema = schemaEmpty ? undefined : jsonSchemaValue
-  const payloadToSave = normalizedTempPayload.type === InputVarType.jsonObject && schemaEmpty
-    ? { ...normalizedTempPayload, json_schema: undefined }
-    : normalizedTempPayload
+  const payloadToSave = tempPayload.type === InputVarType.jsonObject && schemaEmpty
+    ? { ...tempPayload, json_schema: undefined }
+    : tempPayload
 
-  const moreInfo = normalizedTempPayload.variable === payload?.variable
+  const moreInfo = tempPayload.variable === payload?.variable
     ? undefined
     : {
         type: ChangeType.changeVarName,
-        payload: { beforeKey: payload?.variable || '', afterKey: normalizedTempPayload.variable },
+        payload: { beforeKey: payload?.variable || '', afterKey: tempPayload.variable },
       }
 
-  if (!checkVariableName(normalizedTempPayload.variable))
+  if (!checkVariableName(tempPayload.variable))
     return {}
 
-  if (!normalizedTempPayload.label) {
+  if (!tempPayload.label) {
     return {
       errorMessage: t('variableConfig.errorMsg.labelNameRequired', { ns: 'appDebug' }),
     }
   }
 
-  if (normalizedTempPayload.type === InputVarType.select) {
-    if (!normalizedTempPayload.options?.length) {
+  if (tempPayload.type === InputVarType.select) {
+    if (!tempPayload.options?.length) {
       return {
         errorMessage: t('variableConfig.errorMsg.atLeastOneOption', { ns: 'appDebug' }),
       }
     }
 
     const duplicated = new Set<string>()
-    const hasRepeatedItem = normalizedTempPayload.options.some((option) => {
+    const hasRepeatedItem = tempPayload.options.some((option) => {
       if (duplicated.has(option))
         return true
 
@@ -209,8 +204,8 @@ export const validateConfigModalPayload = ({
     }
   }
 
-  if ([InputVarType.singleFile, InputVarType.multiFiles].includes(normalizedTempPayload.type)) {
-    if (!normalizedTempPayload.allowed_file_types?.length) {
+  if ([InputVarType.singleFile, InputVarType.multiFiles].includes(tempPayload.type)) {
+    if (!tempPayload.allowed_file_types?.length) {
       return {
         errorMessage: t('errorMsg.fieldRequired', {
           ns: 'workflow',
@@ -219,7 +214,7 @@ export const validateConfigModalPayload = ({
       }
     }
 
-    if (normalizedTempPayload.allowed_file_types.includes(SupportUploadFileTypes.custom) && !normalizedTempPayload.allowed_file_extensions?.length) {
+    if (tempPayload.allowed_file_types.includes(SupportUploadFileTypes.custom) && !tempPayload.allowed_file_extensions?.length) {
       return {
         errorMessage: t('errorMsg.fieldRequired', {
           ns: 'workflow',
@@ -229,7 +224,7 @@ export const validateConfigModalPayload = ({
     }
   }
 
-  if (normalizedTempPayload.type === InputVarType.jsonObject && !schemaEmpty && typeof normalizedJsonSchema === 'string') {
+  if (tempPayload.type === InputVarType.jsonObject && !schemaEmpty && typeof normalizedJsonSchema === 'string') {
     try {
       const schema = JSON.parse(normalizedJsonSchema)
       if (schema?.type !== 'object') {

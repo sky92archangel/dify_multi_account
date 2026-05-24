@@ -1,6 +1,7 @@
 'use client'
 
 import { Button } from '@langgenius/dify-ui/button'
+import { cn } from '@langgenius/dify-ui/cn'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,7 +11,7 @@ import {
 import { RiAddLine, RiArrowDownSLine } from '@remixicon/react'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { noop } from 'es-toolkit/function'
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FileZip } from '@/app/components/base/icons/src/vender/solid/files'
 import { Github } from '@/app/components/base/icons/src/vender/solid/general'
@@ -35,6 +36,7 @@ const InstallPluginDropdown = ({
 }: Props) => {
   const { t } = useTranslation()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [selectedAction, setSelectedAction] = useState<string | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const { data: enable_marketplace } = useSuspenseQuery({
@@ -52,6 +54,7 @@ const InstallPluginDropdown = ({
     if (file) {
       setSelectedFile(file)
       setSelectedAction('local')
+      setIsMenuOpen(false)
     }
   }
 
@@ -75,17 +78,20 @@ const InstallPluginDropdown = ({
   //   console.log(res)
   // }
 
-  const installMethods = useMemo<InstallMethod[]>(() => {
-    const methods: InstallMethod[] = []
+  const [installMethods, setInstallMethods] = useState<InstallMethod[]>([])
+  useEffect(() => {
+    const methods = []
     if (enable_marketplace)
       methods.push({ icon: MagicBox, text: t('source.marketplace', { ns: 'plugin' }), action: 'marketplace' })
 
-    if (plugin_installation_permission.restrict_to_marketplace_only)
-      return methods
-
-    methods.push({ icon: Github, text: t('source.github', { ns: 'plugin' }), action: 'github' })
-    methods.push({ icon: FileZip, text: t('source.local', { ns: 'plugin' }), action: 'local' })
-    return methods
+    if (plugin_installation_permission.restrict_to_marketplace_only) {
+      setInstallMethods(methods)
+    }
+    else {
+      methods.push({ icon: Github, text: t('source.github', { ns: 'plugin' }), action: 'github' })
+      methods.push({ icon: FileZip, text: t('source.local', { ns: 'plugin' }), action: 'local' })
+      setInstallMethods(methods)
+    }
   }, [plugin_installation_permission, enable_marketplace, t])
 
   const handleInstallMethodSelect = (action: string) => {
@@ -105,7 +111,7 @@ const InstallPluginDropdown = ({
   }
 
   return (
-    <DropdownMenu modal={false}>
+    <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
       <div className="relative">
         <input
           type="file"
@@ -117,14 +123,14 @@ const InstallPluginDropdown = ({
         <DropdownMenuTrigger
           render={(
             <Button
-              className="size-full p-2 text-components-button-secondary-text data-popup-open:bg-state-base-hover"
+              className={cn('h-full w-full p-2 text-components-button-secondary-text', isMenuOpen && 'bg-state-base-hover')}
             />
           )}
         >
           <>
-            <RiAddLine className="size-4" />
+            <RiAddLine className="h-4 w-4" />
             <span className="pl-1">{t('installPlugin', { ns: 'plugin' })}</span>
-            <RiArrowDownSLine className="ml-1 size-4" />
+            <RiArrowDownSLine className="ml-1 h-4 w-4" />
           </>
         </DropdownMenuTrigger>
         <DropdownMenuContent
@@ -132,7 +138,7 @@ const InstallPluginDropdown = ({
           sideOffset={4}
           popupClassName="w-[200px] pb-2"
         >
-          <span className="flex items-start self-stretch px-3 pt-1 pb-0.5 system-xs-medium-uppercase text-text-tertiary">
+          <span className="flex items-start self-stretch pt-1 pr-3 pb-0.5 pl-3 system-xs-medium-uppercase text-text-tertiary">
             {t('installFrom', { ns: 'plugin' })}
           </span>
           {installMethods.map(({ icon: Icon, text, action }) => (
@@ -142,7 +148,7 @@ const InstallPluginDropdown = ({
               onClick={() => handleInstallMethodSelect(action)}
             >
               <div className="flex items-center gap-1">
-                <Icon className="size-4 text-text-tertiary" />
+                <Icon className="h-4 w-4 text-text-tertiary" />
                 <span className="px-1 system-md-regular text-text-secondary">{text}</span>
               </div>
             </DropdownMenuItem>

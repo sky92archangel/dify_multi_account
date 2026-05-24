@@ -1,4 +1,5 @@
 import type { FC } from 'react'
+import { cn } from '@langgenius/dify-ui/cn'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,6 +11,7 @@ import { useSuspenseQuery } from '@tanstack/react-query'
 import {
   Fragment,
   memo,
+  useState,
 } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -21,22 +23,20 @@ import {
   useNodesSyncDraft,
   useWorkflowReadOnly,
 } from '../hooks'
-import { ShortcutKbd } from '../shortcuts/shortcut-kbd'
+import ShortcutsName from '../shortcuts-name'
 import TipPopup from './tip-popup'
 
-const ZoomType = {
-  zoomToFit: 'zoomToFit',
-  zoomTo25: 'zoomTo25',
-  zoomTo50: 'zoomTo50',
-  zoomTo75: 'zoomTo75',
-  zoomTo100: 'zoomTo100',
-  zoomTo200: 'zoomTo200',
-  toggleUserComments: 'toggleUserComments',
-  toggleUserCursors: 'toggleUserCursors',
-  toggleMiniMap: 'toggleMiniMap',
-} as const
-
-type ZoomType = typeof ZoomType[keyof typeof ZoomType]
+enum ZoomType {
+  zoomToFit = 'zoomToFit',
+  zoomTo25 = 'zoomTo25',
+  zoomTo50 = 'zoomTo50',
+  zoomTo75 = 'zoomTo75',
+  zoomTo100 = 'zoomTo100',
+  zoomTo200 = 'zoomTo200',
+  toggleUserComments = 'toggleUserComments',
+  toggleUserCursors = 'toggleUserCursors',
+  toggleMiniMap = 'toggleMiniMap',
+}
 
 type ZoomInOutProps = {
   showMiniMap?: boolean
@@ -66,6 +66,7 @@ const ZoomInOut: FC<ZoomInOutProps> = ({
   } = useReactFlow()
   const { zoom } = useViewport()
   const { handleSyncWorkflowDraft } = useNodesSyncDraft()
+  const [open, setOpen] = useState(false)
   const {
     workflowReadOnly,
     getWorkflowReadOnly,
@@ -125,9 +126,11 @@ const ZoomInOut: FC<ZoomInOutProps> = ({
         ],
   ]
 
-  const handleZoom = (type: ZoomType) => {
+  const handleZoom = (type: string) => {
     if (workflowReadOnly)
       return
+
+    setOpen(false)
 
     if (type === ZoomType.zoomToFit)
       fitView()
@@ -178,13 +181,10 @@ const ZoomInOut: FC<ZoomInOutProps> = ({
       <div className="flex h-8 w-[98px] items-center justify-between rounded-lg">
         <TipPopup
           title={t('operator.zoomOut', { ns: 'workflow' })}
-          shortcut="workflow.zoom-out"
+          shortcuts={['ctrl', '-']}
         >
-          <button
-            type="button"
-            aria-label={t('operator.zoomOut', { ns: 'workflow' })}
-            disabled={zoom <= 0.25}
-            className={`flex size-8 items-center justify-center rounded-lg ${zoom <= 0.25 ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-black/5'}`}
+          <div
+            className={`flex h-8 w-8 items-center justify-center rounded-lg ${zoom <= 0.25 ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-black/5'}`}
             onClick={(e) => {
               if (zoom <= 0.25)
                 return
@@ -193,13 +193,19 @@ const ZoomInOut: FC<ZoomInOutProps> = ({
               zoomOut()
             }}
           >
-            <span aria-hidden className="i-ri-zoom-out-line size-4 text-text-tertiary hover:text-text-secondary" />
-          </button>
+            <span aria-hidden className="i-ri-zoom-out-line h-4 w-4 text-text-tertiary hover:text-text-secondary" />
+          </div>
         </TipPopup>
-        <DropdownMenu>
+        <DropdownMenu
+          open={open}
+          onOpenChange={setOpen}
+        >
           <DropdownMenuTrigger
             disabled={getWorkflowReadOnly()}
-            className="flex h-8 w-[34px] items-center justify-center rounded-lg system-sm-medium text-text-tertiary hover:bg-black/5 hover:text-text-secondary data-popup-open:bg-black/5 data-popup-open:text-text-secondary"
+            className={cn(
+              'flex h-8 w-[34px] items-center justify-center rounded-lg system-sm-medium text-text-tertiary hover:bg-black/5 hover:text-text-secondary',
+              open && 'bg-black/5 text-text-secondary',
+            )}
           >
             {Number.parseFloat(`${zoom * 100}`).toFixed(0)}
             %
@@ -226,43 +232,43 @@ const ZoomInOut: FC<ZoomInOutProps> = ({
                       >
                         <div className="flex items-center gap-2">
                           {option.key === ZoomType.toggleUserComments && showUserComments && (
-                            <span aria-hidden className="i-ri-check-line size-4 text-text-accent" />
+                            <span aria-hidden className="i-ri-check-line h-4 w-4 text-text-accent" />
                           )}
                           {option.key === ZoomType.toggleUserComments && !showUserComments && (
-                            <span aria-hidden className="size-4" />
+                            <span aria-hidden className="h-4 w-4" />
                           )}
                           {option.key === ZoomType.toggleUserCursors && showUserCursors && (
-                            <span aria-hidden className="i-ri-check-line size-4 text-text-accent" />
+                            <span aria-hidden className="i-ri-check-line h-4 w-4 text-text-accent" />
                           )}
                           {option.key === ZoomType.toggleUserCursors && !showUserCursors && (
-                            <span aria-hidden className="size-4" />
+                            <span aria-hidden className="h-4 w-4" />
                           )}
                           {option.key === ZoomType.toggleMiniMap && showMiniMap && (
-                            <span aria-hidden className="i-ri-check-line size-4 text-text-accent" />
+                            <span aria-hidden className="i-ri-check-line h-4 w-4 text-text-accent" />
                           )}
                           {option.key === ZoomType.toggleMiniMap && !showMiniMap && (
-                            <span aria-hidden className="size-4" />
+                            <span aria-hidden className="h-4 w-4" />
                           )}
                           {option.key === ZoomType.zoomToFit && (
-                            <span aria-hidden className="i-ri-fullscreen-line size-4 text-text-tertiary" />
+                            <span aria-hidden className="i-ri-fullscreen-line h-4 w-4 text-text-tertiary" />
                           )}
                           {option.key !== ZoomType.toggleUserComments
                             && option.key !== ZoomType.toggleUserCursors
                             && option.key !== ZoomType.toggleMiniMap
                             && option.key !== ZoomType.zoomToFit && (
-                            <span aria-hidden className="size-4" />
+                            <span aria-hidden className="h-4 w-4" />
                           )}
                           <span>{option.text}</span>
                         </div>
                         <div className="flex items-center space-x-0.5">
                           {option.key === ZoomType.zoomToFit && (
-                            <ShortcutKbd shortcut="workflow.zoom-to-fit" />
+                            <ShortcutsName keys={['ctrl', '1']} />
                           )}
                           {option.key === ZoomType.zoomTo50 && (
-                            <ShortcutKbd shortcut="workflow.zoom-to-50" />
+                            <ShortcutsName keys={['shift', '5']} />
                           )}
                           {option.key === ZoomType.zoomTo100 && (
-                            <ShortcutKbd shortcut="workflow.zoom-to-100" />
+                            <ShortcutsName keys={['shift', '1']} />
                           )}
                         </div>
                       </DropdownMenuItem>
@@ -275,13 +281,10 @@ const ZoomInOut: FC<ZoomInOutProps> = ({
         </DropdownMenu>
         <TipPopup
           title={t('operator.zoomIn', { ns: 'workflow' })}
-          shortcut="workflow.zoom-in"
+          shortcuts={['ctrl', '+']}
         >
-          <button
-            type="button"
-            aria-label={t('operator.zoomIn', { ns: 'workflow' })}
-            disabled={zoom >= 2}
-            className={`flex size-8 items-center justify-center rounded-lg ${zoom >= 2 ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-black/5'}`}
+          <div
+            className={`flex h-8 w-8 items-center justify-center rounded-lg ${zoom >= 2 ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-black/5'}`}
             onClick={(e) => {
               if (zoom >= 2)
                 return
@@ -290,8 +293,8 @@ const ZoomInOut: FC<ZoomInOutProps> = ({
               zoomIn()
             }}
           >
-            <span aria-hidden className="i-ri-zoom-in-line size-4 text-text-tertiary hover:text-text-secondary" />
-          </button>
+            <span aria-hidden className="i-ri-zoom-in-line h-4 w-4 text-text-tertiary hover:text-text-secondary" />
+          </div>
         </TipPopup>
       </div>
     </div>

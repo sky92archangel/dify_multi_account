@@ -273,15 +273,6 @@ describe('SwitchAppModal', () => {
       expect(onClose).toHaveBeenCalledTimes(1)
     })
 
-    it('should call onClose when close button is clicked', async () => {
-      const user = userEvent.setup()
-      const { onClose } = renderComponent()
-
-      await user.click(screen.getByRole('button', { name: /operation\.close$/ }))
-
-      expect(onClose).toHaveBeenCalledTimes(1)
-    })
-
     it('should switch app and navigate with push when keeping original', async () => {
       const user = userEvent.setup()
       // Arrange

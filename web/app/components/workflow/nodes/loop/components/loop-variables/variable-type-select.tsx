@@ -50,7 +50,7 @@ const VariableTypeSelect = ({
       <SelectTrigger className="w-full">
         {selectedOption?.label}
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent popupClassName="w-(--anchor-width)">
         {options.map(option => (
           <SelectItem key={option.value} value={option.value}>
             <SelectItemText>{option.label}</SelectItemText>

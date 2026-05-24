@@ -1,8 +1,22 @@
-import type { WorkflowToolDrawerPayload } from '../index'
+import type { WorkflowToolModalPayload } from '../index'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { WorkflowToolDrawer } from '../index'
+import WorkflowToolAsModal from '../index'
+
+vi.mock('@/app/components/base/drawer-plus', () => ({
+  default: ({ isShow, onHide, title, body }: { isShow: boolean, onHide: () => void, title: string, body: React.ReactNode }) => (
+    isShow
+      ? (
+          <div data-testid="drawer" role="dialog">
+            <span>{title}</span>
+            <button data-testid="drawer-close" onClick={onHide}>Close</button>
+            {body}
+          </div>
+        )
+      : null
+  ),
+}))
 
 vi.mock('@/app/components/base/emoji-picker/Inner', () => ({
   default: ({ onSelect }: { onSelect: (icon: string, background: string) => void }) => (
@@ -23,6 +37,21 @@ vi.mock('@/app/components/tools/labels/selector', () => ({
     <div data-testid="label-selector">
       <span>{value.join(',')}</span>
       <button data-testid="append-label" onClick={() => onChange([...value, 'new-label'])}>Add</button>
+    </div>
+  ),
+}))
+
+vi.mock('@/app/components/base/tooltip', () => ({
+  default: ({
+    children,
+    popupContent,
+  }: {
+    children?: React.ReactNode
+    popupContent?: React.ReactNode
+  }) => (
+    <div>
+      {children}
+      {popupContent}
     </div>
   ),
 }))
@@ -57,7 +86,7 @@ vi.mock('@/app/components/plugins/hooks', () => ({
   }),
 }))
 
-const createPayload = (overrides: Partial<WorkflowToolDrawerPayload> = {}): WorkflowToolDrawerPayload => ({
+const createPayload = (overrides: Partial<WorkflowToolModalPayload> = {}): WorkflowToolModalPayload => ({
   icon: { content: '🔧', background: '#ffffff' },
   label: 'My Tool',
   name: 'my_tool',
@@ -76,7 +105,7 @@ const createPayload = (overrides: Partial<WorkflowToolDrawerPayload> = {}): Work
   ...overrides,
 })
 
-describe('WorkflowToolDrawer', () => {
+describe('WorkflowToolAsModal', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
@@ -86,7 +115,7 @@ describe('WorkflowToolDrawer', () => {
     const onCreate = vi.fn()
 
     render(
-      <WorkflowToolDrawer
+      <WorkflowToolAsModal
         isAdd
         payload={createPayload()}
         onHide={vi.fn()}
@@ -115,7 +144,7 @@ describe('WorkflowToolDrawer', () => {
     const onCreate = vi.fn()
 
     render(
-      <WorkflowToolDrawer
+      <WorkflowToolAsModal
         isAdd
         payload={createPayload({ name: 'bad-name' })}
         onHide={vi.fn()}
@@ -136,7 +165,7 @@ describe('WorkflowToolDrawer', () => {
     const onSave = vi.fn()
 
     render(
-      <WorkflowToolDrawer
+      <WorkflowToolAsModal
         payload={createPayload()}
         onHide={vi.fn()}
         onSave={onSave}
@@ -158,7 +187,7 @@ describe('WorkflowToolDrawer', () => {
 
   it('should show duplicate reserved output warnings', () => {
     render(
-      <WorkflowToolDrawer
+      <WorkflowToolAsModal
         isAdd
         payload={createPayload()}
         onHide={vi.fn()}

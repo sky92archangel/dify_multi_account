@@ -695,8 +695,10 @@ describe('CategoriesFilter Component', () => {
       // Act
       fireEvent.click(screen.getByTestId('portal-trigger'))
 
+      // Assert - Check icon appears for checked state
       await waitFor(() => {
-        expect(screen.getByRole('checkbox', { name: 'Models' })).toHaveAttribute('aria-checked', 'true')
+        const checkIcons = screen.getAllByTestId(/check-icon/)
+        expect(checkIcons.length).toBeGreaterThan(0)
       })
     })
 
@@ -707,8 +709,10 @@ describe('CategoriesFilter Component', () => {
       // Act
       fireEvent.click(screen.getByTestId('portal-trigger'))
 
+      // Assert - No check icon for unchecked state
       await waitFor(() => {
-        expect(screen.getByRole('checkbox', { name: 'Models' })).toHaveAttribute('aria-checked', 'false')
+        const checkIcons = screen.queryAllByTestId(/check-icon/)
+        expect(checkIcons.length).toBe(0)
       })
     })
   })

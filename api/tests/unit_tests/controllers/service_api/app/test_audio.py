@@ -13,7 +13,6 @@ from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 import pytest
-from flask import Flask
 from werkzeug.datastructures import FileStorage
 from werkzeug.exceptions import InternalServerError
 
@@ -191,7 +190,7 @@ class TestAudioServiceMockedBehavior:
 
 
 class TestAudioApi:
-    def test_success(self, app: Flask, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_success(self, app, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(AudioService, "transcript_asr", lambda **_kwargs: {"text": "ok"})
         api = AudioApi()
         handler = _unwrap(api.post)
@@ -217,7 +216,7 @@ class TestAudioApi:
             (InvokeError("invoke"), CompletionRequestError),
         ],
     )
-    def test_error_mapping(self, app: Flask, monkeypatch: pytest.MonkeyPatch, exc, expected) -> None:
+    def test_error_mapping(self, app, monkeypatch: pytest.MonkeyPatch, exc, expected) -> None:
         monkeypatch.setattr(AudioService, "transcript_asr", lambda **_kwargs: (_ for _ in ()).throw(exc))
         api = AudioApi()
         handler = _unwrap(api.post)
@@ -228,7 +227,7 @@ class TestAudioApi:
             with pytest.raises(expected):
                 handler(api, app_model=app_model, end_user=end_user)
 
-    def test_unhandled_error(self, app: Flask, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_unhandled_error(self, app, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
             AudioService, "transcript_asr", lambda **_kwargs: (_ for _ in ()).throw(RuntimeError("boom"))
         )
@@ -243,7 +242,7 @@ class TestAudioApi:
 
 
 class TestTextApi:
-    def test_success(self, app: Flask, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_success(self, app, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(AudioService, "transcript_tts", lambda **_kwargs: {"audio": "ok"})
 
         api = TextApi()
@@ -260,7 +259,7 @@ class TestTextApi:
 
         assert response == {"audio": "ok"}
 
-    def test_error_mapping(self, app: Flask, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_error_mapping(self, app, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
             AudioService, "transcript_tts", lambda **_kwargs: (_ for _ in ()).throw(QuotaExceededError())
         )

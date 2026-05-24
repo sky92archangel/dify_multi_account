@@ -1,13 +1,11 @@
 'use client'
+import type { FC } from 'react'
 import { Button } from '@langgenius/dify-ui/button'
-import { Checkbox } from '@langgenius/dify-ui/checkbox'
-import { CheckboxGroup } from '@langgenius/dify-ui/checkbox-group'
 import { cn } from '@langgenius/dify-ui/cn'
-import { FieldDescription, FieldItem, FieldLabel, FieldRoot } from '@langgenius/dify-ui/field'
-import { FieldsetLegend, FieldsetRoot } from '@langgenius/dify-ui/fieldset'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import Badge from '@/app/components/base/badge'
+import Checkbox from '@/app/components/base/checkbox'
 import SearchInput from '@/app/components/base/search-input'
 import SearchMenu from '@/assets/search-menu.svg'
 
@@ -18,7 +16,6 @@ type CheckboxListOption = {
 }
 
 type CheckboxListProps = {
-  name?: string
   title?: string
   label?: string
   description?: string
@@ -33,8 +30,7 @@ type CheckboxListProps = {
   maxHeight?: string | number
 }
 
-export const CheckboxList = ({
-  name,
+const CheckboxList: FC<CheckboxListProps> = ({
   title = '',
   label,
   description,
@@ -47,7 +43,7 @@ export const CheckboxList = ({
   showCount = true,
   showSearch = true,
   maxHeight,
-}: CheckboxListProps) => {
+}) => {
   const { t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -63,135 +59,163 @@ export const CheckboxList = ({
 
   const selectedCount = value.length
 
-  const selectableOptionValues = useMemo(
-    () => options.filter(option => !option.disabled).map(option => option.value),
-    [options],
-  )
+  const isAllSelected = useMemo(() => {
+    const selectableOptions = options.filter(option => !option.disabled)
+    return selectableOptions.length > 0 && selectableOptions.every(option => value.includes(option.value))
+  }, [options, value])
+
+  const isIndeterminate = useMemo(() => {
+    const selectableOptions = options.filter(option => !option.disabled)
+    const selectedCount = selectableOptions.filter(option => value.includes(option.value)).length
+    return selectedCount > 0 && selectedCount < selectableOptions.length
+  }, [options, value])
+
+  const handleSelectAll = useCallback(() => {
+    if (disabled)
+      return
+
+    if (isAllSelected) {
+      // Deselect all
+      onChange?.([])
+    }
+    else {
+      // Select all non-disabled options
+      const allValues = options
+        .filter(option => !option.disabled)
+        .map(option => option.value)
+      onChange?.(allValues)
+    }
+  }, [isAllSelected, options, onChange, disabled])
+
+  const handleToggleOption = useCallback((optionValue: string) => {
+    if (disabled)
+      return
+
+    const newValue = value.includes(optionValue)
+      ? value.filter(v => v !== optionValue)
+      : [...value, optionValue]
+    onChange?.(newValue)
+  }, [value, onChange, disabled])
 
   return (
-    <FieldRoot name={name} className={cn('flex w-full flex-col gap-1', containerClassName)}>
-      <FieldsetRoot
-        render={(
-          <CheckboxGroup
-            aria-label={!label && title ? title : undefined}
-            value={value}
-            onValueChange={nextValue => onChange?.(nextValue)}
-            allValues={selectableOptionValues}
-            disabled={disabled}
-            className="flex flex-col gap-1"
-          />
-        )}
-      >
-        {label && (
-          <FieldsetLegend className="mb-0">
-            {label}
-          </FieldsetLegend>
-        )}
-        {description && (
-          <FieldDescription className="body-xs-regular text-text-tertiary">
-            {description}
-          </FieldDescription>
-        )}
+    <div className={cn('flex w-full flex-col gap-1', containerClassName)}>
+      {label && (
+        <div className="system-sm-medium text-text-secondary">
+          {label}
+        </div>
+      )}
+      {description && (
+        <div className="body-xs-regular text-text-tertiary">
+          {description}
+        </div>
+      )}
 
-        <div className="rounded-lg border border-components-panel-border bg-components-panel-bg">
-          {(showSelectAll || title || showSearch) && (
-            <div className="relative flex items-center gap-2 border-b border-divider-subtle px-3 py-2">
-              {!searchQuery && showSelectAll && (
-                <FieldItem disabled={disabled} className="shrink-0 gap-0">
-                  <FieldLabel className={cn('flex items-center p-0', !disabled && 'cursor-pointer')}>
-                    <Checkbox
-                      parent
-                      disabled={disabled}
-                    />
-                    <span className="sr-only">{t('operation.selectAll', { ns: 'common' })}</span>
-                  </FieldLabel>
-                </FieldItem>
-              )}
-              {!searchQuery
-                ? (
-                    <div className="flex min-w-0 flex-1 items-center gap-1">
-                      {title && (
-                        <span className="truncate system-xs-semibold-uppercase leading-5 text-text-secondary">
-                          {title}
-                        </span>
-                      )}
-                      {showCount && selectedCount > 0 && (
-                        <Badge uppercase>
-                          {t('operation.selectCount', { ns: 'common', count: selectedCount })}
-                        </Badge>
-                      )}
-                    </div>
-                  )
-                : (
-                    <div className="flex-1 system-sm-medium-uppercase leading-6 text-text-secondary">
-                      {
-                        filteredOptions.length > 0
-                          ? t('operation.searchCount', { ns: 'common', count: filteredOptions.length, content: title })
-                          : t('operation.noSearchCount', { ns: 'common', content: title })
-                      }
-                    </div>
-                  )}
-              {showSearch && (
-                <SearchInput
-                  value={searchQuery}
-                  onChange={setSearchQuery}
-                  placeholder={t('placeholder.search', { ns: 'common' })}
-                  className="w-40"
-                />
-              )}
-            </div>
-          )}
-
-          <div
-            className="p-1"
-            style={maxHeight ? { maxHeight, overflowY: 'auto' } : {}}
-            data-testid="options-container"
-          >
-            {!filteredOptions.length
+      <div className="rounded-lg border border-components-panel-border bg-components-panel-bg">
+        {(showSelectAll || title || showSearch) && (
+          <div className="relative flex items-center gap-2 border-b border-divider-subtle px-3 py-2">
+            {!searchQuery && showSelectAll && (
+              <Checkbox
+                checked={isAllSelected}
+                indeterminate={isIndeterminate}
+                onCheck={handleSelectAll}
+                disabled={disabled}
+                id="selectAll"
+              />
+            )}
+            {!searchQuery
               ? (
-                  <div className="px-3 py-6 text-center text-sm text-text-tertiary">
-                    {searchQuery
-                      ? (
-                          <div className="flex flex-col items-center justify-center gap-2">
-                            <img alt="search menu" src={SearchMenu.src} width={32} />
-                            <span className="system-sm-regular text-text-secondary">{t('operation.noSearchResults', { ns: 'common', content: title })}</span>
-                            <Button variant="secondary-accent" size="small" onClick={() => setSearchQuery('')}>{t('operation.resetKeywords', { ns: 'common' })}</Button>
-                          </div>
-                        )
-                      : t('noData', { ns: 'common' })}
+                  <div className="flex min-w-0 flex-1 items-center gap-1">
+                    {title && (
+                      <span className="truncate system-xs-semibold-uppercase leading-5 text-text-secondary">
+                        {title}
+                      </span>
+                    )}
+                    {showCount && selectedCount > 0 && (
+                      <Badge uppercase>
+                        {t('operation.selectCount', { ns: 'common', count: selectedCount })}
+                      </Badge>
+                    )}
                   </div>
                 )
               : (
-                  filteredOptions.map(option => (
-                    <FieldItem
-                      key={option.value}
-                      disabled={option.disabled || disabled}
-                      className="gap-0"
-                    >
-                      <FieldLabel
-                        data-testid="option-item"
-                        className={cn(
-                          'flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-state-base-hover',
-                          (option.disabled || disabled) && 'cursor-not-allowed opacity-50',
-                        )}
-                      >
-                        <Checkbox
-                          value={option.value}
-                          disabled={option.disabled || disabled}
-                        />
-                        <span
-                          className="flex-1 truncate system-sm-medium text-text-secondary"
-                          title={option.label}
-                        >
-                          {option.label}
-                        </span>
-                      </FieldLabel>
-                    </FieldItem>
-                  ))
+                  <div className="flex-1 system-sm-medium-uppercase leading-6 text-text-secondary">
+                    {
+                      filteredOptions.length > 0
+                        ? t('operation.searchCount', { ns: 'common', count: filteredOptions.length, content: title })
+                        : t('operation.noSearchCount', { ns: 'common', content: title })
+                    }
+                  </div>
                 )}
+            {showSearch && (
+              <SearchInput
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder={t('placeholder.search', { ns: 'common' })}
+                className="w-40"
+              />
+            )}
           </div>
+        )}
+
+        <div
+          className="p-1"
+          style={maxHeight ? { maxHeight, overflowY: 'auto' } : {}}
+          data-testid="options-container"
+        >
+          {!filteredOptions.length
+            ? (
+                <div className="px-3 py-6 text-center text-sm text-text-tertiary">
+                  {searchQuery
+                    ? (
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <img alt="search menu" src={SearchMenu.src} width={32} />
+                          <span className="system-sm-regular text-text-secondary">{t('operation.noSearchResults', { ns: 'common', content: title })}</span>
+                          <Button variant="secondary-accent" size="small" onClick={() => setSearchQuery('')}>{t('operation.resetKeywords', { ns: 'common' })}</Button>
+                        </div>
+                      )
+                    : t('noData', { ns: 'common' })}
+                </div>
+              )
+            : (
+                filteredOptions.map((option) => {
+                  const selected = value.includes(option.value)
+
+                  return (
+                    <div
+                      key={option.value}
+                      data-testid="option-item"
+                      className={cn(
+                        'flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-state-base-hover',
+                        option.disabled && 'cursor-not-allowed opacity-50',
+                      )}
+                      onClick={() => {
+                        if (!option.disabled && !disabled)
+                          handleToggleOption(option.value)
+                      }}
+                    >
+                      <Checkbox
+                        checked={selected}
+                        onCheck={() => {
+                          if (!option.disabled && !disabled)
+                            handleToggleOption(option.value)
+                        }}
+                        disabled={option.disabled || disabled}
+                        id={option.value}
+                      />
+                      <div
+                        className="flex-1 truncate system-sm-medium text-text-secondary"
+                        title={option.label}
+                      >
+                        {option.label}
+                      </div>
+                    </div>
+                  )
+                })
+              )}
         </div>
-      </FieldsetRoot>
-    </FieldRoot>
+      </div>
+    </div>
   )
 }
+
+export default CheckboxList

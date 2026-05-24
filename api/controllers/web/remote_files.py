@@ -1,5 +1,6 @@
+import urllib.parse
+
 import httpx
-from flask import request
 from pydantic import BaseModel, Field, HttpUrl
 
 import services
@@ -15,7 +16,7 @@ from fields.file_fields import FileWithSignedUrl, RemoteFileInfo
 from graphon.file import helpers as file_helpers
 from services.file_service import FileService
 
-from ..common.schema import register_response_schema_models, register_schema_models
+from ..common.schema import register_schema_models
 from . import web_ns
 from .wraps import WebApiResource
 
@@ -24,8 +25,7 @@ class RemoteFileUploadPayload(BaseModel):
     url: HttpUrl = Field(description="Remote file URL")
 
 
-register_schema_models(web_ns, RemoteFileUploadPayload)
-register_response_schema_models(web_ns, RemoteFileInfo, FileWithSignedUrl)
+register_schema_models(web_ns, RemoteFileUploadPayload, RemoteFileInfo, FileWithSignedUrl)
 
 
 @web_ns.route("/remote-files/<path:url>")
@@ -58,7 +58,7 @@ class RemoteFileInfoApi(WebApiResource):
         Raises:
             HTTPException: If the remote file cannot be accessed
         """
-        decoded_url = helpers.decode_remote_url(url, request.query_string)
+        decoded_url = urllib.parse.unquote(url)
         resp = ssrf_proxy.head(decoded_url)
         if resp.status_code != httpx.codes.OK:
             # failed back to get method

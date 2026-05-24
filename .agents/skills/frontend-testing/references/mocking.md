@@ -56,7 +56,7 @@ See [Zustand Store Testing](#zustand-store-testing) section for full details.
 
 | Location | Purpose |
 |----------|---------|
-| `web/vitest.setup.ts` | Global mocks shared by all tests (`react-i18next`, `zustand`, clipboard, FloatingPortal, Monaco, localStorage`) |
+| `web/vitest.setup.ts` | Global mocks shared by all tests (`react-i18next`, `next/image`, `zustand`) |
 | `web/__mocks__/zustand.ts` | Zustand mock implementation (auto-resets stores after each test) |
 | `web/__mocks__/` | Reusable mock factories shared across multiple test files |
 | Test file | Test-specific mocks, inline with `vi.mock()` |
@@ -216,21 +216,28 @@ describe('Component', () => {
 })
 ```
 
-### 5. HTTP and `fetch` Mocking
+### 5. HTTP Mocking with Nock
 
 ```typescript
+import nock from 'nock'
+
+const GITHUB_HOST = 'https://api.github.com'
+const GITHUB_PATH = '/repos/owner/repo'
+
+const mockGithubApi = (status: number, body: Record<string, unknown>, delayMs = 0) => {
+  return nock(GITHUB_HOST)
+    .get(GITHUB_PATH)
+    .delay(delayMs)
+    .reply(status, body)
+}
+
 describe('GithubComponent', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
+  afterEach(() => {
+    nock.cleanAll()
   })
 
   it('should display repo info', async () => {
-    vi.mocked(globalThis.fetch).mockResolvedValueOnce(
-      new Response(JSON.stringify({ name: 'dify', stars: 1000 }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }),
-    )
+    mockGithubApi(200, { name: 'dify', stars: 1000 })
     
     render(<GithubComponent />)
     
@@ -240,12 +247,7 @@ describe('GithubComponent', () => {
   })
 
   it('should handle API error', async () => {
-    vi.mocked(globalThis.fetch).mockResolvedValueOnce(
-      new Response(JSON.stringify({ message: 'Server error' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }),
-    )
+    mockGithubApi(500, { message: 'Server error' })
     
     render(<GithubComponent />)
     
@@ -255,8 +257,6 @@ describe('GithubComponent', () => {
   })
 })
 ```
-
-Prefer mocking `@/service/*` modules or spying on `global.fetch` / `ky` clients with deterministic responses. Do not introduce an HTTP interception dependency such as `nock` or MSW unless it is already declared in the workspace or adding it is part of the task.
 
 ### 6. Context Providers
 
@@ -332,7 +332,7 @@ const renderWithQueryClient = (ui: React.ReactElement) => {
 1. **Don't mock Zustand store modules** - Use real stores with `setState()`
 1. Don't mock components you can import directly
 1. Don't create overly simplified mocks that miss conditional logic
-1. Don't leave HTTP mocks or service mock state leaking between tests
+1. Don't forget to clean up nock after each test
 1. Don't use `any` types in mocks without necessity
 
 ### Mock Decision Tree

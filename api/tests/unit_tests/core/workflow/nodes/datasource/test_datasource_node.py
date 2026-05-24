@@ -1,5 +1,3 @@
-from pytest_mock import MockerFixture
-
 from core.app.entities.app_invoke_entities import DIFY_RUN_CONTEXT_KEY
 from core.workflow.nodes.datasource.datasource_node import DatasourceNode
 from core.workflow.nodes.datasource.entities import DatasourceNodeData
@@ -46,7 +44,7 @@ class _GraphParams:
     call_depth = 0
 
 
-def test_datasource_node_delegates_to_manager_stream(mocker: MockerFixture):
+def test_datasource_node_delegates_to_manager_stream(mocker):
     # prepare sys variables
     sys_vars = {
         "sys": {
@@ -81,7 +79,7 @@ def test_datasource_node_delegates_to_manager_stream(mocker: MockerFixture):
 
     node = DatasourceNode(
         node_id="n",
-        data=DatasourceNodeData(
+        config=DatasourceNodeData(
             type="datasource",
             version="1",
             title="Datasource",

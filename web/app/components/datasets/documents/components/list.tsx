@@ -1,11 +1,12 @@
 'use client'
+import type { FC } from 'react'
 import type { Props as PaginationProps } from '@/app/components/base/pagination'
 import type { SimpleDocumentDetail } from '@/models/datasets'
-import { Checkbox } from '@langgenius/dify-ui/checkbox'
-import { CheckboxGroup } from '@langgenius/dify-ui/checkbox-group'
 import { useBoolean } from 'ahooks'
-import { useCallback, useMemo, useState } from 'react'
+import * as React from 'react'
+import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import Checkbox from '@/app/components/base/checkbox'
 import Pagination from '@/app/components/base/pagination'
 import EditMetadataBatchModal from '@/app/components/datasets/metadata/edit-metadata-batch/modal'
 import useBatchEditDocumentMetadata from '@/app/components/datasets/metadata/hooks/use-batch-edit-document-metadata'
@@ -35,7 +36,7 @@ type DocumentListProps = {
 /**
  * Document list component including basic information
  */
-const DocumentList = ({
+const DocumentList: FC<DocumentListProps> = ({
   embeddingAvailable,
   documents = [],
   selectedIds,
@@ -46,7 +47,7 @@ const DocumentList = ({
   onManageMetadata,
   remoteSortValue,
   onSortChange,
-}: DocumentListProps) => {
+}) => {
   const { t } = useTranslation()
   const datasetConfig = useDatasetDetailContext(s => s.dataset)
   const chunkingMode = datasetConfig?.doc_form
@@ -61,6 +62,10 @@ const DocumentList = ({
 
   // Selection
   const {
+    isAllSelected,
+    isSomeSelected,
+    onSelectAll,
+    onSelectOne,
     hasErrorDocumentsSelected,
     downloadableSelectedIds,
     clearSelection,
@@ -69,7 +74,6 @@ const DocumentList = ({
     selectedIds,
     onSelectedIdChange,
   })
-  const documentIds = useMemo(() => documents.map(doc => doc.id), [documents])
 
   // Actions
   const { handleAction, handleBatchReIndex, handleBatchDownload } = useDocumentActions({
@@ -111,23 +115,19 @@ const DocumentList = ({
   }, [onUpdate])
 
   return (
-    <div className="relative mt-3 flex size-full flex-col">
-      <CheckboxGroup
-        value={selectedIds}
-        onValueChange={nextSelectedIds => onSelectedIdChange(nextSelectedIds)}
-        allValues={documentIds}
-        className="relative h-0 grow overflow-x-auto"
-      >
+    <div className="relative mt-3 flex h-full w-full flex-col">
+      <div className="relative h-0 grow overflow-x-auto">
         <table className={`w-full max-w-full min-w-[700px] border-collapse border-0 text-sm ${s.documentTable}`}>
-          <thead className="h-8 border-b border-divider-subtle text-xs/8 font-medium text-text-tertiary uppercase">
+          <thead className="h-8 border-b border-divider-subtle text-xs leading-8 font-medium text-text-tertiary uppercase">
             <tr>
               <td className="w-12">
                 <div className="flex items-center" onClick={e => e.stopPropagation()}>
                   {embeddingAvailable && (
                     <Checkbox
                       className="mr-2 shrink-0"
-                      parent
-                      aria-label={t('operation.selectAll', { ns: 'common' })}
+                      checked={isAllSelected}
+                      indeterminate={!isAllSelected && isSomeSelected}
+                      onCheck={onSelectAll}
                     />
                   )}
                   #
@@ -167,10 +167,12 @@ const DocumentList = ({
                 doc={doc}
                 index={index}
                 datasetId={datasetId}
+                isSelected={selectedIds.includes(doc.id)}
                 isGeneralMode={isGeneralMode}
                 isQAMode={isQAMode}
                 embeddingAvailable={embeddingAvailable}
                 selectedIds={selectedIds}
+                onSelectOne={onSelectOne}
                 onSelectedIdChange={onSelectedIdChange}
                 onShowRenameModal={handleShowRenameModal}
                 onUpdate={onUpdate}
@@ -178,7 +180,7 @@ const DocumentList = ({
             ))}
           </tbody>
         </table>
-      </CheckboxGroup>
+      </div>
 
       {selectedIds.length > 0 && (
         <BatchAction

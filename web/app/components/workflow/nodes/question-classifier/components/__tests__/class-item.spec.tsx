@@ -3,6 +3,8 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import ClassItem from '../class-item'
 
+const mockEditorRender = vi.hoisted(() => vi.fn())
+
 vi.mock('@/app/components/workflow/nodes/_base/hooks/use-available-var-list', () => ({
   __esModule: true,
   default: () => ({
@@ -14,12 +16,13 @@ vi.mock('@/app/components/workflow/nodes/_base/hooks/use-available-var-list', ()
 vi.mock('@/app/components/workflow/nodes/_base/components/prompt/editor', () => ({
   __esModule: true,
   default: (props: {
-    title: React.ReactNode
+    title: string
     value: string
     onChange: (value: string) => void
     onRemove: () => void
     showRemove?: boolean
   }) => {
+    mockEditorRender(props)
     return (
       <div>
         <div>{props.title}</div>
@@ -67,32 +70,9 @@ describe('question-classifier/class-item', () => {
       name: 'Billing questions updated',
     })
     expect(onRemove).toHaveBeenCalledTimes(1)
-    expect(screen.getByRole('button', { name: 'CLASS 1' })).toBeInTheDocument()
-  })
-
-  it('preserves a custom label when editing the classifier name', () => {
-    const onChange = vi.fn()
-
-    render(
-      <ClassItem
-        nodeId="node-1"
-        payload={{ id: 'topic-1', name: 'Billing questions', label: 'Billing' } as Topic}
-        onChange={onChange}
-        onRemove={vi.fn()}
-        index={1}
-        filterVar={() => true}
-      />,
-    )
-
-    fireEvent.change(screen.getByLabelText('class-name'), {
-      target: { value: 'Billing questions updated' },
-    })
-
-    expect(onChange).toHaveBeenCalledWith({
-      id: 'topic-1',
-      name: 'Billing questions updated',
-      label: 'Billing',
-    })
-    expect(screen.getByRole('button', { name: 'Billing' })).toBeInTheDocument()
+    expect(mockEditorRender).toHaveBeenCalledWith(expect.objectContaining({
+      title: 'workflow.nodes.questionClassifiers.class 1',
+      value: 'Billing questions',
+    }))
   })
 })

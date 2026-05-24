@@ -90,7 +90,7 @@ describe('TransferOwnershipModal', () => {
   }
 
   const goToTransferStep = async (user: ReturnType<typeof userEvent.setup>) => {
-    await user.click(screen.getByRole('button', { name: /members\.transferModal\.sendVerifyCode/i }))
+    await user.click(screen.getByTestId('transfer-modal-send-code'))
     const input = await screen.findByTestId('transfer-modal-code-input')
     await user.type(input, '123456')
     await user.click(screen.getByTestId('transfer-modal-continue'))
@@ -126,7 +126,7 @@ describe('TransferOwnershipModal', () => {
     renderModal()
     // Trigger the email send (which starts the timer)
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /members\.transferModal\.sendVerifyCode/i }))
+      fireEvent.click(screen.getByTestId('transfer-modal-send-code'))
     })
 
     // Step Verify shows up
@@ -144,7 +144,7 @@ describe('TransferOwnershipModal', () => {
     })
     expect(screen.queryByText(/members\.transferModal\.resendCount/i)).not.toBeInTheDocument()
 
-    const resendBtn = screen.getByRole('button', { name: /members\.transferModal\.resend/i })
+    const resendBtn = screen.getByTestId('transfer-modal-resend')
     await act(async () => {
       fireEvent.click(resendBtn)
     })
@@ -183,20 +183,18 @@ describe('TransferOwnershipModal', () => {
     })
   })
 
-  it('should not show a modal-level toast and should stay on start step when sending verification email fails', async () => {
+  it('should show error when sending verification email fails', async () => {
     const user = userEvent.setup()
     vi.mocked(sendOwnerEmail).mockRejectedValue(new Error('network error'))
     renderModal()
-    await user.click(screen.getByRole('button', { name: /members\.transferModal\.sendVerifyCode/i }))
+    await user.click(screen.getByTestId('transfer-modal-send-code'))
 
-    // The base service layer surfaces the real backend error. The modal itself
-    // must NOT show an additional toast (e.g. "Error sending verification code: undefined").
     await waitFor(() => {
-      expect(sendOwnerEmail).toHaveBeenCalled()
+      expect(mockNotify).toHaveBeenCalledWith(expect.objectContaining({
+        type: 'error',
+        message: expect.stringContaining('network error'),
+      }))
     })
-    expect(mockNotify).not.toHaveBeenCalled()
-    // Should remain on the start step instead of advancing to the verify step.
-    expect(screen.getByRole('button', { name: /members\.transferModal\.sendVerifyCode/i })).toBeInTheDocument()
   })
 
   it('should show error when ownership transfer fails', async () => {
@@ -223,7 +221,7 @@ describe('TransferOwnershipModal', () => {
     } as unknown as Awaited<ReturnType<typeof sendOwnerEmail>>)
 
     renderModal()
-    await user.click(screen.getByRole('button', { name: /members\.transferModal\.sendVerifyCode/i }))
+    await user.click(screen.getByTestId('transfer-modal-send-code'))
 
     // Should advance to verify step even with null data
     await waitFor(() => {
@@ -231,18 +229,19 @@ describe('TransferOwnershipModal', () => {
     })
   })
 
-  it('should swallow null rejection from sendOwnerEmail without showing a modal-level toast', async () => {
+  it('should show fallback error prefix when sendOwnerEmail throws null', async () => {
     const user = userEvent.setup()
     vi.mocked(sendOwnerEmail).mockRejectedValue(null)
 
     renderModal()
-    await user.click(screen.getByRole('button', { name: /members\.transferModal\.sendVerifyCode/i }))
+    await user.click(screen.getByTestId('transfer-modal-send-code'))
 
     await waitFor(() => {
-      expect(sendOwnerEmail).toHaveBeenCalled()
+      expect(mockNotify).toHaveBeenCalledWith(expect.objectContaining({
+        type: 'error',
+        message: expect.stringContaining('Error sending verification code:'),
+      }))
     })
-    expect(mockNotify).not.toHaveBeenCalled()
-    expect(screen.getByRole('button', { name: /members\.transferModal\.sendVerifyCode/i })).toBeInTheDocument()
   })
 
   it('should show fallback error prefix when verifyOwnerEmail throws null', async () => {
@@ -281,7 +280,7 @@ describe('TransferOwnershipModal', () => {
   it('should close when close button is clicked', async () => {
     const user = userEvent.setup()
     renderModal()
-    await user.click(screen.getByRole('button', { name: /operation\.close$/ }))
+    await user.click(screen.getByTestId('transfer-modal-close'))
     expect(mockOnClose).toHaveBeenCalled()
   })
 

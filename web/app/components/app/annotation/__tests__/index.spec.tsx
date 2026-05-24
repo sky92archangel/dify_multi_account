@@ -67,7 +67,7 @@ vi.mock('../header-opts', () => ({
 let latestListProps: any
 
 vi.mock('../list', () => ({
-  List: (props: any) => {
+  default: (props: any) => {
     latestListProps = props
     if (!props.list.length)
       return <div data-testid="list-empty" />
@@ -440,7 +440,7 @@ describe('Annotation', () => {
       latestListProps.onSelectedIdsChange([annotation.id])
     })
     await act(async () => {
-      latestListProps.onSelectedIdsChange([])
+      latestListProps.onCancel()
     })
 
     expect(latestListProps.selectedIds).toEqual([])

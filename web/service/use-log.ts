@@ -1,4 +1,5 @@
 import type {
+  AnnotationsCountResponse,
   ChatConversationFullDetailResponse,
   ChatConversationsRequest,
   ChatConversationsResponse,
@@ -10,20 +11,15 @@ import type {
 } from '@/models/log'
 import { useQuery } from '@tanstack/react-query'
 import { get } from './base'
-import { consoleClient } from './client'
 
 const NAME_SPACE = 'log'
 
 // ============ Annotations Count ============
 
 export const useAnnotationsCount = (appId: string) => {
-  return useQuery({
+  return useQuery<AnnotationsCountResponse>({
     queryKey: [NAME_SPACE, 'annotations-count', appId],
-    queryFn: () => consoleClient.apps.byAppId.annotations.count.get({
-      params: {
-        app_id: appId,
-      },
-    }),
+    queryFn: () => get<AnnotationsCountResponse>(`/apps/${appId}/annotations/count`),
     enabled: !!appId,
   })
 }

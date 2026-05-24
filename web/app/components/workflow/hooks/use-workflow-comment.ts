@@ -1,33 +1,23 @@
-import type { UserProfile, WorkflowCommentDetail, WorkflowCommentList } from '@/contract/console/workflow-comment'
+import type { UserProfile, WorkflowCommentDetail, WorkflowCommentList } from '@/service/workflow-comment'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { useReactFlow } from 'reactflow'
 import { collaborationManager } from '@/app/components/workflow/collaboration/core/collaboration-manager'
 import { useAppContext } from '@/context/app-context'
 import { useParams } from '@/next/navigation'
-import { consoleClient } from '@/service/client'
 import { systemFeaturesQueryOptions } from '@/service/system-features'
+import { createWorkflowComment, createWorkflowCommentReply, deleteWorkflowComment, deleteWorkflowCommentReply, fetchWorkflowComment, fetchWorkflowComments, resolveWorkflowComment, updateWorkflowComment, updateWorkflowCommentReply } from '@/service/workflow-comment'
 import { useStore } from '../store'
 import { ControlMode } from '../types'
 
 const EMPTY_USERS: UserProfile[] = []
+type CommentDetailResponse = WorkflowCommentDetail | { data: WorkflowCommentDetail }
 
-const normalizeTimestamp = (value: number | string): number => {
-  if (typeof value === 'number')
-    return value
-
-  const parsed = Number(value)
-  if (!Number.isNaN(parsed))
-    return parsed
-
-  return Math.floor(Date.parse(value) / 1000)
+const getCommentDetail = (response: CommentDetailResponse): WorkflowCommentDetail => {
+  if ('data' in response)
+    return response.data
+  return response
 }
-
-const toCommentDetailPreview = (comment: WorkflowCommentList): WorkflowCommentDetail => ({
-  ...comment,
-  replies: [],
-  mentions: [],
-})
 
 export const useWorkflowComment = () => {
   const params = useParams()
@@ -60,10 +50,6 @@ export const useWorkflowComment = () => {
   const mentionableUsers = useStore(state => (
     appId ? state.mentionableUsersCache[appId] ?? EMPTY_USERS : EMPTY_USERS
   ))
-  const mentionableUserById = useMemo(
-    () => new Map(mentionableUsers.map(user => [user.id, user])),
-    [mentionableUsers],
-  )
   const { userProfile } = useAppContext()
   const { data: isCollaborationEnabled } = useSuspenseQuery({
     ...systemFeaturesQueryOptions(),
@@ -84,9 +70,8 @@ export const useWorkflowComment = () => {
     if (!appId)
       return
 
-    const detail = await consoleClient.workflowComments.detail({
-      params: { appId, commentId },
-    })
+    const detailResponse = await fetchWorkflowComment(appId, commentId) as CommentDetailResponse
+    const detail = getCommentDetail(detailResponse)
 
     commentDetailCacheRef.current = {
       ...commentDetailCacheRef.current,
@@ -102,10 +87,8 @@ export const useWorkflowComment = () => {
 
     setCommentsLoading(true)
     try {
-      const response = await consoleClient.workflowComments.list({
-        params: { appId },
-      })
-      setComments(response.data)
+      const commentsData = await fetchWorkflowComments(appId)
+      setComments(commentsData)
     }
     catch (error) {
       console.error('Failed to fetch comments:', error)
@@ -150,17 +133,17 @@ export const useWorkflowComment = () => {
         y: pendingComment.pageY,
       })
 
-      const newComment = await consoleClient.workflowComments.create({
-        params: { appId },
-        body: {
-          position_x: flowPosition.x,
-          position_y: flowPosition.y,
-          content,
-          mentioned_user_ids: mentionedUserIds,
-        },
+      const newComment = await createWorkflowComment(appId, {
+        position_x: flowPosition.x,
+        position_y: flowPosition.y,
+        content,
+        mentioned_user_ids: mentionedUserIds,
       })
 
-      const createdAtSeconds = normalizeTimestamp(newComment.created_at)
+      const createdAt = Number(newComment.created_at)
+      const createdAtSeconds = Number.isNaN(createdAt)
+        ? Math.floor(Date.parse(newComment.created_at) / 1000)
+        : createdAt
       const createdByAccount = {
         id: userProfile?.id ?? '',
         name: userProfile?.name ?? '',
@@ -168,7 +151,7 @@ export const useWorkflowComment = () => {
         avatar_url: userProfile?.avatar_url || userProfile?.avatar || undefined,
       }
       const mentionedUsers = mentionedUserIds
-        .map(mentionedId => mentionableUserById.get(mentionedId))
+        .map(mentionedId => mentionableUsers.find(user => user.id === mentionedId))
         .filter((user): user is NonNullable<typeof user> => Boolean(user))
       const uniqueParticipantsMap = new Map<string, typeof createdByAccount>()
       if (createdByAccount.id)
@@ -213,7 +196,7 @@ export const useWorkflowComment = () => {
         replies: [],
         mentions: mentionedUserIds.map(mentionedId => ({
           mentioned_user_id: mentionedId,
-          mentioned_user_account: mentionableUserById.get(mentionedId) ?? null,
+          mentioned_user_account: mentionableUsers.find(user => user.id === mentionedId) ?? null,
           reply_id: null,
         })),
       }
@@ -235,7 +218,7 @@ export const useWorkflowComment = () => {
       setPendingComment(null)
       setCommentQuickAdd(false)
     }
-  }, [appId, pendingComment, setPendingComment, setCommentQuickAdd, reactflow, comments, setComments, userProfile, setCommentDetailCache, mentionableUserById])
+  }, [appId, pendingComment, setPendingComment, setCommentQuickAdd, reactflow, comments, setComments, userProfile, setCommentDetailCache, mentionableUsers])
 
   const handleCommentCancel = useCallback(() => {
     setPendingComment(null)
@@ -258,8 +241,8 @@ export const useWorkflowComment = () => {
     activeCommentIdRef.current = comment.id
     setActiveCommentId(comment.id)
 
-    const cachedDetail = commentDetailCacheRef.current[comment.id]
-    setActiveComment(cachedDetail ?? toCommentDetailPreview(comment))
+    const cachedDetail = commentDetailCacheRef.current[comment.id]!
+    setActiveComment(cachedDetail || comment)
 
     const hasSelectedNode = reactflow.getNodes().some(node => node.data?.selected)
     const commentPanelWidth = controlMode === ControlMode.Comment ? 420 : 0
@@ -284,9 +267,8 @@ export const useWorkflowComment = () => {
     setActiveCommentLoading(!cachedDetail)
 
     try {
-      const detail = await consoleClient.workflowComments.detail({
-        params: { appId, commentId: comment.id },
-      })
+      const detailResponse = await fetchWorkflowComment(appId, comment.id) as CommentDetailResponse
+      const detail = getCommentDetail(detailResponse)
 
       commentDetailCacheRef.current = {
         ...commentDetailCacheRef.current,
@@ -322,9 +304,7 @@ export const useWorkflowComment = () => {
 
     setActiveCommentLoading(true)
     try {
-      await consoleClient.workflowComments.resolve({
-        params: { appId, commentId },
-      })
+      await resolveWorkflowComment(appId, commentId)
 
       collaborationManager.emitCommentsUpdate(appId)
 
@@ -345,9 +325,7 @@ export const useWorkflowComment = () => {
 
     setActiveCommentLoading(true)
     try {
-      await consoleClient.workflowComments.delete({
-        params: { appId, commentId },
-      })
+      await deleteWorkflowComment(appId, commentId)
 
       collaborationManager.emitCommentsUpdate(appId)
 
@@ -421,13 +399,10 @@ export const useWorkflowComment = () => {
     }
 
     try {
-      await consoleClient.workflowComments.update({
-        params: { appId, commentId },
-        body: {
-          content: targetComment.content,
-          position_x: nextPosition.position_x,
-          position_y: nextPosition.position_y,
-        },
+      await updateWorkflowComment(appId, commentId, {
+        content: targetComment.content,
+        position_x: nextPosition.position_x,
+        position_y: nextPosition.position_y,
       })
       collaborationManager.emitCommentsUpdate(appId)
     }
@@ -468,14 +443,11 @@ export const useWorkflowComment = () => {
       return
 
     try {
-      await consoleClient.workflowComments.update({
-        params: { appId, commentId },
-        body: {
-          content: trimmed,
-          position_x: positionX,
-          position_y: positionY,
-          mentioned_user_ids: mentionedUserIds,
-        },
+      await updateWorkflowComment(appId, commentId, {
+        content: trimmed,
+        position_x: positionX,
+        position_y: positionY,
+        mentioned_user_ids: mentionedUserIds,
       })
 
       collaborationManager.emitCommentsUpdate(appId)
@@ -497,10 +469,7 @@ export const useWorkflowComment = () => {
 
     setReplySubmitting(true)
     try {
-      await consoleClient.workflowComments.replies.create({
-        params: { appId, commentId },
-        body: { content: trimmed, mentioned_user_ids: mentionedUserIds },
-      })
+      await createWorkflowCommentReply(appId, commentId, { content: trimmed, mentioned_user_ids: mentionedUserIds })
 
       collaborationManager.emitCommentsUpdate(appId)
 
@@ -524,10 +493,7 @@ export const useWorkflowComment = () => {
 
     setReplyUpdating(true)
     try {
-      await consoleClient.workflowComments.replies.update({
-        params: { appId, commentId, replyId },
-        body: { content: trimmed, mentioned_user_ids: mentionedUserIds },
-      })
+      await updateWorkflowCommentReply(appId, commentId, replyId, { content: trimmed, mentioned_user_ids: mentionedUserIds })
 
       collaborationManager.emitCommentsUpdate(appId)
 
@@ -548,9 +514,7 @@ export const useWorkflowComment = () => {
 
     setActiveCommentLoading(true)
     try {
-      await consoleClient.workflowComments.replies.delete({
-        params: { appId, commentId, replyId },
-      })
+      await deleteWorkflowCommentReply(appId, commentId, replyId)
 
       collaborationManager.emitCommentsUpdate(appId)
 

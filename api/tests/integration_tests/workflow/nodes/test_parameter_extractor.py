@@ -56,7 +56,7 @@ def init_parameter_extractor_node(config: dict, memory=None):
     )
 
     # construct variable pool
-    variable_pool = VariablePool.from_bootstrap(
+    variable_pool = VariablePool(
         system_variables=build_system_variables(
             user_id="aaa", files=[], query="what's the weather in SF", conversation_id="abababa"
         ),
@@ -71,7 +71,7 @@ def init_parameter_extractor_node(config: dict, memory=None):
 
     node = ParameterExtractorNode(
         node_id=str(uuid.uuid4()),
-        data=ParameterExtractorNodeData.model_validate(config["data"]),
+        config=ParameterExtractorNodeData.model_validate(config["data"]),
         graph_init_params=init_params,
         graph_runtime_state=graph_runtime_state,
         credentials_provider=MagicMock(spec=CredentialsProvider),
@@ -83,11 +83,7 @@ def init_parameter_extractor_node(config: dict, memory=None):
     return node
 
 
-def _mock_db_session_close(monkeypatch) -> None:
-    monkeypatch.setattr(db.session, "close", MagicMock())
-
-
-def test_function_calling_parameter_extractor(setup_model_mock, monkeypatch):
+def test_function_calling_parameter_extractor(setup_model_mock):
     """
     Test function calling for parameter extractor.
     """
@@ -118,7 +114,7 @@ def test_function_calling_parameter_extractor(setup_model_mock, monkeypatch):
         mode="chat",
         credentials={"openai_api_key": os.environ.get("OPENAI_API_KEY")},
     )()
-    _mock_db_session_close(monkeypatch)
+    db.session.close = MagicMock()
 
     result = node._run()
 
@@ -128,7 +124,7 @@ def test_function_calling_parameter_extractor(setup_model_mock, monkeypatch):
     assert result.outputs.get("__reason") == None
 
 
-def test_instructions(setup_model_mock, monkeypatch):
+def test_instructions(setup_model_mock):
     """
     Test chat parameter extractor.
     """
@@ -159,7 +155,7 @@ def test_instructions(setup_model_mock, monkeypatch):
         mode="chat",
         credentials={"openai_api_key": os.environ.get("OPENAI_API_KEY")},
     )()
-    _mock_db_session_close(monkeypatch)
+    db.session.close = MagicMock()
 
     result = node._run()
 
@@ -178,7 +174,7 @@ def test_instructions(setup_model_mock, monkeypatch):
             assert "what's the weather in SF" in prompt.get("text")
 
 
-def test_chat_parameter_extractor(setup_model_mock, monkeypatch):
+def test_chat_parameter_extractor(setup_model_mock):
     """
     Test chat parameter extractor.
     """
@@ -209,7 +205,7 @@ def test_chat_parameter_extractor(setup_model_mock, monkeypatch):
         mode="chat",
         credentials={"openai_api_key": os.environ.get("OPENAI_API_KEY")},
     )()
-    _mock_db_session_close(monkeypatch)
+    db.session.close = MagicMock()
 
     result = node._run()
 
@@ -229,7 +225,7 @@ def test_chat_parameter_extractor(setup_model_mock, monkeypatch):
                 assert '<structure>\n{"type": "object"' in prompt.get("text")
 
 
-def test_completion_parameter_extractor(setup_model_mock, monkeypatch):
+def test_completion_parameter_extractor(setup_model_mock):
     """
     Test completion parameter extractor.
     """
@@ -260,7 +256,7 @@ def test_completion_parameter_extractor(setup_model_mock, monkeypatch):
         mode="completion",
         credentials={"openai_api_key": os.environ.get("OPENAI_API_KEY")},
     )()
-    _mock_db_session_close(monkeypatch)
+    db.session.close = MagicMock()
 
     result = node._run()
 
@@ -354,7 +350,7 @@ def test_extract_json_from_tool_call():
     assert result["location"] == "kawaii"
 
 
-def test_chat_parameter_extractor_with_memory(setup_model_mock, monkeypatch):
+def test_chat_parameter_extractor_with_memory(setup_model_mock):
     """
     Test chat parameter extractor with memory.
     """
@@ -386,7 +382,7 @@ def test_chat_parameter_extractor_with_memory(setup_model_mock, monkeypatch):
         mode="chat",
         credentials={"openai_api_key": os.environ.get("OPENAI_API_KEY")},
     )()
-    _mock_db_session_close(monkeypatch)
+    db.session.close = MagicMock()
 
     result = node._run()
 

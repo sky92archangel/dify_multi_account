@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { DeliveryMethodType } from '../../../types'
 import DeliveryMethodForm from '../index'
 
@@ -7,6 +7,11 @@ const mockUseNodesSyncDraft = vi.hoisted(() => vi.fn())
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => mockUseTranslation(),
+}))
+
+vi.mock('@/app/components/base/tooltip', () => ({
+  __esModule: true,
+  default: ({ popupContent }: { popupContent: string }) => <div data-testid="tooltip">{popupContent}</div>,
 }))
 
 vi.mock('@/app/components/workflow/hooks', () => ({
@@ -54,6 +59,15 @@ vi.mock('../method-item', () => ({
         delete-method
       </button>
     </div>
+  ),
+}))
+
+vi.mock('../upgrade-modal', () => ({
+  __esModule: true,
+  default: ({ onClose }: { onClose: () => void }) => (
+    <button type="button" onClick={onClose}>
+      upgrade-modal
+    </button>
   ),
 }))
 
@@ -118,7 +132,7 @@ describe('DeliveryMethodForm', () => {
     expect(mockHandleSyncWorkflowDraft).toHaveBeenCalledWith(true, true)
   })
 
-  it('should open and close the upgrade modal', async () => {
+  it('should open and close the upgrade modal', () => {
     render(
       <DeliveryMethodForm
         nodeId="node-1"
@@ -128,9 +142,9 @@ describe('DeliveryMethodForm', () => {
     )
 
     fireEvent.click(screen.getByText('show-upgrade'))
-    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(screen.getByText('upgrade-modal')).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: 'nodes.humanInput.deliveryMethod.upgradeTipHide' }))
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    fireEvent.click(screen.getByText('upgrade-modal'))
+    expect(screen.queryByText('upgrade-modal')).not.toBeInTheDocument()
   })
 })

@@ -20,6 +20,12 @@ vi.mock('@/app/components/workflow/hooks', () => ({
   useToolIcon: (nodeData: DataSourceNodeType) => nodeData.provider_name || 'default-icon',
 }))
 
+vi.mock('@/app/components/base/tooltip', () => ({
+  default: ({ popupContent, popupClassName }: { popupContent: string, popupClassName?: string }) => (
+    <div data-testid="tooltip" data-content={popupContent} className={popupClassName} />
+  ),
+}))
+
 afterEach(() => {
   cleanup()
   vi.clearAllMocks()
@@ -155,19 +161,21 @@ describe('GlobalInputs', () => {
     it('should render tooltip component', () => {
       render(<GlobalInputs />)
 
-      expect(screen.getByLabelText('datasetPipeline.inputFieldPanel.globalInputs.tooltip')).toBeInTheDocument()
+      expect(screen.getByTestId('tooltip')).toBeInTheDocument()
     })
 
     it('should pass correct tooltip content', () => {
       render(<GlobalInputs />)
 
-      expect(screen.getByLabelText('datasetPipeline.inputFieldPanel.globalInputs.tooltip')).toBeInTheDocument()
+      const tooltip = screen.getByTestId('tooltip')
+      expect(tooltip).toHaveAttribute('data-content', 'datasetPipeline.inputFieldPanel.globalInputs.tooltip')
     })
 
-    it('should render the tooltip trigger as an icon-sized button', () => {
+    it('should have correct tooltip className', () => {
       render(<GlobalInputs />)
 
-      expect(screen.getByLabelText('datasetPipeline.inputFieldPanel.globalInputs.tooltip')).toHaveClass('size-4')
+      const tooltip = screen.getByTestId('tooltip')
+      expect(tooltip).toHaveClass('w-[240px]')
     })
 
     it('should have correct container layout', () => {

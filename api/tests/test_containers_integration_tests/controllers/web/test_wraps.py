@@ -8,7 +8,6 @@ from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 import pytest
-from flask import Flask
 from sqlalchemy.orm import Session
 from werkzeug.exceptions import BadRequest, NotFound, Unauthorized
 
@@ -183,7 +182,7 @@ class TestValidateUserAccessibility:
 
 class TestDecodeJwtToken:
     @pytest.fixture
-    def app(self, flask_app_with_containers: Flask):
+    def app(self, flask_app_with_containers):
         return flask_app_with_containers
 
     def _create_app_site_enduser(self, db_session: Session, *, enable_site: bool = True):
@@ -240,7 +239,7 @@ class TestDecodeJwtToken:
         mock_access_mode: MagicMock,
         mock_validate_token: MagicMock,
         mock_validate_user: MagicMock,
-        app: Flask,
+        app,
         db_session_with_containers: Session,
     ) -> None:
         app_model, site, end_user = self._create_app_site_enduser(db_session_with_containers)
@@ -277,7 +276,7 @@ class TestDecodeJwtToken:
         mock_extract: MagicMock,
         mock_passport_cls: MagicMock,
         mock_features: MagicMock,
-        app: Flask,
+        app,
     ) -> None:
         non_existent_id = str(uuid4())
         mock_extract.return_value = "jwt-token"
@@ -300,7 +299,7 @@ class TestDecodeJwtToken:
         mock_extract: MagicMock,
         mock_passport_cls: MagicMock,
         mock_features: MagicMock,
-        app: Flask,
+        app,
         db_session_with_containers: Session,
     ) -> None:
         app_model, site, end_user = self._create_app_site_enduser(db_session_with_containers, enable_site=False)
@@ -325,7 +324,7 @@ class TestDecodeJwtToken:
         mock_extract: MagicMock,
         mock_passport_cls: MagicMock,
         mock_features: MagicMock,
-        app: Flask,
+        app,
         db_session_with_containers: Session,
     ) -> None:
         app_model, site, _ = self._create_app_site_enduser(db_session_with_containers)
@@ -351,7 +350,7 @@ class TestDecodeJwtToken:
         mock_extract: MagicMock,
         mock_passport_cls: MagicMock,
         mock_features: MagicMock,
-        app: Flask,
+        app,
         db_session_with_containers: Session,
     ) -> None:
         app_model, site, end_user = self._create_app_site_enduser(db_session_with_containers)

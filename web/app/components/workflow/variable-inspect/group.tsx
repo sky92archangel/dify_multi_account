@@ -1,7 +1,6 @@
 import type { currentVarType } from './panel'
 import type { NodeWithVar, VarInInspect } from '@/types/workflow'
 import { cn } from '@langgenius/dify-ui/cn'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@langgenius/dify-ui/tooltip'
 import {
   RiArrowRightSLine,
   RiDeleteBinLine,
@@ -13,6 +12,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 // import { Button } from '@langgenius/dify-ui/button'
 import ActionButton from '@/app/components/base/action-button'
+import Tooltip from '@/app/components/base/tooltip'
 import BlockIcon from '@/app/components/workflow/block-icon'
 import { VariableIconWithColor } from '@/app/components/workflow/nodes/_base/components/variable/variable-label'
 import { VarInInspectType } from '@/types/workflow'
@@ -45,11 +45,6 @@ const Group = ({
   const isEnv = varType === VarInInspectType.environment
   const isChatVar = varType === VarInInspectType.conversation
   const isSystem = varType === VarInInspectType.system
-  const groupTitle = nodeData?.title
-    || (isEnv && t('debug.variableInspect.envNode', { ns: 'workflow' }))
-    || (isChatVar && t('debug.variableInspect.chatNode', { ns: 'workflow' }))
-    || (isSystem && t('debug.variableInspect.systemNode', { ns: 'workflow' }))
-    || ''
 
   const visibleVarList = isEnv ? varList : varList.filter(v => v.visible)
 
@@ -105,20 +100,15 @@ const Group = ({
     <div className="p-0.5">
       {/* node item */}
       <div className="group flex h-6 items-center gap-0.5">
-        <button
-          type="button"
-          aria-expanded={visibleVarList.length > 0 ? !isCollapsed : undefined}
-          className="flex min-w-0 grow cursor-pointer items-center gap-0.5 rounded-sm border-none bg-transparent p-0 text-left outline-hidden focus-visible:ring-1 focus-visible:ring-components-input-border-hover"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-        >
-          <div className="size-3 shrink-0">
-            {nodeData?.isSingRunRunning && (
-              <RiLoader2Line className="size-3 animate-spin text-text-accent" aria-hidden />
-            )}
-            {(!nodeData || !nodeData.isSingRunRunning) && visibleVarList.length > 0 && (
-              <RiArrowRightSLine className={cn('size-3 text-text-tertiary', !isCollapsed && 'rotate-90')} aria-hidden />
-            )}
-          </div>
+        <div className="h-3 w-3 shrink-0">
+          {nodeData?.isSingRunRunning && (
+            <RiLoader2Line className="h-3 w-3 animate-spin text-text-accent" />
+          )}
+          {(!nodeData || !nodeData.isSingRunRunning) && visibleVarList.length > 0 && (
+            <RiArrowRightSLine className={cn('h-3 w-3 text-text-tertiary', !isCollapsed && 'rotate-90')} onClick={() => setIsCollapsed(!isCollapsed)} />
+          )}
+        </div>
+        <div className="flex grow cursor-pointer items-center gap-1" onClick={() => setIsCollapsed(!isCollapsed)}>
           {nodeData && (
             <>
               <BlockIcon
@@ -132,35 +122,23 @@ const Group = ({
           )}
           {!nodeData && (
             <div className="truncate system-xs-medium-uppercase text-text-tertiary">
-              {groupTitle}
+              {isEnv && t('debug.variableInspect.envNode', { ns: 'workflow' })}
+              {isChatVar && t('debug.variableInspect.chatNode', { ns: 'workflow' })}
+              {isSystem && t('debug.variableInspect.systemNode', { ns: 'workflow' })}
             </div>
           )}
-        </button>
+        </div>
         {nodeData && !nodeData.isSingRunRunning && (
           <div className="hidden shrink-0 items-center group-hover:flex">
-            <Tooltip>
-              <TooltipTrigger
-                render={(
-                  <ActionButton aria-label={t('debug.variableInspect.view', { ns: 'workflow' })} onClick={handleView}>
-                    <RiFileList3Line className="size-4" aria-hidden />
-                  </ActionButton>
-                )}
-              />
-              <TooltipContent>
-                {t('debug.variableInspect.view', { ns: 'workflow' })}
-              </TooltipContent>
+            <Tooltip popupContent={t('debug.variableInspect.view', { ns: 'workflow' })}>
+              <ActionButton onClick={handleView}>
+                <RiFileList3Line className="h-4 w-4" />
+              </ActionButton>
             </Tooltip>
-            <Tooltip>
-              <TooltipTrigger
-                render={(
-                  <ActionButton aria-label={t('debug.variableInspect.clearNode', { ns: 'workflow' })} onClick={handleClear}>
-                    <RiDeleteBinLine className="size-4" aria-hidden />
-                  </ActionButton>
-                )}
-              />
-              <TooltipContent>
-                {t('debug.variableInspect.clearNode', { ns: 'workflow' })}
-              </TooltipContent>
+            <Tooltip popupContent={t('debug.variableInspect.clearNode', { ns: 'workflow' })}>
+              <ActionButton onClick={handleClear}>
+                <RiDeleteBinLine className="h-4 w-4" />
+              </ActionButton>
             </Tooltip>
           </div>
         )}
@@ -169,14 +147,11 @@ const Group = ({
       {!isCollapsed && !nodeData?.isSingRunRunning && (
         <div className="px-0.5">
           {visibleVarList.length > 0 && visibleVarList.map(varItem => (
-            <button
-              type="button"
+            <div
               key={varItem.id}
               className={cn(
-                'relative flex w-full cursor-pointer items-center gap-1 rounded-md border-none px-3 py-1 text-left outline-hidden hover:bg-state-base-hover focus-visible:ring-1 focus-visible:ring-components-input-border-hover',
-                varItem.id === currentVar?.var?.id
-                  ? 'bg-state-base-hover-alt hover:bg-state-base-hover-alt'
-                  : 'bg-transparent',
+                'relative flex cursor-pointer items-center gap-1 rounded-md px-3 py-1 hover:bg-state-base-hover',
+                varItem.id === currentVar?.var?.id && 'bg-state-base-hover-alt hover:bg-state-base-hover-alt',
               )}
               onClick={() => handleSelectVar(varItem, varType)}
             >
@@ -187,7 +162,7 @@ const Group = ({
               />
               <div className="grow truncate system-sm-medium text-text-secondary">{varItem.name}</div>
               <div className="shrink-0 system-xs-regular text-text-tertiary">{varItem.value_type}</div>
-            </button>
+            </div>
           ))}
         </div>
       )}

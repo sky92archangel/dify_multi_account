@@ -235,8 +235,8 @@ describe('AppInfo', () => {
     })
   })
 
-  describe('categories', () => {
-    it('renders categories when provided', () => {
+  describe('category', () => {
+    it('renders category when provided', () => {
       const appDetail = createMockAppDetail('chat')
       const mockOnCreate = vi.fn()
 
@@ -244,17 +244,16 @@ describe('AppInfo', () => {
         <AppInfo
           appId="test-app-id"
           appDetail={appDetail}
-          categories={['AI Assistant', 'Workflow']}
+          category="AI Assistant"
           onCreate={mockOnCreate}
         />,
       )
 
       expect(screen.getByText('explore.tryApp.category')).toBeInTheDocument()
       expect(screen.getByText('AI Assistant')).toBeInTheDocument()
-      expect(screen.getByText('Workflow')).toBeInTheDocument()
     })
 
-    it('does not render categories section when not provided', () => {
+    it('does not render category section when not provided', () => {
       const appDetail = createMockAppDetail('chat')
       const mockOnCreate = vi.fn()
 

@@ -16,7 +16,6 @@ from uuid import uuid4
 from sqlalchemy.orm import Session
 
 from core.rag.index_processor.constant.index_type import IndexTechniqueType
-from models import AccountStatus, CreatorUserRole, TenantStatus
 from models.account import Account, Tenant, TenantAccountJoin, TenantAccountRole
 from models.dataset import (
     AppDatasetJoin,
@@ -26,7 +25,7 @@ from models.dataset import (
     DatasetProcessRule,
     DatasetQuery,
 )
-from models.enums import DatasetQuerySource, DataSourceType, ProcessRuleMode, TagType
+from models.enums import DatasetQuerySource, DataSourceType, ProcessRuleMode
 from models.model import Tag, TagBinding
 from services.dataset_service import DatasetService, DocumentService
 
@@ -43,11 +42,11 @@ class DatasetRetrievalTestDataFactory:
             email=f"{uuid4()}@example.com",
             name=f"user-{uuid4()}",
             interface_language="en-US",
-            status=AccountStatus.ACTIVE,
+            status="active",
         )
         tenant = Tenant(
             name=f"tenant-{uuid4()}",
-            status=TenantStatus.NORMAL,
+            status="normal",
         )
         db_session_with_containers.add_all([account, tenant])
         db_session_with_containers.flush()
@@ -73,7 +72,7 @@ class DatasetRetrievalTestDataFactory:
             email=f"{uuid4()}@example.com",
             name=f"user-{uuid4()}",
             interface_language="en-US",
-            status=AccountStatus.ACTIVE,
+            status="active",
         )
         db_session_with_containers.add(account)
         db_session_with_containers.flush()
@@ -131,7 +130,7 @@ class DatasetRetrievalTestDataFactory:
 
     @staticmethod
     def create_process_rule(
-        db_session_with_containers: Session, dataset_id: str, created_by: str, mode: ProcessRuleMode, rules: dict
+        db_session_with_containers: Session, dataset_id: str, created_by: str, mode: str, rules: dict
     ) -> DatasetProcessRule:
         """Create a dataset process rule."""
         process_rule = DatasetProcessRule(
@@ -154,7 +153,7 @@ class DatasetRetrievalTestDataFactory:
             content=content,
             source=DatasetQuerySource.APP,
             source_app_id=None,
-            created_by_role=CreatorUserRole.ACCOUNT,
+            created_by_role="account",
             created_by=created_by,
         )
         db_session_with_containers.add(dataset_query)
@@ -177,7 +176,7 @@ class DatasetRetrievalTestDataFactory:
         """Create a knowledge tag and bind it to the target dataset."""
         tag = Tag(
             tenant_id=tenant_id,
-            type=TagType.KNOWLEDGE,
+            type="knowledge",
             name=f"tag-{uuid4()}",
             created_by=created_by,
         )

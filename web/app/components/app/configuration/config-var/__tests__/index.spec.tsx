@@ -233,7 +233,9 @@ describe('ConfigVar', () => {
       const item = screen.getByTitle('name · Name')
       const itemContainer = item.closest('div.group')
       expect(itemContainer).not.toBeNull()
-      fireEvent.click(within(itemContainer as HTMLElement).getByRole('button', { name: 'common.operation.edit' }))
+      const actionButtons = itemContainer!.querySelectorAll('div.h-6.w-6')
+      expect(actionButtons).toHaveLength(2)
+      fireEvent.click(actionButtons[0]!)
 
       const editDialog = await screen.findByRole('dialog')
       const saveButton = within(editDialog).getByRole('button', { name: 'common.operation.save' })
@@ -257,7 +259,9 @@ describe('ConfigVar', () => {
       const item = screen.getByTitle('first · First')
       const itemContainer = item.closest('div.group')
       expect(itemContainer).not.toBeNull()
-      fireEvent.click(within(itemContainer as HTMLElement).getByRole('button', { name: 'common.operation.edit' }))
+      const actionButtons = itemContainer!.querySelectorAll('div.h-6.w-6')
+      expect(actionButtons).toHaveLength(2)
+      fireEvent.click(actionButtons[0]!)
 
       const inputs = await screen.findAllByPlaceholderText('appDebug.variableConfig.inputPlaceholder')
       fireEvent.change(inputs[0]!, { target: { value: 'second' } })
@@ -281,7 +285,9 @@ describe('ConfigVar', () => {
       const item = screen.getByTitle('first · First')
       const itemContainer = item.closest('div.group')
       expect(itemContainer).not.toBeNull()
-      fireEvent.click(within(itemContainer as HTMLElement).getByRole('button', { name: 'common.operation.edit' }))
+      const actionButtons = itemContainer!.querySelectorAll('div.h-6.w-6')
+      expect(actionButtons).toHaveLength(2)
+      fireEvent.click(actionButtons[0]!)
 
       const inputs = await screen.findAllByPlaceholderText('appDebug.variableConfig.inputPlaceholder')
       fireEvent.change(inputs[1]!, { target: { value: 'Second' } })
@@ -312,7 +318,7 @@ describe('ConfigVar', () => {
         onPromptVariablesChange,
       })
 
-      const removeBtn = screen.getByRole('button', { name: 'common.operation.delete' })
+      const removeBtn = screen.getByTestId('var-item-delete-btn')
       fireEvent.click(removeBtn)
 
       expect(onPromptVariablesChange).toHaveBeenCalledWith([])
@@ -337,7 +343,7 @@ describe('ConfigVar', () => {
         },
       )
 
-      const deleteBtn = screen.getByRole('button', { name: 'common.operation.delete' })
+      const deleteBtn = screen.getByTestId('var-item-delete-btn')
       fireEvent.click(deleteBtn)
       // confirmation modal should show up
       fireEvent.click(screen.getByRole('button', { name: 'common.operation.confirm' }))
@@ -405,7 +411,8 @@ describe('ConfigVar', () => {
       const itemContainer = item.closest('div.group')
       expect(itemContainer).not.toBeNull()
 
-      fireEvent.click(within(itemContainer as HTMLElement).getByRole('button', { name: 'common.operation.edit' }))
+      const actionButtons = itemContainer!.querySelectorAll('div.h-6.w-6')
+      fireEvent.click(actionButtons[0]!)
 
       const modalState = setShowExternalDataToolModal.mock.calls.at(-1)?.[0]
 
@@ -453,7 +460,8 @@ describe('ConfigVar', () => {
       const itemContainer = item.closest('div.group')
       expect(itemContainer).not.toBeNull()
 
-      fireEvent.click(within(itemContainer as HTMLElement).getByRole('button', { name: 'common.operation.edit' }))
+      const actionButtons = itemContainer!.querySelectorAll('div.h-6.w-6')
+      fireEvent.click(actionButtons[0]!)
 
       const modalState = setShowExternalDataToolModal.mock.calls.at(-1)?.[0]
 

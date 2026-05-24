@@ -15,11 +15,6 @@ from models.model import App, AppMode
 from tests.unit_tests.conftest import setup_mock_tenant_owner_execute_result
 
 
-def _configure_current_app_mock(mock_current_app):
-    mock_current_app.login_manager = Mock()
-    mock_current_app._get_current_object = Mock(return_value=Mock())
-
-
 class TestAppParameterApi:
     """Test suite for AppParameterApi"""
 
@@ -46,11 +41,11 @@ class TestAppParameterApi:
     @patch("controllers.service_api.wraps.validate_and_get_api_token")
     @patch("controllers.service_api.wraps.db")
     def test_get_parameters_for_chat_app(
-        self, mock_db, mock_validate_token, mock_current_app, mock_user_logged_in, app: Flask, mock_app_model
+        self, mock_db, mock_validate_token, mock_current_app, mock_user_logged_in, app, mock_app_model
     ):
         """Test retrieving parameters for a chat app."""
         # Arrange
-        _configure_current_app_mock(mock_current_app)
+        mock_current_app.login_manager = Mock()
 
         mock_config = Mock()
         mock_config.id = str(uuid.uuid4())
@@ -96,11 +91,11 @@ class TestAppParameterApi:
     @patch("controllers.service_api.wraps.validate_and_get_api_token")
     @patch("controllers.service_api.wraps.db")
     def test_get_parameters_for_workflow_app(
-        self, mock_db, mock_validate_token, mock_current_app, mock_user_logged_in, app: Flask, mock_app_model
+        self, mock_db, mock_validate_token, mock_current_app, mock_user_logged_in, app, mock_app_model
     ):
         """Test retrieving parameters for a workflow app."""
         # Arrange
-        _configure_current_app_mock(mock_current_app)
+        mock_current_app.login_manager = Mock()
 
         mock_app_model.mode = AppMode.WORKFLOW
         mock_workflow = Mock()
@@ -141,11 +136,11 @@ class TestAppParameterApi:
     @patch("controllers.service_api.wraps.validate_and_get_api_token")
     @patch("controllers.service_api.wraps.db")
     def test_get_parameters_raises_error_when_chat_config_missing(
-        self, mock_db, mock_validate_token, mock_current_app, mock_user_logged_in, app: Flask, mock_app_model
+        self, mock_db, mock_validate_token, mock_current_app, mock_user_logged_in, app, mock_app_model
     ):
         """Test that AppUnavailableError is raised when chat app has no config."""
         # Arrange
-        _configure_current_app_mock(mock_current_app)
+        mock_current_app.login_manager = Mock()
 
         mock_app_model.app_model_config = None
         mock_app_model.workflow = None
@@ -179,11 +174,11 @@ class TestAppParameterApi:
     @patch("controllers.service_api.wraps.validate_and_get_api_token")
     @patch("controllers.service_api.wraps.db")
     def test_get_parameters_raises_error_when_workflow_missing(
-        self, mock_db, mock_validate_token, mock_current_app, mock_user_logged_in, app: Flask, mock_app_model
+        self, mock_db, mock_validate_token, mock_current_app, mock_user_logged_in, app, mock_app_model
     ):
         """Test that AppUnavailableError is raised when workflow app has no workflow."""
         # Arrange
-        _configure_current_app_mock(mock_current_app)
+        mock_current_app.login_manager = Mock()
 
         mock_app_model.mode = AppMode.WORKFLOW
         mock_app_model.workflow = None
@@ -239,18 +234,11 @@ class TestAppMetaApi:
     @patch("controllers.service_api.wraps.db")
     @patch("controllers.service_api.app.app.AppService")
     def test_get_app_meta(
-        self,
-        mock_app_service,
-        mock_db,
-        mock_validate_token,
-        mock_current_app,
-        mock_user_logged_in,
-        app: Flask,
-        mock_app_model,
+        self, mock_app_service, mock_db, mock_validate_token, mock_current_app, mock_user_logged_in, app, mock_app_model
     ):
         """Test retrieving app metadata via AppService."""
         # Arrange
-        _configure_current_app_mock(mock_current_app)
+        mock_current_app.login_manager = Mock()
 
         mock_service_instance = Mock()
         mock_service_instance.get_app_meta.return_value = {
@@ -322,10 +310,10 @@ class TestAppInfoApi:
     @patch("controllers.service_api.wraps.validate_and_get_api_token")
     @patch("controllers.service_api.wraps.db")
     def test_get_app_info(
-        self, mock_db, mock_validate_token, mock_current_app, mock_user_logged_in, app: Flask, mock_app_model
+        self, mock_db, mock_validate_token, mock_current_app, mock_user_logged_in, app, mock_app_model
     ):
         """Test retrieving basic app information."""
-        _configure_current_app_mock(mock_current_app)
+        mock_current_app.login_manager = Mock()
 
         # Mock authentication
         mock_api_token = Mock()
@@ -366,7 +354,7 @@ class TestAppInfoApi:
     ):
         """Test retrieving app info with multiple tags."""
         # Arrange
-        _configure_current_app_mock(mock_current_app)
+        mock_current_app.login_manager = Mock()
 
         mock_app = Mock(spec=App)
         mock_app.id = str(uuid.uuid4())
@@ -414,12 +402,10 @@ class TestAppInfoApi:
     @patch("controllers.service_api.wraps.current_app")
     @patch("controllers.service_api.wraps.validate_and_get_api_token")
     @patch("controllers.service_api.wraps.db")
-    def test_get_app_info_with_no_tags(
-        self, mock_db, mock_validate_token, mock_current_app, mock_user_logged_in, app: Flask
-    ):
+    def test_get_app_info_with_no_tags(self, mock_db, mock_validate_token, mock_current_app, mock_user_logged_in, app):
         """Test retrieving app info when app has no tags."""
         # Arrange
-        _configure_current_app_mock(mock_current_app)
+        mock_current_app.login_manager = Mock()
 
         mock_app = Mock(spec=App)
         mock_app.id = str(uuid.uuid4())
@@ -467,11 +453,11 @@ class TestAppInfoApi:
     @patch("controllers.service_api.wraps.validate_and_get_api_token")
     @patch("controllers.service_api.wraps.db")
     def test_get_app_info_returns_correct_mode(
-        self, mock_db, mock_validate_token, mock_current_app, mock_user_logged_in, app: Flask, app_mode
+        self, mock_db, mock_validate_token, mock_current_app, mock_user_logged_in, app, app_mode
     ):
         """Test that all app modes are correctly returned."""
         # Arrange
-        _configure_current_app_mock(mock_current_app)
+        mock_current_app.login_manager = Mock()
 
         mock_app = Mock(spec=App)
         mock_app.id = str(uuid.uuid4())

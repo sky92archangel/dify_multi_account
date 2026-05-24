@@ -9,9 +9,9 @@ const Signup = () => {
   const searchParams = useSearchParams()
   const { t } = useTranslation()
 
-  const handleInputMailSubmitted = useCallback((email: string, result: string) => {
+  const handleInputMailSubmitted = useCallback((email: string, token: string) => {
     const params = new URLSearchParams(searchParams)
-    params.set('token', encodeURIComponent(result))
+    params.set('token', encodeURIComponent(token))
     params.set('email', encodeURIComponent(email))
     router.push(`/signup/check-code?${params.toString()}`)
   }, [router, searchParams])

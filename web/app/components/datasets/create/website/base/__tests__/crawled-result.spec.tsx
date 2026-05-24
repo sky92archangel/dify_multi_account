@@ -3,6 +3,48 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import CrawledResult from '../crawled-result'
 
+vi.mock('../checkbox-with-label', () => ({
+  default: ({ isChecked, onChange, label, testId }: {
+    isChecked: boolean
+    onChange: (checked: boolean) => void
+    label: string
+    testId?: string
+  }) => (
+    <label data-testid={testId}>
+      <input
+        type="checkbox"
+        checked={isChecked}
+        onChange={() => onChange(!isChecked)}
+        data-testid={`checkbox-${testId}`}
+      />
+      <span>{label}</span>
+    </label>
+  ),
+}))
+
+vi.mock('../crawled-result-item', () => ({
+  default: ({ payload, isChecked, isPreview, onCheckChange, onPreview, testId }: {
+    payload: CrawlResultItem
+    isChecked: boolean
+    isPreview: boolean
+    onCheckChange: (checked: boolean) => void
+    onPreview: () => void
+    testId?: string
+  }) => (
+    <div data-testid={testId} data-preview={isPreview}>
+      <input
+        type="checkbox"
+        checked={isChecked}
+        onChange={() => onCheckChange(!isChecked)}
+        data-testid={`check-${testId}`}
+      />
+      <span>{payload.title}</span>
+      <span>{payload.source_url}</span>
+      <button onClick={onPreview} data-testid={`preview-${testId}`}>Preview</button>
+    </div>
+  ),
+}))
+
 const createMockItem = (overrides: Partial<CrawlResultItem> = {}): CrawlResultItem => ({
   title: 'Test Page',
   markdown: '# Test',
@@ -38,7 +80,7 @@ describe('CrawledResult', () => {
         />,
       )
 
-      expect(screen.getByRole('checkbox', { name: /selectAll/i })).toBeInTheDocument()
+      expect(screen.getByTestId('select-all'))!.toBeInTheDocument()
     })
 
     it('should render all items from list', () => {
@@ -53,9 +95,9 @@ describe('CrawledResult', () => {
         />,
       )
 
-      expect(screen.getByText('Page 1')).toBeInTheDocument()
-      expect(screen.getByText('Page 2')).toBeInTheDocument()
-      expect(screen.getByText('Page 3')).toBeInTheDocument()
+      expect(screen.getByTestId('item-0'))!.toBeInTheDocument()
+      expect(screen.getByTestId('item-1'))!.toBeInTheDocument()
+      expect(screen.getByTestId('item-2'))!.toBeInTheDocument()
     })
 
     it('should render scrap time info', () => {
@@ -104,7 +146,7 @@ describe('CrawledResult', () => {
         />,
       )
 
-      const selectAllCheckbox = screen.getByRole('checkbox', { name: /selectAll/i })
+      const selectAllCheckbox = screen.getByTestId('checkbox-select-all')
       fireEvent.click(selectAllCheckbox)
 
       expect(mockOnSelectedChange).toHaveBeenCalledWith(list)
@@ -122,7 +164,7 @@ describe('CrawledResult', () => {
         />,
       )
 
-      const selectAllCheckbox = screen.getByRole('checkbox', { name: /resetAll/i })
+      const selectAllCheckbox = screen.getByTestId('checkbox-select-all')
       fireEvent.click(selectAllCheckbox)
 
       expect(mockOnSelectedChange).toHaveBeenCalledWith([])
@@ -173,7 +215,7 @@ describe('CrawledResult', () => {
         />,
       )
 
-      const item1Checkbox = screen.getByRole('checkbox', { name: /Page 2/ })
+      const item1Checkbox = screen.getByTestId('check-item-1')
       fireEvent.click(item1Checkbox)
 
       expect(mockOnSelectedChange).toHaveBeenCalledWith([list[0], list[1]])
@@ -192,7 +234,7 @@ describe('CrawledResult', () => {
         />,
       )
 
-      const item0Checkbox = screen.getByRole('checkbox', { name: /Page 1/ })
+      const item0Checkbox = screen.getByTestId('check-item-0')
       fireEvent.click(item0Checkbox)
 
       expect(mockOnSelectedChange).toHaveBeenCalledWith([list[1]])
@@ -212,7 +254,7 @@ describe('CrawledResult', () => {
         />,
       )
 
-      const previewButton = screen.getAllByRole('button', { name: /preview/i })[1]!
+      const previewButton = screen.getByTestId('preview-item-1')
       fireEvent.click(previewButton)
 
       expect(mockOnPreview).toHaveBeenCalledWith(list[1])
@@ -230,11 +272,11 @@ describe('CrawledResult', () => {
         />,
       )
 
-      const previewButton = screen.getAllByRole('button', { name: /preview/i })[0]!
+      const previewButton = screen.getByTestId('preview-item-0')
       fireEvent.click(previewButton)
 
-      const item0 = screen.getByText('Page 1').closest('.rounded-lg')
-      expect(item0).toHaveClass('bg-state-base-active')
+      const item0 = screen.getByTestId('item-0')
+      expect(item0)!.toHaveAttribute('data-preview', 'true')
     })
   })
 
@@ -250,7 +292,7 @@ describe('CrawledResult', () => {
         />,
       )
 
-      expect(screen.getByRole('checkbox', { name: /resetAll/i })).toBeInTheDocument()
+      expect(screen.getByTestId('select-all'))!.toBeInTheDocument()
     })
 
     it('should handle single item list', () => {
@@ -265,7 +307,7 @@ describe('CrawledResult', () => {
         />,
       )
 
-      expect(screen.getByText('Test Page')).toBeInTheDocument()
+      expect(screen.getByTestId('item-0'))!.toBeInTheDocument()
     })
   })
 })

@@ -5,7 +5,6 @@ import type {
   ModelProvider,
 } from '@/app/components/header/account-setting/model-provider-page/declarations'
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { createMockProviderContextValue } from '@/__mocks__/provider-context'
 import {
   ConfigurationMethodEnum,
@@ -84,6 +83,12 @@ vi.mock('@/app/components/header/account-setting/model-provider-page/model-icon'
 vi.mock('@/app/components/header/account-setting/model-provider-page/model-name', () => ({
   default: ({ modelItem }: { modelItem: { model: string } }) => (
     <div data-testid="model-name">{modelItem?.model}</div>
+  ),
+}))
+
+vi.mock('@/app/components/base/tooltip', () => ({
+  default: ({ children, popupContent }: { children: ReactNode, popupContent: string }) => (
+    <div data-testid="tooltip" data-content={popupContent}>{children}</div>
   ),
 }))
 
@@ -380,15 +385,14 @@ describe('ModelParameterTrigger', () => {
       expect(screen.getByText('common.modelProvider.selectModel')).toBeInTheDocument()
     })
 
-    it('should render configured model id and incompatible tooltip when model is missing from the provider list', async () => {
+    it('should render configured model id and incompatible tooltip when model is missing from the provider list', () => {
       renderComponent()
 
       expect(screen.getByText('gpt-3.5-turbo')).toBeInTheDocument()
-      await userEvent.hover(screen.getByLabelText('common.modelProvider.selector.incompatibleTip'))
-      expect(await screen.findByText('common.modelProvider.selector.incompatibleTip')).toBeInTheDocument()
+      expect(screen.getByTestId('tooltip')).toHaveAttribute('data-content', 'common.modelProvider.selector.incompatibleTip')
     })
 
-    it('should render configure required tooltip for no-configure status', async () => {
+    it('should render configure required tooltip for no-configure status', () => {
       const { unmount } = renderComponent()
       const triggerContent = capturedModalProps?.renderTrigger({
         open: false,
@@ -399,11 +403,10 @@ describe('ModelParameterTrigger', () => {
       unmount()
       render(<>{triggerContent}</>)
 
-      await userEvent.hover(screen.getByLabelText('common.modelProvider.selector.configureRequired'))
-      expect(await screen.findByText('common.modelProvider.selector.configureRequired')).toBeInTheDocument()
+      expect(screen.getByTestId('tooltip')).toHaveAttribute('data-content', 'common.modelProvider.selector.configureRequired')
     })
 
-    it('should render disabled tooltip for disabled status', async () => {
+    it('should render disabled tooltip for disabled status', () => {
       const { unmount } = renderComponent()
       const triggerContent = capturedModalProps?.renderTrigger({
         open: false,
@@ -414,8 +417,7 @@ describe('ModelParameterTrigger', () => {
       unmount()
       render(<>{triggerContent}</>)
 
-      await userEvent.hover(screen.getByLabelText('common.modelProvider.selector.disabled'))
-      expect(await screen.findByText('common.modelProvider.selector.disabled')).toBeInTheDocument()
+      expect(screen.getByTestId('tooltip')).toHaveAttribute('data-content', 'common.modelProvider.selector.disabled')
     })
 
     it('should apply expanded and warning styles when the trigger is open for a non-active status', () => {

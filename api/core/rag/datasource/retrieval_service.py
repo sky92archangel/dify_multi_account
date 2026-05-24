@@ -1,6 +1,5 @@
 import concurrent.futures
 import logging
-from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, NotRequired, TypedDict
 
@@ -9,7 +8,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, load_only
 
 from configs import dify_config
-from core.app.file_access import grant_upload_file_access
 from core.db.session_factory import session_factory
 from core.model_manager import ModelManager
 from core.rag.data_post_processor.data_post_processor import DataPostProcessor, RerankingModelDict, WeightsDict
@@ -23,7 +21,7 @@ from core.rag.index_processor.constant.query_type import QueryType
 from core.rag.models.document import Document
 from core.rag.rerank.rerank_type import RerankMode
 from core.rag.retrieval.retrieval_methods import RetrievalMethod
-from core.tools.signature import sign_upload_file_preview_url
+from core.tools.signature import sign_upload_file
 from extensions.ext_database import db
 from graphon.model_runtime.entities.model_entities import ModelType
 from models.dataset import (
@@ -219,11 +217,10 @@ class RetrievalService:
         """Deduplicate documents in O(n) while preserving first-seen order.
 
         Rules:
-        - If metadata["doc_id"] exists (any provider): deduplicate by (provider, doc_id) key;
-          keep the doc with the highest metadata["score"] among duplicates. If a later duplicate
-          has no score, ignore it.
-        - If metadata["doc_id"] is absent: deduplicate by content key (provider, page_content),
-          keeping the first occurrence.
+        - For provider == "dify" and metadata["doc_id"] exists: keep the doc with the highest
+          metadata["score"] among duplicates; if a later duplicate has no score, ignore it.
+        - For non-dify documents (or dify without doc_id): deduplicate by content key
+          (provider, page_content), keeping the first occurrence.
         """
         if not documents:
             return documents
@@ -234,10 +231,11 @@ class RetrievalService:
         order: list[tuple] = []
 
         for doc in documents:
-            doc_id = (doc.metadata or {}).get("doc_id")
+            is_dify = doc.provider == "dify"
+            doc_id = (doc.metadata or {}).get("doc_id") if is_dify else None
 
-            if doc_id:
-                key = (doc.provider or "dify", doc_id)
+            if is_dify and doc_id:
+                key = ("dify", doc_id)
                 if key not in chosen:
                     chosen[key] = doc
                     order.append(key)
@@ -528,7 +526,7 @@ class RetrievalService:
             index_node_ids = [i for i in index_node_ids if i]
 
             segment_ids: list[str] = []
-            index_node_segments: Sequence[DocumentSegment] = []
+            index_node_segments: list[DocumentSegment] = []
             segments: list[DocumentSegment] = []
             attachment_map: dict[str, list[AttachmentInfoDict]] = {}
             child_chunk_map: dict[str, list[ChildChunk]] = {}
@@ -570,9 +568,8 @@ class RetrievalService:
                         DocumentSegment.status == "completed",
                         DocumentSegment.index_node_id.in_(index_node_ids),
                     )
-                    index_node_segments = session.execute(document_segment_stmt).scalars().all()
+                    index_node_segments = session.execute(document_segment_stmt).scalars().all()  # type: ignore
                     for index_node_segment in index_node_segments:
-                        assert index_node_segment.index_node_id
                         doc_segment_map[index_node_segment.id] = [index_node_segment.index_node_id]
 
                 if segment_ids:
@@ -891,13 +888,12 @@ class RetrievalService:
                 .limit(1)
             )
             if attachment_binding:
-                grant_upload_file_access([str(upload_file.id)])
                 attachment_info: AttachmentInfoDict = {
                     "id": upload_file.id,
                     "name": upload_file.name,
                     "extension": "." + upload_file.extension,
                     "mime_type": upload_file.mime_type,
-                    "source_url": sign_upload_file_preview_url(upload_file.id, upload_file.extension),
+                    "source_url": sign_upload_file(upload_file.id, upload_file.extension),
                     "size": upload_file.size,
                 }
                 return {"attachment_info": attachment_info, "segment_id": attachment_binding.segment_id}
@@ -908,7 +904,6 @@ class RetrievalService:
         cls, attachment_ids: list[str], session: Session
     ) -> list[SegmentAttachmentInfoResult]:
         attachment_infos: list[SegmentAttachmentInfoResult] = []
-        granted_upload_file_ids: list[str] = []
         upload_files = session.scalars(select(UploadFile).where(UploadFile.id.in_(attachment_ids))).all()
         if upload_files:
             upload_file_ids = [upload_file.id for upload_file in upload_files]
@@ -925,11 +920,10 @@ class RetrievalService:
                         "name": upload_file.name,
                         "extension": "." + upload_file.extension,
                         "mime_type": upload_file.mime_type,
-                        "source_url": sign_upload_file_preview_url(upload_file.id, upload_file.extension),
+                        "source_url": sign_upload_file(upload_file.id, upload_file.extension),
                         "size": upload_file.size,
                     }
                     if attachment_binding:
-                        granted_upload_file_ids.append(str(upload_file.id))
                         attachment_infos.append(
                             {
                                 "attachment_id": attachment_binding.attachment_id,
@@ -937,5 +931,4 @@ class RetrievalService:
                                 "segment_id": attachment_binding.segment_id,
                             }
                         )
-        grant_upload_file_access(granted_upload_file_ids)
         return attachment_infos

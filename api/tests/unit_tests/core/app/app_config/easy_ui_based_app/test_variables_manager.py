@@ -1,5 +1,4 @@
 import pytest
-from pytest_mock import MockerFixture
 
 from core.app.app_config.easy_ui_based_app.variables.manager import (
     BasicVariablesConfigManager,
@@ -16,7 +15,7 @@ class TestBasicVariablesConfigManagerConvert:
         assert variables == []
         assert external == []
 
-    def test_convert_external_data_tools_enabled_and_disabled(self, mocker: MockerFixture):
+    def test_convert_external_data_tools_enabled_and_disabled(self, mocker):
         config = {
             "external_data_tools": [
                 {"enabled": False},
@@ -233,7 +232,7 @@ class TestValidateExternalDataToolsAndSetDefaults:
         with pytest.raises(ValueError):
             BasicVariablesConfigManager.validate_external_data_tools_and_set_defaults("tenant", config)
 
-    def test_validate_disabled_tool_skipped(self, mocker: MockerFixture):
+    def test_validate_disabled_tool_skipped(self, mocker):
         config = {"external_data_tools": [{"enabled": False}]}
 
         spy = mocker.patch(
@@ -251,7 +250,7 @@ class TestValidateExternalDataToolsAndSetDefaults:
         with pytest.raises(ValueError):
             BasicVariablesConfigManager.validate_external_data_tools_and_set_defaults("tenant", config)
 
-    def test_validate_enabled_tool_calls_factory(self, mocker: MockerFixture):
+    def test_validate_enabled_tool_calls_factory(self, mocker):
         config = {"external_data_tools": [{"enabled": True, "type": "tool", "config": {"a": 1}}]}
 
         spy = mocker.patch(
@@ -264,7 +263,7 @@ class TestValidateExternalDataToolsAndSetDefaults:
 
 
 class TestValidateAndSetDefaultsIntegration:
-    def test_validate_and_set_defaults_calls_both(self, mocker: MockerFixture):
+    def test_validate_and_set_defaults_calls_both(self, mocker):
         config = {}
 
         spy_var = mocker.patch.object(

@@ -29,7 +29,7 @@ import {
   TextNode,
 } from 'lexical'
 import * as React from 'react'
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useEventEmitterContextContext } from '@/context/event-emitter'
 import {
   UPDATE_DATASETS_EVENT_EMITTER,
@@ -203,16 +203,12 @@ const PromptEditor: FC<PromptEditorProps> = ({
     } as any)
   }, [eventEmitter, historyBlock?.history])
 
-  const [floatingAnchorElem, setFloatingAnchorElem] = useState<HTMLDivElement | null>(null)
+  const [floatingAnchorElem, setFloatingAnchorElem] = useState(null)
 
-  const onRef = useCallback((nextFloatingAnchorElem: HTMLDivElement | null) => {
-    setFloatingAnchorElem((currentFloatingAnchorElem) => {
-      if (currentFloatingAnchorElem === nextFloatingAnchorElem)
-        return currentFloatingAnchorElem
-
-      return nextFloatingAnchorElem
-    })
-  }, [])
+  const onRef = (_floatingAnchorElem: any) => {
+    if (_floatingAnchorElem !== null)
+      setFloatingAnchorElem(_floatingAnchorElem)
+  }
 
   return (
     <LexicalComposer initialConfig={{ ...initialConfig, editable }}>

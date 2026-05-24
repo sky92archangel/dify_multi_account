@@ -131,7 +131,6 @@ describe('Header Account Dropdown Flow', () => {
       payload: ACCOUNT_SETTING_TAB.MEMBERS,
     })
 
-    fireEvent.click(screen.getByRole('button', { name: 'common.account.account' }))
     fireEvent.click(screen.getByText('common.userProfile.about'))
 
     await waitFor(() => {

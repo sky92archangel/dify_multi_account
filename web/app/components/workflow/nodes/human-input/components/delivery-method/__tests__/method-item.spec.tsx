@@ -6,15 +6,15 @@ import { DeliveryMethodType } from '../../../types'
 import DeliveryMethodItem from '../method-item'
 
 type EmailConfigureModalProps = {
-  open: boolean
+  isShow: boolean
   config?: EmailConfig
-  onOpenChange: (open: boolean) => void
+  onClose: () => void
   onConfirm: (data: EmailConfig) => void
 }
 
 type TestEmailSenderProps = {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  isShow: boolean
+  onClose: () => void
   jumpToEmailConfigModal: () => void
 }
 
@@ -30,7 +30,7 @@ vi.mock('@/context/app-context', () => ({
 vi.mock('../email-configure-modal', () => ({
   default: (props: EmailConfigureModalProps) => {
     mockEmailConfigureModal(props)
-    return props.open
+    return props.isShow
       ? (
           <div data-testid="email-configure-modal">
             <button
@@ -44,7 +44,7 @@ vi.mock('../email-configure-modal', () => ({
             >
               confirm-email-config
             </button>
-            <button type="button" onClick={() => props.onOpenChange(false)}>close-email-config</button>
+            <button type="button" onClick={props.onClose}>close-email-config</button>
           </div>
         )
       : null
@@ -54,11 +54,11 @@ vi.mock('../email-configure-modal', () => ({
 vi.mock('../test-email-sender', () => ({
   default: (props: TestEmailSenderProps) => {
     mockTestEmailSender(props)
-    return props.open
+    return props.isShow
       ? (
           <div data-testid="test-email-sender">
             <button type="button" onClick={props.jumpToEmailConfigModal}>jump-to-config</button>
-            <button type="button" onClick={() => props.onOpenChange(false)}>close-test-sender</button>
+            <button type="button" onClick={props.onClose}>close-test-sender</button>
           </div>
         )
       : null
@@ -140,14 +140,14 @@ describe('human-input/delivery-method/method-item', () => {
 
     const row = getMethodRow('webapp')
     const actionButtons = within(row).getAllByRole('button')
-    const deleteButton = actionButtons[0]!
+    const deleteButtonWrapper = actionButtons[0]!.parentElement as HTMLDivElement
 
-    fireEvent.mouseEnter(deleteButton)
+    fireEvent.mouseEnter(deleteButtonWrapper)
     expect(row)!.toHaveClass('border-state-destructive-border')
-    fireEvent.mouseLeave(deleteButton)
+    fireEvent.mouseLeave(deleteButtonWrapper)
     expect(row).not.toHaveClass('border-state-destructive-border')
 
-    fireEvent.click(deleteButton)
+    fireEvent.click(actionButtons[0]!)
     expect(handleDelete).toHaveBeenCalledWith(DeliveryMethodType.WebApp)
   })
 

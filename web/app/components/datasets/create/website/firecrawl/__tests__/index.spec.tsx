@@ -662,9 +662,11 @@ describe('FireCrawl', () => {
     })
 
     it('should call onCrawlOptionsChange when checkbox changes', () => {
-      render(<FireCrawl {...defaultProps} />)
+      const { container } = render(<FireCrawl {...defaultProps} />)
 
-      fireEvent.click(screen.getByRole('checkbox', { name: /crawlSubPage/ }))
+      // Use data-testid to find checkboxes since they are custom div elements
+      const checkboxes = container.querySelectorAll('[data-testid^="checkbox-"]')
+      fireEvent.click(checkboxes[0]!) // crawl_sub_pages
 
       expect(mockOnCrawlOptionsChange).toHaveBeenCalledWith(
         expect.objectContaining({ crawl_sub_pages: false }),

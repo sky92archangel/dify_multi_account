@@ -24,7 +24,8 @@ describe('Tag Component', () => {
         'rounded-md',
         'px-2.5',
         'py-px',
-        'text-xs/5',
+        'text-xs',
+        'leading-5',
       )
     })
   })

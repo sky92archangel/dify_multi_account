@@ -190,6 +190,13 @@ export type InvitationResponse = CommonResponse & {
   invitation_results: InvitationResult[]
 }
 
+export type ApiBasedExtension = {
+  id?: string
+  name?: string
+  api_endpoint?: string
+  api_key?: string
+}
+
 export type CodeBasedExtensionForm = {
   type: string
   label: I18nText

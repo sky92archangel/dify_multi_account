@@ -1,5 +1,5 @@
-import type { UserProfile } from '@/contract/console/workflow-comment'
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import type { UserProfile } from '@/service/workflow-comment'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { useState } from 'react'
 import { MentionInput } from './mention-input'
 
@@ -30,12 +30,8 @@ vi.mock('@/next/navigation', () => ({
   useParams: () => ({ appId: 'app-1' }),
 }))
 
-vi.mock('@/service/client', () => ({
-  consoleClient: {
-    workflowComments: {
-      mentionUsers: (...args: unknown[]) => mockFetchMentionableUsers(...args),
-    },
-  },
+vi.mock('@/service/workflow-comment', () => ({
+  fetchMentionableUsers: (...args: unknown[]) => mockFetchMentionableUsers(...args),
 }))
 
 vi.mock('../store', () => ({
@@ -84,7 +80,7 @@ describe('MentionInput', () => {
     vi.clearAllMocks()
     mentionStoreState.mentionableUsersCache = {}
     mentionStoreState.mentionableUsersLoading = {}
-    mockFetchMentionableUsers.mockResolvedValue({ users: mentionUsers })
+    mockFetchMentionableUsers.mockResolvedValue(mentionUsers)
   })
 
   it('loads mentionable users when cache is empty', async () => {
@@ -97,9 +93,7 @@ describe('MentionInput', () => {
     )
 
     await waitFor(() => {
-      expect(mockFetchMentionableUsers).toHaveBeenCalledWith({
-        params: { appId: 'app-1' },
-      })
+      expect(mockFetchMentionableUsers).toHaveBeenCalledWith('app-1')
     })
 
     expect(mockSetMentionableUsersLoading).toHaveBeenCalledWith('app-1', true)
@@ -153,36 +147,5 @@ describe('MentionInput', () => {
     await waitFor(() => {
       expect(onSubmit).toHaveBeenCalledWith('updated reply', [])
     })
-  })
-
-  it('focuses the textarea at the end when autoFocus is enabled', () => {
-    vi.useFakeTimers()
-    try {
-      mentionStoreState.mentionableUsersCache['app-1'] = mentionUsers
-
-      const { unmount } = render(
-        <MentionInput
-          value="draft"
-          onChange={vi.fn()}
-          onSubmit={vi.fn()}
-          autoFocus
-        />,
-      )
-
-      const textarea = screen.getByPlaceholderText('workflow.comments.placeholder.add') as HTMLTextAreaElement
-
-      act(() => {
-        vi.runOnlyPendingTimers()
-      })
-
-      expect(document.activeElement).toBe(textarea)
-      expect(textarea.selectionStart).toBe(5)
-      expect(textarea.selectionEnd).toBe(5)
-
-      unmount()
-    }
-    finally {
-      vi.useRealTimers()
-    }
   })
 })

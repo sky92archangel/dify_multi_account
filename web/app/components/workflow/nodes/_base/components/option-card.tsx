@@ -5,7 +5,7 @@ import { cn } from '@langgenius/dify-ui/cn'
 import { cva } from 'class-variance-authority'
 import * as React from 'react'
 import { useCallback } from 'react'
-import { Infotip } from '@/app/components/base/infotip'
+import Tooltip from '@/app/components/base/tooltip'
 
 const variants = cva([], {
   variants: {
@@ -60,9 +60,13 @@ const OptionCard: FC<Props> = ({
       <span>{title}</span>
       {tooltip
         && (
-          <Infotip aria-label={tooltip} popupClassName="w-[240px]">
-            {tooltip}
-          </Infotip>
+          <Tooltip
+            popupContent={(
+              <div className="w-[240px]">
+                {tooltip}
+              </div>
+            )}
+          />
         )}
     </div>
   )

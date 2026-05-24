@@ -165,7 +165,7 @@ class TestMessagesCleanServiceIntegration:
 
         return app
 
-    def _create_conversation(self, db_session_with_containers: Session, app: App):
+    def _create_conversation(self, db_session_with_containers: Session, app):
         """Helper to create a conversation."""
         conversation = Conversation(
             app_id=app.id,

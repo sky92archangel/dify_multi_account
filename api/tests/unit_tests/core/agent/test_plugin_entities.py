@@ -9,7 +9,6 @@ mocking; ensure entity invariants and validation rules remain stable.
 
 import pytest
 from pydantic import ValidationError
-from pytest_mock import MockerFixture
 
 from core.agent.plugin_entities import (
     AgentFeature,
@@ -29,12 +28,12 @@ from core.tools.entities.tool_entities import ToolIdentity, ToolProviderIdentity
 
 
 @pytest.fixture
-def mock_identity(mocker: MockerFixture):
+def mock_identity(mocker):
     return mocker.MagicMock(spec=AgentStrategyIdentity)
 
 
 @pytest.fixture
-def mock_provider_identity(mocker: MockerFixture):
+def mock_provider_identity(mocker):
     return mocker.MagicMock(spec=AgentStrategyProviderIdentity)
 
 
@@ -48,7 +47,7 @@ class TestAgentStrategyParameterType:
         "enum_member",
         list(AgentStrategyParameter.AgentStrategyParameterType),
     )
-    def test_as_normal_type_calls_external_function(self, mocker: MockerFixture, enum_member) -> None:
+    def test_as_normal_type_calls_external_function(self, mocker, enum_member) -> None:
         mock_func = mocker.patch(
             "core.agent.plugin_entities.as_normal_type",
             return_value="normalized",
@@ -59,7 +58,7 @@ class TestAgentStrategyParameterType:
         mock_func.assert_called_once_with(enum_member)
         assert result == "normalized"
 
-    def test_as_normal_type_propagates_exception(self, mocker: MockerFixture) -> None:
+    def test_as_normal_type_propagates_exception(self, mocker) -> None:
         enum_member = AgentStrategyParameter.AgentStrategyParameterType.STRING
         mocker.patch(
             "core.agent.plugin_entities.as_normal_type",
@@ -80,7 +79,7 @@ class TestAgentStrategyParameterType:
             (AgentStrategyParameter.AgentStrategyParameterType.FILES, []),
         ],
     )
-    def test_cast_value_calls_external_function(self, mocker: MockerFixture, enum_member, value) -> None:
+    def test_cast_value_calls_external_function(self, mocker, enum_member, value) -> None:
         mock_func = mocker.patch(
             "core.agent.plugin_entities.cast_parameter_value",
             return_value="casted",
@@ -91,7 +90,7 @@ class TestAgentStrategyParameterType:
         mock_func.assert_called_once_with(enum_member, value)
         assert result == "casted"
 
-    def test_cast_value_propagates_exception(self, mocker: MockerFixture) -> None:
+    def test_cast_value_propagates_exception(self, mocker) -> None:
         enum_member = AgentStrategyParameter.AgentStrategyParameterType.STRING
         mocker.patch(
             "core.agent.plugin_entities.cast_parameter_value",
@@ -137,7 +136,7 @@ class TestAgentStrategyParameter:
 
         assert any(error["loc"] == ("type",) for error in exc_info.value.errors())
 
-    def test_init_frontend_parameter_calls_external(self, mocker: MockerFixture) -> None:
+    def test_init_frontend_parameter_calls_external(self, mocker) -> None:
         mock_func = mocker.patch(
             "core.agent.plugin_entities.init_frontend_parameter",
             return_value="frontend",
@@ -154,7 +153,7 @@ class TestAgentStrategyParameter:
         mock_func.assert_called_once_with(param, param.type, "value")
         assert result == "frontend"
 
-    def test_init_frontend_parameter_propagates_exception(self, mocker: MockerFixture) -> None:
+    def test_init_frontend_parameter_propagates_exception(self, mocker) -> None:
         mocker.patch(
             "core.agent.plugin_entities.init_frontend_parameter",
             side_effect=RuntimeError("error"),

@@ -23,7 +23,7 @@ class TestFeedbackService:
     """Test FeedbackService methods."""
 
     @pytest.fixture
-    def mock_db_session(self, monkeypatch: pytest.MonkeyPatch):
+    def mock_db_session(self, monkeypatch):
         """Mock database session."""
         mock_session = mock.Mock()
         monkeypatch.setattr(db, "session", mock_session)

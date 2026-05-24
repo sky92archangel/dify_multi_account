@@ -117,9 +117,11 @@ describe('DetailPanel', () => {
     })
 
     it('should render close button', () => {
-      render(<DetailPanel runID="run-123" onClose={defaultOnClose} />)
+      const { container } = render(<DetailPanel runID="run-123" onClose={defaultOnClose} />)
 
-      expect(screen.getByRole('button', { name: 'common.operation.close' })).toBeInTheDocument()
+      // Close button has RiCloseLine icon
+      const closeButton = container.querySelector('span.cursor-pointer')
+      expect(closeButton).toBeInTheDocument()
     })
 
     it('should render Run component with correct URLs', () => {
@@ -171,11 +173,12 @@ describe('DetailPanel', () => {
       const user = userEvent.setup()
       const onClose = vi.fn()
 
-      render(<DetailPanel runID="run-123" onClose={onClose} />)
+      const { container } = render(<DetailPanel runID="run-123" onClose={onClose} />)
 
-      const closeButton = screen.getByRole('button', { name: 'common.operation.close' })
+      const closeButton = container.querySelector('span.cursor-pointer')
+      expect(closeButton).toBeInTheDocument()
 
-      await user.click(closeButton)
+      await user.click(closeButton!)
 
       expect(onClose).toHaveBeenCalledTimes(1)
     })

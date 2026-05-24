@@ -2,7 +2,6 @@ from flask import request
 from flask_restx import Resource, fields
 from pydantic import BaseModel, Field, field_validator
 
-from controllers.common.schema import register_schema_models
 from controllers.console import console_ns
 from controllers.console.app.wraps import get_app_model
 from controllers.console.wraps import account_initialization_required, setup_required
@@ -10,6 +9,8 @@ from libs.helper import uuid_value
 from libs.login import login_required
 from models.model import AppMode
 from services.agent_service import AgentService
+
+DEFAULT_REF_TEMPLATE_SWAGGER_2_0 = "#/definitions/{model}"
 
 
 class AgentLogQuery(BaseModel):
@@ -22,7 +23,9 @@ class AgentLogQuery(BaseModel):
         return uuid_value(value)
 
 
-register_schema_models(console_ns, AgentLogQuery)
+console_ns.schema_model(
+    AgentLogQuery.__name__, AgentLogQuery.model_json_schema(ref_template=DEFAULT_REF_TEMPLATE_SWAGGER_2_0)
+)
 
 
 @console_ns.route("/apps/<uuid:app_id>/agent/logs")
@@ -41,6 +44,6 @@ class AgentLogApi(Resource):
     @get_app_model(mode=[AppMode.AGENT_CHAT])
     def get(self, app_model):
         """Get agent logs"""
-        args = AgentLogQuery.model_validate(request.args.to_dict(flat=True))
+        args = AgentLogQuery.model_validate(request.args.to_dict(flat=True))  # type: ignore
 
         return AgentService.get_agent_logs(app_model, args.conversation_id, args.message_id)

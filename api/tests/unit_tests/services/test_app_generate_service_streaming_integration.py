@@ -89,7 +89,7 @@ class _FakeStreams:
 
 
 @pytest.fixture
-def _patch_get_channel_streams(monkeypatch: pytest.MonkeyPatch):
+def _patch_get_channel_streams(monkeypatch):
     from libs.broadcast_channel.redis.streams_channel import StreamsBroadcastChannel
 
     fake = _FakeStreams()
@@ -108,7 +108,7 @@ def _patch_get_channel_streams(monkeypatch: pytest.MonkeyPatch):
 
 
 @pytest.fixture
-def _patch_get_channel_pubsub(monkeypatch: pytest.MonkeyPatch):
+def _patch_get_channel_pubsub(monkeypatch):
     from libs.broadcast_channel.redis.channel import BroadcastChannel as RedisBroadcastChannel
 
     store: dict[str, deque[bytes]] = defaultdict(deque)
@@ -163,7 +163,7 @@ def test_streams_full_flow_prepublish_and_replay():
 
 
 @pytest.mark.usefixtures("_patch_get_channel_pubsub")
-def test_pubsub_full_flow_start_on_subscribe_gated(monkeypatch: pytest.MonkeyPatch):
+def test_pubsub_full_flow_start_on_subscribe_gated(monkeypatch):
     # Speed up any potential timer if it accidentally triggers
     monkeypatch.setattr("services.app_generate_service.SSE_TASK_START_FALLBACK_MS", 50)
 

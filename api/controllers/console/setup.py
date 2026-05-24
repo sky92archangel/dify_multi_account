@@ -76,12 +76,13 @@ def setup_system(payload: SetupRequestPayload) -> SetupResponse:
     Access is restricted by deployment mode (`SELF_HOSTED`), one-time setup guards,
     and init-password validation rather than user session authentication.
     """
-    if get_setup_status():
-        raise AlreadySetupError()
-
-    tenant_count = TenantService.get_tenant_count()
-    if tenant_count > 0:
-        raise AlreadySetupError()
+    #注释掉对已经设置状态的检查 允许多次创建管理员账号
+    # if get_setup_status():
+    #     raise AlreadySetupError()
+    #注释掉对租户数量检查 允许创建多租户
+    # tenant_count = TenantService.get_tenant_count()
+    # if tenant_count > 0:
+    #     raise AlreadySetupError()
 
     if not get_init_validate_status():
         raise NotInitValidateError()

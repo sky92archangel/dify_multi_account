@@ -82,18 +82,8 @@ vi.mock('@langgenius/dify-ui/dropdown-menu', async () => {
       return (
         <button
           type="button"
-          aria-label={ariaLabel}
           className={className}
-          onMouseDown={(event) => {
-            const baseUiEvent = event as MouseEvent<HTMLButtonElement> & { preventBaseUIHandler?: () => void }
-            baseUiEvent.preventBaseUIHandler = vi.fn()
-            onMouseDown?.(baseUiEvent as unknown as MouseEvent<HTMLDivElement>)
-          }}
-          onClick={(event) => {
-            onClick?.(event as unknown as MouseEvent<HTMLDivElement>)
-            if (!onMouseDown)
-              setOpen(!open)
-          }}
+          onClick={() => setOpen(!open)}
         >
           {children}
         </button>

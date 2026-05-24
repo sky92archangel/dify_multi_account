@@ -1,6 +1,6 @@
-import { Checkbox } from '@langgenius/dify-ui/checkbox'
 import { cn } from '@langgenius/dify-ui/cn'
 import { useFieldContext } from '../..'
+import Checkbox from '../../../checkbox'
 
 type CheckboxFieldProps = {
   label: string
@@ -14,22 +14,29 @@ const CheckboxField = ({
   const field = useFieldContext<boolean>()
 
   return (
-    <label className="flex cursor-pointer gap-2">
-      <span className="flex h-6 shrink-0 items-center">
+    <div className="flex gap-2">
+      <div className="flex h-6 shrink-0 items-center">
         <Checkbox
+          id={field.name}
           checked={field.state.value}
-          onCheckedChange={checked => field.handleChange(checked)}
+          onCheck={() => {
+            field.handleChange(!field.state.value)
+          }}
         />
-      </span>
-      <span
+      </div>
+      <label
+        htmlFor={field.name}
         className={cn(
-          'grow pt-1 system-sm-medium text-text-secondary',
+          'grow cursor-pointer pt-1 system-sm-medium text-text-secondary',
           labelClassName,
         )}
+        onClick={() => {
+          field.handleChange(!field.state.value)
+        }}
       >
         {label}
-      </span>
-    </label>
+      </label>
+    </div>
   )
 }
 

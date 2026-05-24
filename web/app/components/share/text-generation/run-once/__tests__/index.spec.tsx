@@ -219,7 +219,7 @@ describe('RunOnce', () => {
     await waitFor(() => {
       expect(onInputsChange).toHaveBeenCalled()
     })
-    fireEvent.click(screen.getByRole('button', { name: 'share.generation.run' }))
+    fireEvent.click(screen.getByTestId('run-button'))
     expect(onSend).toHaveBeenCalledTimes(1)
   })
 
@@ -233,7 +233,7 @@ describe('RunOnce', () => {
     await waitFor(() => {
       expect(onInputsChange).toHaveBeenCalled()
     })
-    const stopButton = screen.getByRole('button', { name: 'share.generation.stopRun:{"defaultValue":"Stop Run"}' })
+    const stopButton = screen.getByTestId('stop-button')
     fireEvent.click(stopButton)
     expect(onStop).toHaveBeenCalledTimes(1)
   })
@@ -247,7 +247,7 @@ describe('RunOnce', () => {
     await waitFor(() => {
       expect(onInputsChange).toHaveBeenCalled()
     })
-    const stopButton = screen.getByRole('button', { name: 'share.generation.stopRun:{"defaultValue":"Stop Run"}' })
+    const stopButton = screen.getByTestId('stop-button')
     expect(stopButton)!.toBeDisabled()
   })
 

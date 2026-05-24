@@ -2,10 +2,12 @@ import type { VarType } from '../types'
 import type { ChunkInfo } from '@/app/components/rag-pipeline/components/chunk-card-list/types'
 import type { ParentMode } from '@/models/datasets'
 import { cn } from '@langgenius/dify-ui/cn'
-import { ToggleGroup, ToggleGroupItem } from '@langgenius/dify-ui/toggle-group'
+import { RiBracesLine, RiEyeLine } from '@remixicon/react'
+import * as React from 'react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Markdown } from '@/app/components/base/markdown'
+import { SegmentedControl } from '@/app/components/base/segmented-control'
 import Textarea from '@/app/components/base/textarea'
 import { ChunkCardList } from '@/app/components/rag-pipeline/components/chunk-card-list'
 import SchemaEditor from '@/app/components/workflow/nodes/llm/components/json-schema-config-modal/schema-editor'
@@ -24,16 +26,11 @@ type DisplayContentProps = {
   className?: string
 }
 
-export function DisplayContent(props: DisplayContentProps) {
+const DisplayContent = (props: DisplayContentProps) => {
   const { previewType, varType, schemaType, mdString, jsonString, readonly, handleTextChange, handleEditorChange, className } = props
-  const [viewMode, setViewMode] = useState<readonly ViewMode[]>([ViewMode.Code])
+  const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Code)
   const [isFocused, setIsFocused] = useState(false)
   const { t } = useTranslation()
-  const viewOptions = [
-    { value: ViewMode.Code, label: t('nodes.templateTransform.code', { ns: 'workflow' }), iconClassName: 'i-ri-braces-line' },
-    { value: ViewMode.Preview, label: t('common.preview', { ns: 'workflow' }), iconClassName: 'i-ri-eye-line' },
-  ]
-  const selectedViewMode = viewMode[0] ?? ViewMode.Code
 
   const chunkType = useMemo(() => {
     if (previewType !== PreviewType.Chunks || !schemaType)
@@ -68,26 +65,22 @@ export function DisplayContent(props: DisplayContentProps) {
             {schemaType ? `(${schemaType})` : ''}
           </div>
         )}
-        <ToggleGroup<ViewMode>
-          aria-label={t('common.preview', { ns: 'workflow' })}
+        <SegmentedControl
+          options={[
+            { value: ViewMode.Code, text: t('nodes.templateTransform.code', { ns: 'workflow' }), Icon: RiBracesLine },
+            { value: ViewMode.Preview, text: t('common.preview', { ns: 'workflow' }), Icon: RiEyeLine },
+          ]}
           value={viewMode}
-          onValueChange={setViewMode}
-          className="shrink-0 rounded-md p-px"
-        >
-          {viewOptions.map(({ value, label, iconClassName }) => (
-            <ToggleGroupItem
-              key={value}
-              value={value}
-              className="h-[22px] gap-[3px] rounded-md p-px pr-0.5 pl-1.5 text-text-tertiary data-pressed:text-text-accent-light-mode-only"
-            >
-              <i className={cn('size-4 shrink-0', iconClassName)} aria-hidden="true" />
-              <span className="p-0.5 pr-1">{label}</span>
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
+          onChange={setViewMode}
+          size="small"
+          padding="with"
+          activeClassName="text-text-accent-light-mode-only!"
+          btnClassName="pl-1.5! pr-0.5! gap-[3px]"
+          className="shrink-0"
+        />
       </div>
       <div className="flex flex-1 overflow-auto rounded-b-[10px] pr-1 pl-3">
-        {selectedViewMode === ViewMode.Code && (
+        {viewMode === ViewMode.Code && (
           previewType === PreviewType.Markdown
             ? (
                 <Textarea
@@ -112,7 +105,7 @@ export function DisplayContent(props: DisplayContentProps) {
                 />
               )
         )}
-        {selectedViewMode === ViewMode.Preview && (
+        {viewMode === ViewMode.Preview && (
           previewType === PreviewType.Markdown
             ? <Markdown className="grow overflow-auto rounded-lg px-4 py-3" content={(mdString ?? '') as string} />
             : (
@@ -127,3 +120,5 @@ export function DisplayContent(props: DisplayContentProps) {
     </div>
   )
 }
+
+export default React.memo(DisplayContent)

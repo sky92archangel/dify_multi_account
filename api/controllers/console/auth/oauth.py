@@ -12,8 +12,7 @@ from events.tenant_event import tenant_was_created
 from extensions.ext_database import db
 from libs.datetime_utils import naive_utc_now
 from libs.helper import extract_remote_ip
-from libs.helper import timezone as validate_timezone_string
-from libs.oauth import GitHubOAuth, GoogleOAuth, OAuthUserInfo, decode_oauth_state
+from libs.oauth import GitHubOAuth, GoogleOAuth, OAuthUserInfo
 from libs.token import (
     set_access_token_to_cookie,
     set_csrf_token_to_cookie,
@@ -54,31 +53,6 @@ def get_oauth_providers():
         return OAUTH_PROVIDERS
 
 
-def _validated_timezone(value: str | None) -> str | None:
-    if not value:
-        return None
-    try:
-        return validate_timezone_string(value)
-    except ValueError:
-        return None
-
-
-def _validated_language(value: str | None) -> str | None:
-    if value and value in languages:
-        return value
-    return None
-
-
-def _preferred_interface_language(language: str | None = None) -> str:
-    if language:
-        return language
-
-    preferred_lang = request.accept_languages.best_match(languages)
-    if preferred_lang and preferred_lang in languages:
-        return preferred_lang
-    return languages[0]
-
-
 @console_ns.route("/oauth/login/<provider>")
 class OAuthLogin(Resource):
     @console_ns.doc("oauth_login")
@@ -90,19 +64,13 @@ class OAuthLogin(Resource):
     @console_ns.response(400, "Invalid provider")
     def get(self, provider: str):
         invite_token = request.args.get("invite_token") or None
-        timezone = _validated_timezone(request.args.get("timezone") or None)
-        language = _validated_language(request.args.get("language") or None)
         OAUTH_PROVIDERS = get_oauth_providers()
         with current_app.app_context():
             oauth_provider = OAUTH_PROVIDERS.get(provider)
         if not oauth_provider:
             return {"error": "Invalid provider"}, 400
 
-        auth_url = oauth_provider.get_authorization_url(
-            invite_token=invite_token,
-            timezone=timezone,
-            language=language,
-        )
+        auth_url = oauth_provider.get_authorization_url(invite_token=invite_token)
         return redirect(auth_url)
 
 
@@ -128,10 +96,9 @@ class OAuthCallback(Resource):
 
         code = request.args.get("code")
         state = request.args.get("state")
-        oauth_state = decode_oauth_state(state)
-        invite_token = oauth_state.get("invite_token")
-        timezone = _validated_timezone(oauth_state.get("timezone"))
-        language = _validated_language(oauth_state.get("language"))
+        invite_token = None
+        if state:
+            invite_token = state
 
         if not code:
             return {"error": "Authorization code is required"}, 400
@@ -162,7 +129,7 @@ class OAuthCallback(Resource):
             return redirect(f"{dify_config.CONSOLE_WEB_URL}/signin/invite-settings?invite_token={invite_token}")
 
         try:
-            account, oauth_new_user = _generate_account(provider, user_info, timezone=timezone, language=language)
+            account, oauth_new_user = _generate_account(provider, user_info)
         except AccountNotFoundError:
             return redirect(f"{dify_config.CONSOLE_WEB_URL}/signin?message=Account not found.")
         except (WorkSpaceNotFoundError, WorkSpaceNotAllowedCreateError):
@@ -217,12 +184,7 @@ def _get_account_by_openid_or_email(provider: str, user_info: OAuthUserInfo) -> 
     return account
 
 
-def _generate_account(
-    provider: str,
-    user_info: OAuthUserInfo,
-    timezone: str | None = None,
-    language: str | None = None,
-) -> tuple[Account, bool]:
+def _generate_account(provider: str, user_info: OAuthUserInfo) -> tuple[Account, bool]:
     # Get account by openid or email.
     account = _get_account_by_openid_or_email(provider, user_info)
     oauth_new_user = False
@@ -249,18 +211,25 @@ def _generate_account(
                         "30 days and is temporarily unavailable for new account registration"
                     )
                 )
-            raise AccountRegisterError(description=("Invalid email or password"))
+            else:
+                raise AccountRegisterError(description=("Invalid email or password"))
         account_name = user_info.name or "Dify"
-        interface_language = _preferred_interface_language(language)
         account = RegisterService.register(
             email=normalized_email,
             name=account_name,
             password=None,
             open_id=user_info.id,
             provider=provider,
-            language=interface_language,
-            timezone=timezone,
         )
+
+        # Set interface language
+        preferred_lang = request.accept_languages.best_match(languages)
+        if preferred_lang and preferred_lang in languages:
+            interface_language = preferred_lang
+        else:
+            interface_language = languages[0]
+        account.interface_language = interface_language
+        db.session.commit()
 
     # Link account
     AccountService.link_account_integrate(provider, user_info.id, account)

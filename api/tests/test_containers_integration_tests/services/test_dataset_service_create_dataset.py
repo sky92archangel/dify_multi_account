@@ -6,7 +6,6 @@ from unittest.mock import Mock, patch
 from uuid import uuid4
 
 import pytest
-from sqlalchemy.orm import Session
 
 from models.account import Account, Tenant, TenantAccountJoin
 from services.dataset_service import DatasetService
@@ -49,7 +48,7 @@ class TestDatasetServiceCreateRagPipelineDataset:
             permission="only_me",
         )
 
-    def test_create_rag_pipeline_dataset_raises_when_current_user_id_is_none(self, db_session_with_containers: Session):
+    def test_create_rag_pipeline_dataset_raises_when_current_user_id_is_none(self, db_session_with_containers):
         tenant, _ = self._create_tenant_and_account(db_session_with_containers)
 
         mock_user = Mock(id=None)

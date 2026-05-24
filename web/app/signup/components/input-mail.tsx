@@ -24,7 +24,7 @@ export default function Form({
   const locale = useLocale()
   const { data: systemFeatures } = useSuspenseQuery(systemFeaturesQueryOptions())
 
-  const { mutateAsync: submitMail, isPending } = useSendMail()
+  const { mutateAsync: sendMail, isPending } = useSendMail()
 
   const handleSubmit = useCallback(async () => {
     if (isPending)
@@ -38,10 +38,17 @@ export default function Form({
       toast.error(t('error.emailInValid', { ns: 'login' }))
       return
     }
-    const res = await submitMail({ email, language: locale })
-    if ((res as MailSendResponse).result === 'success')
-      onSuccess(email, (res as MailSendResponse).data)
-  }, [email, locale, submitMail, t, isPending, onSuccess])
+    try {
+      const res = await sendMail({ email, language: locale })
+      if ((res as MailSendResponse).result === 'success') {
+        onSuccess(email, (res as MailSendResponse).data)
+      }
+    }
+    catch (e: any) {
+      const message = e?.response?.data?.description || e?.message || t('error.error', { ns: 'login' })
+      toast.error(message)
+    }
+  }, [email, locale, sendMail, t, isPending, onSuccess])
 
   return (
     <form onSubmit={(e) => {
@@ -73,7 +80,7 @@ export default function Form({
           disabled={isPending || !email}
           className="w-full"
         >
-          {t('signup.verifyMail', { ns: 'login' })}
+          {t('sendVerificationCode', { ns: 'login' })}
         </Button>
       </div>
       <Split className="mt-4 mb-5" />

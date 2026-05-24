@@ -1,8 +1,7 @@
 import type { ChildChunkDetail, SegmentDetailModel } from '@/models/datasets'
-import { Checkbox } from '@langgenius/dify-ui/checkbox'
 import * as React from 'react'
 import { useMemo } from 'react'
-import { useTranslation } from 'react-i18next'
+import Checkbox from '@/app/components/base/checkbox'
 import Divider from '@/app/components/base/divider'
 import { ChunkingMode } from '@/models/datasets'
 import { useDocumentContext } from '../context'
@@ -15,6 +14,8 @@ import ParagraphListSkeleton from './skeleton/paragraph-list-skeleton'
 type ISegmentListProps = {
   isLoading: boolean
   items: SegmentDetailModel[]
+  selectedSegmentIds: string[]
+  onSelected: (segId: string) => void
   onClick: (detail: SegmentDetailModel, isEditMode?: boolean) => void
   onChangeSwitch: (enabled: boolean, segId?: string) => Promise<void>
   onDelete: (segId: string) => Promise<void>
@@ -31,6 +32,8 @@ const SegmentList = (
     ref,
     isLoading,
     items,
+    selectedSegmentIds,
+    onSelected,
     onClick: onClickCard,
     onChangeSwitch,
     onDelete,
@@ -44,7 +47,6 @@ const SegmentList = (
     ref: React.LegacyRef<HTMLDivElement>
   },
 ) => {
-  const { t } = useTranslation()
   const docForm = useDocumentContext(s => s.docForm)
   const parentMode = useDocumentContext(s => s.parentMode)
   const currSegment = useSegmentListContext(s => s.currSegment)
@@ -80,8 +82,8 @@ const SegmentList = (
               <Checkbox
                 key={`${segItem.id}-checkbox`}
                 className="mt-3.5 shrink-0"
-                value={segItem.id}
-                aria-label={`${t('segment.chunk', { ns: 'datasetDocuments' })} ${segItem.position}`}
+                checked={selectedSegmentIds.includes(segItem.id)}
+                onCheck={() => onSelected(segItem.id)}
               />
               <div className="min-w-0 grow">
                 <SegmentCard

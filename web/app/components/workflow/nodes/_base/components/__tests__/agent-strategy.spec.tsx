@@ -145,7 +145,8 @@ describe('AgentStrategy', () => {
       />,
     )
 
-    expect(screen.getByRole('textbox', { name: 'Count' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Count')).toBeInTheDocument()
+    expect(screen.getByRole('textbox')).toBeInTheDocument()
   })
 
   it('should skip text-number schemas when min is missing', () => {

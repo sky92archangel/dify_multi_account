@@ -43,7 +43,7 @@ describe('PromptLogModal', () => {
 
     it('renders copy feedback when log length is 1', () => {
       render(<PromptLogModal {...defaultProps} />)
-      expect(screen.getByRole('button', { name: 'common.operation.close' }))!.toBeInTheDocument()
+      expect(screen.getByTestId('close-btn-container'))!.toBeInTheDocument()
     })
 
     it('renders multiple logs in Card correctly', () => {
@@ -72,7 +72,7 @@ describe('PromptLogModal', () => {
   describe('Interactions', () => {
     it('calls onCancel when close button is clicked', () => {
       render(<PromptLogModal {...defaultProps} />)
-      const closeBtn = screen.getByRole('button', { name: 'common.operation.close' })
+      const closeBtn = screen.getByTestId('close-btn')
       expect(closeBtn)!.toBeInTheDocument()
       fireEvent.click(closeBtn)
       expect(defaultProps.onCancel).toHaveBeenCalled()

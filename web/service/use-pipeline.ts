@@ -113,7 +113,7 @@ export const useImportPipelineDSL = (
   return useMutation({
     mutationKey: [NAME_SPACE, 'dsl-import'],
     mutationFn: (request: ImportPipelineDSLRequest) => {
-      return post<ImportPipelineDSLResponse>('/rag/pipelines/imports', { body: request }, { silent: true })
+      return post<ImportPipelineDSLResponse>('/rag/pipelines/imports', { body: request })
     },
     ...mutationOptions,
   })
@@ -125,7 +125,7 @@ export const useImportPipelineDSLConfirm = (
   return useMutation({
     mutationKey: [NAME_SPACE, 'dsl-import-confirm'],
     mutationFn: (importId: string) => {
-      return post<ImportPipelineDSLConfirmResponse>(`/rag/pipelines/imports/${importId}/confirm`, {}, { silent: true })
+      return post<ImportPipelineDSLConfirmResponse>(`/rag/pipelines/imports/${importId}/confirm`)
     },
     ...mutationOptions,
   })
@@ -195,10 +195,10 @@ export const useInvalidDataSourceList = () => {
 export const publishedPipelineInfoQueryKeyPrefix = [NAME_SPACE, 'published-pipeline']
 
 export const usePublishedPipelineInfo = (pipelineId: string) => {
-  return useQuery<PublishedPipelineInfoResponse | null>({
+  return useQuery<PublishedPipelineInfoResponse>({
     queryKey: [...publishedPipelineInfoQueryKeyPrefix, pipelineId],
     queryFn: () => {
-      return get<PublishedPipelineInfoResponse | null>(`/rag/pipelines/${pipelineId}/workflows/publish`)
+      return get<PublishedPipelineInfoResponse>(`/rag/pipelines/${pipelineId}/workflows/publish`)
     },
     enabled: !!pipelineId,
   })

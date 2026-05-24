@@ -14,6 +14,7 @@ type Props = {
   onChange: (value: ValueSelector, varDetail: Var) => void
   itemWidth?: number
   isSupportFileVar?: boolean
+  zIndex?: number
   preferSchemaType?: boolean
 }
 const VarReferencePopup: FC<Props> = ({
@@ -22,6 +23,7 @@ const VarReferencePopup: FC<Props> = ({
   onChange,
   itemWidth,
   isSupportFileVar = true,
+  zIndex,
   preferSchemaType,
 }) => {
   const { t } = useTranslation()
@@ -66,6 +68,7 @@ const VarReferencePopup: FC<Props> = ({
               onChange={onChange}
               itemWidth={itemWidth}
               isSupportFileVar={isSupportFileVar}
+              zIndex={zIndex}
               showManageInputField={showManageRagInputFields}
               onManageInputField={() => setShowInputFieldPanel?.(true)}
               preferSchemaType={preferSchemaType}

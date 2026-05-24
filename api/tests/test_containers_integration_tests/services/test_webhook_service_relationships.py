@@ -6,7 +6,6 @@ from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 import pytest
-from flask import Flask
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -166,7 +165,7 @@ class WebhookServiceRelationshipFactory:
 
 class TestWebhookServiceLookupWithContainers:
     def test_get_webhook_trigger_and_workflow_raises_when_app_trigger_missing(
-        self, db_session_with_containers: Session, flask_app_with_containers: Flask
+        self, db_session_with_containers: Session, flask_app_with_containers
     ):
         del flask_app_with_containers
         factory = WebhookServiceRelationshipFactory
@@ -183,7 +182,7 @@ class TestWebhookServiceLookupWithContainers:
             WebhookService.get_webhook_trigger_and_workflow(webhook_trigger.webhook_id)
 
     def test_get_webhook_trigger_and_workflow_raises_when_app_trigger_rate_limited(
-        self, db_session_with_containers: Session, flask_app_with_containers: Flask
+        self, db_session_with_containers: Session, flask_app_with_containers
     ):
         del flask_app_with_containers
         factory = WebhookServiceRelationshipFactory
@@ -203,7 +202,7 @@ class TestWebhookServiceLookupWithContainers:
             WebhookService.get_webhook_trigger_and_workflow(webhook_trigger.webhook_id)
 
     def test_get_webhook_trigger_and_workflow_raises_when_app_trigger_disabled(
-        self, db_session_with_containers: Session, flask_app_with_containers: Flask
+        self, db_session_with_containers: Session, flask_app_with_containers
     ):
         del flask_app_with_containers
         factory = WebhookServiceRelationshipFactory
@@ -223,7 +222,7 @@ class TestWebhookServiceLookupWithContainers:
             WebhookService.get_webhook_trigger_and_workflow(webhook_trigger.webhook_id)
 
     def test_get_webhook_trigger_and_workflow_raises_when_workflow_missing(
-        self, db_session_with_containers: Session, flask_app_with_containers: Flask
+        self, db_session_with_containers: Session, flask_app_with_containers
     ):
         del flask_app_with_containers
         factory = WebhookServiceRelationshipFactory
@@ -240,7 +239,7 @@ class TestWebhookServiceLookupWithContainers:
             WebhookService.get_webhook_trigger_and_workflow(webhook_trigger.webhook_id)
 
     def test_get_webhook_trigger_and_workflow_returns_debug_draft_workflow(
-        self, db_session_with_containers: Session, flask_app_with_containers: Flask
+        self, db_session_with_containers: Session, flask_app_with_containers
     ):
         del flask_app_with_containers
         factory = WebhookServiceRelationshipFactory
@@ -276,7 +275,7 @@ class TestWebhookServiceLookupWithContainers:
 
 class TestWebhookServiceTriggerExecutionWithContainers:
     def test_trigger_workflow_execution_triggers_async_workflow_successfully(
-        self, db_session_with_containers: Session, flask_app_with_containers: Flask
+        self, db_session_with_containers: Session, flask_app_with_containers
     ):
         del flask_app_with_containers
         factory = WebhookServiceRelationshipFactory
@@ -319,7 +318,7 @@ class TestWebhookServiceTriggerExecutionWithContainers:
         assert trigger_args[2].root_node_id == webhook_trigger.node_id
 
     def test_trigger_workflow_execution_marks_tenant_rate_limited_when_quota_exceeded(
-        self, db_session_with_containers: Session, flask_app_with_containers: Flask
+        self, db_session_with_containers: Session, flask_app_with_containers
     ):
         del flask_app_with_containers
         factory = WebhookServiceRelationshipFactory
@@ -355,7 +354,7 @@ class TestWebhookServiceTriggerExecutionWithContainers:
         mock_mark_rate_limited.assert_called_once_with(tenant.id)
 
     def test_trigger_workflow_execution_logs_and_reraises_unexpected_errors(
-        self, db_session_with_containers: Session, flask_app_with_containers: Flask
+        self, db_session_with_containers: Session, flask_app_with_containers
     ):
         del flask_app_with_containers
         factory = WebhookServiceRelationshipFactory
@@ -387,7 +386,7 @@ class TestWebhookServiceTriggerExecutionWithContainers:
 
 class TestWebhookServiceRelationshipSyncWithContainers:
     def test_sync_webhook_relationships_raises_when_workflow_exceeds_node_limit(
-        self, db_session_with_containers: Session, flask_app_with_containers: Flask
+        self, db_session_with_containers: Session, flask_app_with_containers
     ):
         del flask_app_with_containers
         factory = WebhookServiceRelationshipFactory
@@ -402,7 +401,7 @@ class TestWebhookServiceRelationshipSyncWithContainers:
             WebhookService.sync_webhook_relationships(app, workflow)
 
     def test_sync_webhook_relationships_raises_when_lock_not_acquired(
-        self, db_session_with_containers: Session, flask_app_with_containers: Flask
+        self, db_session_with_containers: Session, flask_app_with_containers
     ):
         del flask_app_with_containers
         factory = WebhookServiceRelationshipFactory
@@ -419,7 +418,7 @@ class TestWebhookServiceRelationshipSyncWithContainers:
                 WebhookService.sync_webhook_relationships(app, workflow)
 
     def test_sync_webhook_relationships_creates_missing_records_and_deletes_stale_records(
-        self, db_session_with_containers: Session, flask_app_with_containers: Flask
+        self, db_session_with_containers: Session, flask_app_with_containers
     ):
         del flask_app_with_containers
         factory = WebhookServiceRelationshipFactory
@@ -456,7 +455,7 @@ class TestWebhookServiceRelationshipSyncWithContainers:
         assert db_session_with_containers.get(WorkflowWebhookTrigger, stale_trigger_id) is None
 
     def test_sync_webhook_relationships_sets_redis_cache_for_new_record(
-        self, db_session_with_containers: Session, flask_app_with_containers: Flask
+        self, db_session_with_containers: Session, flask_app_with_containers
     ):
         del flask_app_with_containers
         factory = WebhookServiceRelationshipFactory
@@ -482,7 +481,7 @@ class TestWebhookServiceRelationshipSyncWithContainers:
         assert cached_payload["webhook_id"] == "cache-webhook-id-00001"
 
     def test_sync_webhook_relationships_logs_when_lock_release_fails(
-        self, db_session_with_containers: Session, flask_app_with_containers: Flask
+        self, db_session_with_containers: Session, flask_app_with_containers
     ):
         del flask_app_with_containers
         factory = WebhookServiceRelationshipFactory

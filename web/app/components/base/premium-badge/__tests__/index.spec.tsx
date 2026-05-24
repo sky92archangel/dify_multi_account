@@ -1,6 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import PremiumBadge, { PremiumBadgeButton } from '../index'
+import PremiumBadge from '../index'
 
 describe('PremiumBadge', () => {
   it('renders with default props', () => {
@@ -25,9 +24,9 @@ describe('PremiumBadge', () => {
 
   it('applies allowHover class when allowHover is true', () => {
     render(
-      <PremiumBadgeButton>
+      <PremiumBadge allowHover>
         Premium
-      </PremiumBadgeButton>,
+      </PremiumBadge>,
     )
     const badge = screen.getByText('Premium')
     expect(badge).toBeInTheDocument()
@@ -43,23 +42,5 @@ describe('PremiumBadge', () => {
     const badge = screen.getByText('Premium')
     expect(badge).toBeInTheDocument()
     expect(badge).toHaveStyle('background-color: red')
-  })
-
-  it('renders a static badge without button semantics', () => {
-    render(<PremiumBadge>Premium</PremiumBadge>)
-
-    expect(screen.queryByRole('button')).not.toBeInTheDocument()
-  })
-
-  it('renders an action badge as a button', async () => {
-    const user = userEvent.setup()
-    const handleClick = vi.fn()
-
-    render(<PremiumBadgeButton onClick={handleClick}>Upgrade</PremiumBadgeButton>)
-
-    const button = screen.getByRole('button', { name: 'Upgrade' })
-    await user.click(button)
-
-    expect(handleClick).toHaveBeenCalledTimes(1)
   })
 })

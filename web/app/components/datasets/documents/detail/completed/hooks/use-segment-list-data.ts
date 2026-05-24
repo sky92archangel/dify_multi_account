@@ -1,6 +1,5 @@
 import type { FileEntity } from '@/app/components/datasets/common/image-uploader/types'
 import type { SegmentDetailModel, SegmentsResponse, SegmentUpdater } from '@/models/datasets'
-import type { SegmentImportStatus } from '@/types/dataset'
 import { toast } from '@langgenius/dify-ui/toast'
 import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
@@ -10,16 +9,16 @@ import { ChunkingMode } from '@/models/datasets'
 import { usePathname } from '@/next/navigation'
 import { useChunkListAllKey, useChunkListDisabledKey, useChunkListEnabledKey, useDeleteSegment, useDisableSegment, useEnableSegment, useSegmentList, useSegmentListKey, useUpdateSegment } from '@/service/knowledge/use-segment'
 import { useInvalid } from '@/service/use-base'
-import { segmentImportStatus } from '@/types/dataset'
 import { formatNumber } from '@/utils/format'
 import { useDocumentContext } from '../../context'
+import { ProcessStatus } from '../../segment-add'
 
 const DEFAULT_LIMIT = 10
 type UseSegmentListDataOptions = {
   searchValue: string
   selectedStatus: boolean | 'all'
   selectedSegmentIds: string[]
-  importStatus: SegmentImportStatus | undefined
+  importStatus: ProcessStatus | string | undefined
   currentPage: number
   limit: number
   onCloseSegmentDetail: () => void
@@ -93,7 +92,7 @@ export const useSegmentListData = (options: UseSegmentListDataOptions): UseSegme
   }, [pathname])
   // Reset list on import completion
   useEffect(() => {
-    if (importStatus === segmentImportStatus.completed) {
+    if (importStatus === ProcessStatus.COMPLETED) {
       clearSelection()
       invalidSegmentList()
     }

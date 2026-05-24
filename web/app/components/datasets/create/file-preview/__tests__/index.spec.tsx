@@ -73,9 +73,9 @@ describe('FilePreview', () => {
     })
 
     it('should render close button with XMarkIcon', async () => {
-      renderFilePreview()
+      const { container } = renderFilePreview()
 
-      const closeButton = screen.getByRole('button', { name: /operation\.close$/ })
+      const closeButton = container.querySelector('.cursor-pointer')
       expect(closeButton)!.toBeInTheDocument()
       const xMarkIcon = closeButton?.querySelector('svg')
       expect(xMarkIcon)!.toBeInTheDocument()
@@ -269,18 +269,20 @@ describe('FilePreview', () => {
   describe('User Interactions', () => {
     it('should call hidePreview when close button is clicked', async () => {
       const hidePreview = vi.fn()
-      renderFilePreview({ hidePreview })
+      const { container } = renderFilePreview({ hidePreview })
 
-      fireEvent.click(screen.getByRole('button', { name: /operation\.close$/ }))
+      const closeButton = container.querySelector('.cursor-pointer') as HTMLElement
+      fireEvent.click(closeButton)
 
       expect(hidePreview).toHaveBeenCalledTimes(1)
     })
 
     it('should call hidePreview with event object when clicked', async () => {
       const hidePreview = vi.fn()
-      renderFilePreview({ hidePreview })
+      const { container } = renderFilePreview({ hidePreview })
 
-      fireEvent.click(screen.getByRole('button', { name: /operation\.close$/ }))
+      const closeButton = container.querySelector('.cursor-pointer') as HTMLElement
+      fireEvent.click(closeButton)
 
       // Assert - onClick receives the event object
       expect(hidePreview).toHaveBeenCalled()
@@ -289,9 +291,9 @@ describe('FilePreview', () => {
 
     it('should handle multiple clicks on close button', async () => {
       const hidePreview = vi.fn()
-      renderFilePreview({ hidePreview })
+      const { container } = renderFilePreview({ hidePreview })
 
-      const closeButton = screen.getByRole('button', { name: /operation\.close$/ })
+      const closeButton = container.querySelector('.cursor-pointer') as HTMLElement
       fireEvent.click(closeButton)
       fireEvent.click(closeButton)
       fireEvent.click(closeButton)

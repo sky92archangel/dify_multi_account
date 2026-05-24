@@ -13,9 +13,9 @@ from uuid import uuid4
 from sqlalchemy.orm import Session
 
 from core.rag.index_processor.constant.index_type import IndexTechniqueType
-from models import Account, AccountStatus, Tenant, TenantAccountJoin, TenantAccountRole, TenantStatus
+from models import Account, Tenant, TenantAccountJoin, TenantAccountRole
 from models.dataset import Dataset, DatasetPermissionEnum, Document, DocumentSegment
-from models.enums import DataSourceType, DocumentCreatedFrom, SegmentStatus
+from models.enums import DataSourceType, DocumentCreatedFrom
 from services.dataset_service import SegmentService
 
 
@@ -35,13 +35,13 @@ class SegmentServiceTestDataFactory:
             email=f"{uuid4()}@example.com",
             name=f"user-{uuid4()}",
             interface_language="en-US",
-            status=AccountStatus.ACTIVE,
+            status="active",
         )
         db_session_with_containers.add(account)
         db_session_with_containers.commit()
 
         if tenant is None:
-            tenant = Tenant(name=f"tenant-{uuid4()}", status=TenantStatus.NORMAL)
+            tenant = Tenant(name=f"tenant-{uuid4()}", status="normal")
             db_session_with_containers.add(tenant)
             db_session_with_containers.commit()
 
@@ -103,7 +103,7 @@ class SegmentServiceTestDataFactory:
         created_by: str,
         position: int = 1,
         content: str = "Test content",
-        status: SegmentStatus = SegmentStatus.COMPLETED,
+        status: str = "completed",
         word_count: int = 10,
         tokens: int = 15,
     ) -> DocumentSegment:
@@ -203,7 +203,7 @@ class TestSegmentServiceGetSegments:
             document_id=document.id,
             created_by=owner.id,
             position=1,
-            status=SegmentStatus.COMPLETED,
+            status="completed",
         )
         SegmentServiceTestDataFactory.create_segment(
             db_session_with_containers,
@@ -212,7 +212,7 @@ class TestSegmentServiceGetSegments:
             document_id=document.id,
             created_by=owner.id,
             position=2,
-            status=SegmentStatus.INDEXING,
+            status="indexing",
         )
         SegmentServiceTestDataFactory.create_segment(
             db_session_with_containers,
@@ -221,7 +221,7 @@ class TestSegmentServiceGetSegments:
             document_id=document.id,
             created_by=owner.id,
             position=3,
-            status=SegmentStatus.WAITING,
+            status="waiting",
         )
 
         # Act
@@ -257,7 +257,7 @@ class TestSegmentServiceGetSegments:
             document_id=document.id,
             created_by=owner.id,
             position=1,
-            status=SegmentStatus.COMPLETED,
+            status="completed",
         )
         SegmentServiceTestDataFactory.create_segment(
             db_session_with_containers,
@@ -266,7 +266,7 @@ class TestSegmentServiceGetSegments:
             document_id=document.id,
             created_by=owner.id,
             position=2,
-            status=SegmentStatus.INDEXING,
+            status="indexing",
         )
 
         # Act
@@ -415,7 +415,7 @@ class TestSegmentServiceGetSegments:
             document_id=document.id,
             created_by=owner.id,
             position=1,
-            status=SegmentStatus.COMPLETED,
+            status="completed",
             content="This is important information",
         )
         SegmentServiceTestDataFactory.create_segment(
@@ -425,7 +425,7 @@ class TestSegmentServiceGetSegments:
             document_id=document.id,
             created_by=owner.id,
             position=2,
-            status=SegmentStatus.INDEXING,
+            status="indexing",
             content="This is also important",
         )
         SegmentServiceTestDataFactory.create_segment(
@@ -435,7 +435,7 @@ class TestSegmentServiceGetSegments:
             document_id=document.id,
             created_by=owner.id,
             position=3,
-            status=SegmentStatus.COMPLETED,
+            status="completed",
             content="This is irrelevant",
         )
 
@@ -477,7 +477,7 @@ class TestSegmentServiceGetSegments:
             document_id=document.id,
             created_by=owner.id,
             position=1,
-            status=SegmentStatus.COMPLETED,
+            status="completed",
         )
         SegmentServiceTestDataFactory.create_segment(
             db_session_with_containers,
@@ -486,7 +486,7 @@ class TestSegmentServiceGetSegments:
             document_id=document.id,
             created_by=owner.id,
             position=2,
-            status=SegmentStatus.WAITING,
+            status="waiting",
         )
 
         # Act

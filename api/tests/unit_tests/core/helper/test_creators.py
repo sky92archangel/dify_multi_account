@@ -8,7 +8,7 @@ from yarl import URL
 
 
 @pytest.fixture(autouse=True)
-def _patch_creators_url(monkeypatch: pytest.MonkeyPatch):
+def _patch_creators_url(monkeypatch):
     """Patch the module-level creators_platform_api_url for all tests."""
     monkeypatch.setattr(
         "core.helper.creators.creators_platform_api_url",

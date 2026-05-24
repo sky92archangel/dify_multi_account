@@ -1,7 +1,6 @@
 import type { BlockEnum, CommonNodeType } from '../types'
 import type { TriggerDefaultValue } from './types'
 import {
-  createPreviewCardHandle,
   PreviewCard,
   PreviewCardContent,
   PreviewCardTrigger,
@@ -26,9 +25,6 @@ type StartBlocksProps = {
   onContentStateChange?: (hasContent: boolean) => void
   hideUserInput?: boolean
 }
-type StartBlockPreviewPayload = {
-  block: typeof START_BLOCKS[number]
-}
 
 const StartBlocks = ({
   searchText,
@@ -39,7 +35,6 @@ const StartBlocks = ({
 }: StartBlocksProps) => {
   const { t } = useTranslation()
   const nodes = useNodes()
-  const previewCardHandle = useMemo(() => createPreviewCardHandle<StartBlockPreviewPayload>(), [])
   // const nodeMetaData = useNodeMetaData()
 
   const filteredBlocks = useMemo(() => {
@@ -79,31 +74,54 @@ const StartBlocks = ({
   // the start node, so hover/focus-only activation is a11y-safe. See
   // packages/dify-ui/AGENTS.md → Overlay Primitive Selection.
   const renderBlock = useCallback((block: typeof START_BLOCKS[number]) => (
-    <PreviewCardTrigger
-      key={block.type}
-      delay={150}
-      closeDelay={150}
-      handle={previewCardHandle}
-      payload={{ block }}
-      render={(
-        <div
-          className="flex h-8 w-full cursor-pointer items-center rounded-lg px-3 hover:bg-state-base-hover"
-          onClick={() => onSelect(block.type)}
-        >
+    <PreviewCard key={block.type}>
+      <PreviewCardTrigger
+        delay={150}
+        closeDelay={150}
+        render={(
+          <div
+            className="flex h-8 w-full cursor-pointer items-center rounded-lg px-3 hover:bg-state-base-hover"
+            onClick={() => onSelect(block.type)}
+          >
+            <BlockIcon
+              className="mr-2 shrink-0"
+              type={block.type}
+            />
+            <div className="flex w-0 grow items-center justify-between text-sm text-text-secondary">
+              <span className="truncate">{t(`blocks.${block.type}`, { ns: 'workflow' })}</span>
+              {block.type === BlockEnumValues.Start && (
+                <span className="ml-2 shrink-0 system-xs-regular text-text-quaternary">{t('blocks.originalStartNode', { ns: 'workflow' })}</span>
+              )}
+            </div>
+          </div>
+        )}
+      />
+      <PreviewCardContent placement="right" popupClassName="w-[224px] px-3 py-2.5">
+        <div>
           <BlockIcon
-            className="mr-2 shrink-0"
+            size="md"
+            className="mb-2"
             type={block.type}
           />
-          <div className="flex w-0 grow items-center justify-between text-sm text-text-secondary">
-            <span className="truncate">{t(`blocks.${block.type}`, { ns: 'workflow' })}</span>
-            {block.type === BlockEnumValues.Start && (
-              <span className="ml-2 shrink-0 system-xs-regular text-text-quaternary">{t('blocks.originalStartNode', { ns: 'workflow' })}</span>
-            )}
+          <div className="mb-1 system-md-medium text-text-primary">
+            {block.type === BlockEnumValues.TriggerWebhook
+              ? t('customWebhook', { ns: 'workflow' })
+              : t(`blocks.${block.type}`, { ns: 'workflow' })}
           </div>
+          <div className="system-xs-regular text-text-secondary">
+            {t(`blocksAbout.${block.type}`, { ns: 'workflow' })}
+          </div>
+          {(block.type === BlockEnumValues.TriggerWebhook || block.type === BlockEnumValues.TriggerSchedule) && (
+            <div className="mt-1 mb-1 system-xs-regular text-text-tertiary">
+              {t('author', { ns: 'tools' })}
+              {' '}
+              {t('difyTeam', { ns: 'workflow' })}
+            </div>
+          )}
         </div>
-      )}
-    />
-  ), [onSelect, previewCardHandle, t])
+      </PreviewCardContent>
+    </PreviewCard>
+  ), [onSelect, t])
 
   if (isEmpty)
     return null
@@ -122,57 +140,7 @@ const StartBlocks = ({
           </div>
         ))}
       </div>
-      <PreviewCard handle={previewCardHandle}>
-        {({ payload }) => (
-          <StartBlockPreviewCard
-            payload={payload as StartBlockPreviewPayload | undefined}
-            t={t}
-          />
-        )}
-      </PreviewCard>
     </div>
-  )
-}
-
-type StartBlockPreviewCardProps = {
-  payload?: StartBlockPreviewPayload
-  t: ReturnType<typeof useTranslation>['t']
-}
-
-function StartBlockPreviewCard({
-  payload,
-  t,
-}: StartBlockPreviewCardProps) {
-  if (!payload)
-    return null
-
-  const { block } = payload
-
-  return (
-    <PreviewCardContent placement="right" popupClassName="w-[224px] px-3 py-2.5">
-      <div>
-        <BlockIcon
-          size="md"
-          className="mb-2"
-          type={block.type}
-        />
-        <div className="mb-1 system-md-medium text-text-primary">
-          {block.type === BlockEnumValues.TriggerWebhook
-            ? t('customWebhook', { ns: 'workflow' })
-            : t(`blocks.${block.type}`, { ns: 'workflow' })}
-        </div>
-        <div className="system-xs-regular wrap-break-word text-text-secondary">
-          {t(`blocksAbout.${block.type}`, { ns: 'workflow' })}
-        </div>
-        {(block.type === BlockEnumValues.TriggerWebhook || block.type === BlockEnumValues.TriggerSchedule) && (
-          <div className="my-1 system-xs-regular text-text-tertiary">
-            {t('author', { ns: 'tools' })}
-            {' '}
-            {t('difyTeam', { ns: 'workflow' })}
-          </div>
-        )}
-      </div>
-    </PreviewCardContent>
   )
 }
 

@@ -3,23 +3,23 @@ import type { FC } from 'react'
 import type { DeliveryMethod } from '../../types'
 import { cn } from '@langgenius/dify-ui/cn'
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@langgenius/dify-ui/popover'
-import {
   RiAddLine,
   RiDiscordFill,
   RiLightbulbFlashFill,
   RiMailSendFill,
   RiRobot2Fill,
 } from '@remixicon/react'
-import { memo, useMemo, useState } from 'react'
+import { memo, useCallback, useMemo, useRef, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { v4 as uuid4 } from 'uuid'
 import ActionButton from '@/app/components/base/action-button'
 import Badge from '@/app/components/base/badge'
 import { Slack, Teams } from '@/app/components/base/icons/src/public/other'
+import {
+  PortalToFollowElem,
+  PortalToFollowElemContent,
+  PortalToFollowElemTrigger,
+} from '@/app/components/base/portal-to-follow-elem'
 import useWorkflowNodes from '@/app/components/workflow/store/workflow/use-nodes'
 import { isTriggerWorkflow } from '@/app/components/workflow/utils/workflow-entry'
 import { IS_CE_EDITION } from '@/config'
@@ -40,9 +40,19 @@ const MethodSelector: FC<MethodSelectorProps> = ({
   onShowUpgradeTip,
 }) => {
   const { t } = useTranslation()
-  const [open, setOpen] = useState(false)
+  const [open, doSetOpen] = useState(false)
   const humanInputEmailDeliveryEnabled = useProviderContextSelector(s => s.humanInputEmailDeliveryEnabled)
+  const openRef = useRef(open)
   const nodes = useWorkflowNodes()
+
+  const setOpen = useCallback((v: boolean) => {
+    doSetOpen(v)
+    openRef.current = v
+  }, [doSetOpen])
+
+  const handleTrigger = useCallback(() => {
+    setOpen(!openRef.current)
+  }, [setOpen])
 
   const webAppDeliveryInfo = useMemo(() => {
     const isTriggerMode = isTriggerWorkflow(nodes)
@@ -61,25 +71,23 @@ const MethodSelector: FC<MethodSelectorProps> = ({
   }, [data, humanInputEmailDeliveryEnabled])
 
   return (
-    <Popover
+    <PortalToFollowElem
       open={open}
       onOpenChange={setOpen}
+      placement="bottom-end"
+      offset={{
+        mainAxis: 4,
+        crossAxis: 12,
+      }}
     >
-      <PopoverTrigger
-        render={(
-          <ActionButton
-            aria-label={t(`${i18nPrefix}.deliveryMethod.title`, { ns: 'workflow' })}
-            className="data-popup-open:bg-state-base-hover"
-          >
-            <RiAddLine className="size-4" />
+      <PortalToFollowElemTrigger onClick={handleTrigger}>
+        <div>
+          <ActionButton className={cn(open && 'bg-state-base-hover')}>
+            <RiAddLine className="h-4 w-4" />
           </ActionButton>
-        )}
-      />
-      <PopoverContent
-        placement="bottom-end"
-        sideOffset={4}
-        popupClassName="border-none bg-transparent p-0 shadow-none backdrop-blur-none"
-      >
+        </div>
+      </PortalToFollowElemTrigger>
+      <PortalToFollowElemContent className="z-50">
         <div className="w-[360px] rounded-xl border-[0.5px] border-components-panel-border bg-components-panel-bg-blur shadow-lg backdrop-blur-xs">
           <div className="p-1">
             <div
@@ -95,7 +103,7 @@ const MethodSelector: FC<MethodSelectorProps> = ({
               }}
             >
               <div className={cn('rounded-sm border border-divider-regular bg-components-icon-bg-indigo-solid p-1', webAppDeliveryInfo.disabled && 'opacity-50')}>
-                <RiRobot2Fill className="size-4 text-text-primary-on-surface" />
+                <RiRobot2Fill className="h-4 w-4 text-text-primary-on-surface" />
               </div>
               <div className={cn('p-1', webAppDeliveryInfo.disabled && 'opacity-50')}>
                 <div className="mb-0.5 truncate system-sm-medium text-text-primary">{t(`${i18nPrefix}.deliveryMethod.types.webapp.title`, { ns: 'workflow' })}</div>
@@ -133,7 +141,7 @@ const MethodSelector: FC<MethodSelectorProps> = ({
                   emailDeliveryInfo.added && 'opacity-50',
                 )}
               >
-                <RiMailSendFill className="size-4 text-text-primary-on-surface" />
+                <RiMailSendFill className="h-4 w-4 text-text-primary-on-surface" />
               </div>
               <div className={cn('p-1', emailDeliveryInfo.added && 'opacity-50')}>
                 <div className="mb-0.5 truncate system-sm-medium text-text-primary">{t(`${i18nPrefix}.deliveryMethod.types.email.title`, { ns: 'workflow' })}</div>
@@ -148,7 +156,7 @@ const MethodSelector: FC<MethodSelectorProps> = ({
               className={cn('relative flex cursor-pointer items-center gap-1 rounded-lg p-1 pl-3 hover:bg-state-base-hover', 'cursor-not-allowed bg-transparent hover:bg-transparent')}
             >
               <div className={cn('rounded-sm border border-divider-regular bg-background-default-dodge p-1', 'opacity-50')}>
-                <Slack className="size-4 text-text-primary-on-surface" />
+                <Slack className="h-4 w-4 text-text-primary-on-surface" />
               </div>
               <div className={cn('p-1', 'opacity-50')}>
                 <div className="mb-0.5 truncate system-sm-medium text-text-primary">{t(`${i18nPrefix}.deliveryMethod.types.slack.title`, { ns: 'workflow' })}</div>
@@ -163,7 +171,7 @@ const MethodSelector: FC<MethodSelectorProps> = ({
               className={cn('relative flex cursor-pointer items-center gap-1 rounded-lg p-1 pl-3 hover:bg-state-base-hover', 'cursor-not-allowed bg-transparent hover:bg-transparent')}
             >
               <div className={cn('rounded-sm border border-divider-regular bg-background-default-dodge p-1', 'opacity-50')}>
-                <Teams className="size-4 text-text-primary-on-surface" />
+                <Teams className="h-4 w-4 text-text-primary-on-surface" />
               </div>
               <div className={cn('p-1', 'opacity-50')}>
                 <div className="mb-0.5 truncate system-sm-medium text-text-primary">{t(`${i18nPrefix}.deliveryMethod.types.teams.title`, { ns: 'workflow' })}</div>
@@ -178,7 +186,7 @@ const MethodSelector: FC<MethodSelectorProps> = ({
               className={cn('relative flex cursor-pointer items-center gap-1 rounded-lg p-1 pl-3 hover:bg-state-base-hover', 'cursor-not-allowed bg-transparent hover:bg-transparent')}
             >
               <div className={cn('rounded-sm border border-divider-regular bg-components-icon-bg-indigo-solid p-0.5', 'opacity-50')}>
-                <RiDiscordFill className="size-5 text-text-primary-on-surface" />
+                <RiDiscordFill className="h-5 w-5 text-text-primary-on-surface" />
               </div>
               <div className={cn('p-1', 'opacity-50')}>
                 <div className="mb-0.5 truncate system-sm-medium text-text-primary">{t(`${i18nPrefix}.deliveryMethod.types.discord.title`, { ns: 'workflow' })}</div>
@@ -194,7 +202,7 @@ const MethodSelector: FC<MethodSelectorProps> = ({
           <div className="mt-1 rounded-xl border-[0.5px] border-components-panel-border bg-components-panel-bg-blur shadow-lg backdrop-blur-xs">
             <div className="flex items-center gap-2 px-4 py-3">
               <div className={cn('rounded-sm border border-divider-regular bg-components-icon-bg-midnight-solid p-1')}>
-                <RiLightbulbFlashFill className="size-4 text-text-primary-on-surface" />
+                <RiLightbulbFlashFill className="h-4 w-4 text-text-primary-on-surface" />
               </div>
               <div className="system-sm-regular text-text-secondary">
                 <div>{t(`${i18nPrefix}.deliveryMethod.contactTip1`, { ns: 'workflow' })}</div>
@@ -207,8 +215,8 @@ const MethodSelector: FC<MethodSelectorProps> = ({
             </div>
           </div>
         )}
-      </PopoverContent>
-    </Popover>
+      </PortalToFollowElemContent>
+    </PortalToFollowElem>
   )
 }
 export default memo(MethodSelector)

@@ -5,17 +5,16 @@ from pydantic import BaseModel, Field, field_validator
 from configs import dify_config
 from constants import DEFAULT_REGISTER_PASSWORD
 from constants.languages import get_valid_language, languages
-from controllers.common.fields import SimpleResultDataResponse, SimpleResultResponse, VerificationTokenResponse
-from controllers.common.schema import register_response_schema_models, register_schema_models
 from controllers.console import console_ns
 from controllers.console.auth.error import (
     EmailAlreadyInUseError,
+    EmailCodeError,
+    EmailRegisterLimitError,
     InvalidEmailError,
     InvalidTokenError,
     PasswordMismatchError,
 )
 from libs.helper import EmailStr, extract_remote_ip
-from libs.helper import timezone as validate_timezone_string
 from libs.password import valid_password
 from libs.token import (
     set_access_token_to_cookie,
@@ -25,10 +24,18 @@ from libs.token import (
 from models import Account
 from services.account_service import AccountService
 from services.billing_service import BillingService
-from services.errors.account import AccountRegisterError
+from services.errors.account import AccountNotFoundError, AccountRegisterError
 
 from ..error import AccountInFreezeError, EmailSendIpLimitError
 from ..wraps import email_password_login_enabled, email_register_enabled, setup_required
+
+DEFAULT_REF_TEMPLATE_SWAGGER_2_0 = "#/definitions/{model}"
+
+
+class EmailRegisterDirectPayload(BaseModel):
+    email: EmailStr = Field(..., description="Email address")
+    language: str | None = Field(default=None, description="Language code")
+    timezone: str | None = Field(default=None, description="Timezone")
 
 
 class EmailRegisterSendPayload(BaseModel):
@@ -42,34 +49,21 @@ class EmailRegisterValidityPayload(BaseModel):
     token: str = Field(...)
 
 
-class EmailRegisterDirectPayload(BaseModel):
-    email: EmailStr = Field(..., description="Email address")
-    language: str | None = Field(default=None, description="Language code")
-    timezone: str | None = Field(default=None, description="Timezone")
-
-
 class EmailRegisterResetPayload(BaseModel):
     token: str = Field(...)
     new_password: str = Field(...)
     password_confirm: str = Field(...)
-    language: str | None = Field(default=None)
-    timezone: str | None = Field(default=None)
 
-    @field_validator("new_password", "password_confirm")
+    @field_validator("password_confirm")
     @classmethod
-    def validate_password(cls, value: str) -> str:
-        return valid_password(value)
-
-    @field_validator("timezone")
-    @classmethod
-    def validate_timezone(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        return validate_timezone_string(value)
+    def validate_password_confirm(cls, value: str) -> str:
+        if len(value) < 1:
+            raise ValueError("Password must not be empty.")
+        return value
 
 
-register_schema_models(console_ns, EmailRegisterSendPayload, EmailRegisterValidityPayload, EmailRegisterResetPayload, EmailRegisterDirectPayload)
-register_response_schema_models(console_ns, SimpleResultDataResponse, VerificationTokenResponse)
+for model in (EmailRegisterDirectPayload, EmailRegisterSendPayload, EmailRegisterValidityPayload, EmailRegisterResetPayload):
+    console_ns.schema_model(model.__name__, model.model_json_schema(ref_template=DEFAULT_REF_TEMPLATE_SWAGGER_2_0))
 
 
 @console_ns.route("/email-register/send-email")
@@ -77,7 +71,6 @@ class EmailRegisterSendEmailApi(Resource):
     @setup_required
     @email_password_login_enabled
     @email_register_enabled
-    @console_ns.response(200, "Success", console_ns.models[SimpleResultDataResponse.__name__])
     def post(self):
         args = EmailRegisterSendPayload.model_validate(console_ns.payload)
         normalized_email = args.email.lower()
@@ -102,13 +95,11 @@ class EmailRegisterCheckApi(Resource):
     @setup_required
     @email_password_login_enabled
     @email_register_enabled
-    @console_ns.response(200, "Success", console_ns.models[VerificationTokenResponse.__name__])
     def post(self):
         args = EmailRegisterValidityPayload.model_validate(console_ns.payload)
 
         user_email = args.email.lower()
 
-        # 直接返回成功，跳过验证码验证
         return {"is_valid": True, "email": user_email, "token": args.token}
 
 
@@ -128,9 +119,6 @@ class EmailRegisterResetApi(Resource):
         register_data = AccountService.get_email_register_data(args.token)
         if not register_data:
             raise InvalidTokenError()
-        # Must use token in reset phase
-        if register_data.get("phase", "") != "register":
-            raise InvalidTokenError()
 
         # Revoke token to prevent reuse
         AccountService.revoke_email_register_token(args.token)
@@ -142,35 +130,34 @@ class EmailRegisterResetApi(Resource):
 
         if account:
             raise EmailAlreadyInUseError()
+        else:
+            account = self._create_new_account(normalized_email, args.password_confirm)
+            if not account:
+                raise AccountNotFoundError()
+            token_pair = AccountService.login(account=account, ip_address=extract_remote_ip(request))
+            AccountService.reset_login_error_rate_limit(normalized_email)
 
-        account = self._create_new_account(
-            email=normalized_email,
-            password=args.password_confirm,
-            timezone=args.timezone,
-            language=args.language,
-        )
-        token_pair = AccountService.login(account=account, ip_address=extract_remote_ip(request))
-        AccountService.reset_login_error_rate_limit(normalized_email)
+        response = make_response({"result": "success", "data": token_pair.model_dump()})
+        set_access_token_to_cookie(request, response, token_pair.access_token)
+        set_refresh_token_to_cookie(request, response, token_pair.refresh_token)
+        set_csrf_token_to_cookie(request, response, token_pair.csrf_token)
 
-        return {"result": "success", "data": token_pair.model_dump()}
+        return response
 
-    def _create_new_account(
-        self,
-        email: str,
-        password: str,
-        timezone: str | None = None,
-        language: str | None = None,
-    ) -> Account:
+    def _create_new_account(self, email: str, password: str) -> Account | None:
+        # Create new account if allowed
+        account = None
         try:
-            return AccountService.create_account_and_tenant(
+            account = AccountService.create_account_and_tenant(
                 email=email,
                 name=email,
                 password=password,
-                interface_language=get_valid_language(language),
-                timezone=timezone,
+                interface_language=languages[0],
             )
         except AccountRegisterError:
             raise AccountInFreezeError()
+
+        return account
 
 
 @console_ns.route("/email-register/direct")

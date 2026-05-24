@@ -81,8 +81,10 @@ describe('EmojiPicker', () => {
         )
       })
 
+      const emojiWrappers = screen.getAllByTestId(/^emoji-container-/)
+      expect(emojiWrappers.length).toBeGreaterThan(0)
       await act(async () => {
-        fireEvent.click(screen.getByRole('button', { name: 'emoji1' }))
+        fireEvent.click(emojiWrappers[0]!)
       })
 
       const okButton = screen.getByText(/OK/i)

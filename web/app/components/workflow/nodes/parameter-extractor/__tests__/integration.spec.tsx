@@ -110,23 +110,24 @@ vi.mock('@/app/components/header/account-setting/model-provider-page/model-param
   ),
 }))
 
-vi.mock('@langgenius/dify-ui/dialog', () => ({
+vi.mock('@/app/components/base/modal', () => ({
   __esModule: true,
-  Dialog: ({
+  default: ({
     children,
-    open,
+    isShow,
+    title,
   }: {
     children: ReactNode
-    open?: boolean
-  }) => open !== false
+    isShow?: boolean
+    title?: ReactNode
+  }) => isShow
     ? (
         <div data-testid="base-modal">
+          <div>{title}</div>
           {children}
         </div>
       )
     : null,
-  DialogContent: ({ children }: { children: ReactNode }) => <>{children}</>,
-  DialogTitle: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }))
 
 vi.mock('@/app/components/workflow/nodes/_base/components/collapse', () => ({
@@ -604,7 +605,7 @@ describe('parameter-extractor path', () => {
         />,
       )
 
-      expect(screen.getByRole('button', { name: 'workflow.nodes.parameterExtractor.addExtractParameter' })).toBeInTheDocument()
+      expect(screen.getByTestId('add-button')).toBeInTheDocument()
     })
 
     it('should reject invalid names and reset add modal fields after canceling', async () => {
@@ -619,7 +620,7 @@ describe('parameter-extractor path', () => {
         />,
       )
 
-      await user.click(screen.getByRole('button', { name: 'workflow.nodes.parameterExtractor.addExtractParameter' }))
+      await user.click(screen.getByTestId('add-button'))
 
       const nameInput = screen.getByPlaceholderText('workflow.nodes.parameterExtractor.addExtractParameterContent.namePlaceholder')
       const descriptionInput = screen.getByPlaceholderText('workflow.nodes.parameterExtractor.addExtractParameterContent.descriptionPlaceholder')
@@ -635,7 +636,7 @@ describe('parameter-extractor path', () => {
       expect(onCancel).toHaveBeenCalledTimes(1)
       expect(screen.queryByTestId('base-modal')).not.toBeInTheDocument()
 
-      await user.click(screen.getByRole('button', { name: 'workflow.nodes.parameterExtractor.addExtractParameter' }))
+      await user.click(screen.getByTestId('add-button'))
       expect(screen.getByPlaceholderText('workflow.nodes.parameterExtractor.addExtractParameterContent.namePlaceholder')).toHaveValue('')
       expect(screen.getByPlaceholderText('workflow.nodes.parameterExtractor.addExtractParameterContent.descriptionPlaceholder')).toHaveValue('')
     })

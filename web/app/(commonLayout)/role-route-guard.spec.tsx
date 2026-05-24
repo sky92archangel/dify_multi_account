@@ -48,12 +48,12 @@ describe('RoleRouteGuard', () => {
 
     render((
       <RoleRouteGuard>
-        <div>content</div>
+        <div data-testid="guarded-content">content</div>
       </RoleRouteGuard>
     ))
 
     expect(screen.getByRole('status')).toBeInTheDocument()
-    expect(screen.queryByText('content')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('guarded-content')).not.toBeInTheDocument()
     expect(mockReplace).not.toHaveBeenCalled()
   })
 
@@ -64,11 +64,11 @@ describe('RoleRouteGuard', () => {
 
     render((
       <RoleRouteGuard>
-        <div>content</div>
+        <div data-testid="guarded-content">content</div>
       </RoleRouteGuard>
     ))
 
-    expect(screen.queryByText('content')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('guarded-content')).not.toBeInTheDocument()
     await waitFor(() => {
       expect(mockReplace).toHaveBeenCalledWith('/datasets')
     })
@@ -82,11 +82,11 @@ describe('RoleRouteGuard', () => {
 
     render((
       <RoleRouteGuard>
-        <div>content</div>
+        <div data-testid="guarded-content">content</div>
       </RoleRouteGuard>
     ))
 
-    expect(screen.getByText('content')).toBeInTheDocument()
+    expect(screen.getByTestId('guarded-content')).toBeInTheDocument()
     expect(mockReplace).not.toHaveBeenCalled()
   })
 
@@ -98,11 +98,11 @@ describe('RoleRouteGuard', () => {
 
     render((
       <RoleRouteGuard>
-        <div>content</div>
+        <div data-testid="guarded-content">content</div>
       </RoleRouteGuard>
     ))
 
-    expect(screen.getByText('content')).toBeInTheDocument()
+    expect(screen.getByTestId('guarded-content')).toBeInTheDocument()
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
     expect(mockReplace).not.toHaveBeenCalled()
   })

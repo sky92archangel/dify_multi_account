@@ -12,7 +12,7 @@ import {
   useState,
 } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ShortcutKbd } from '@/app/components/workflow/shortcuts/shortcut-kbd'
+import ShortcutsName from '@/app/components/workflow/shortcuts-name'
 
 export type OperatorProps = {
   onCopy: () => void
@@ -37,10 +37,12 @@ const Operator = ({
       onOpenChange={setOpen}
     >
       <DropdownMenuTrigger
+        nativeButton={false}
+        render={<div />}
         aria-label={t('operation.more', { ns: 'common' })}
         className={cn(
-          'flex size-8 cursor-pointer items-center justify-center rounded-lg text-text-tertiary hover:bg-state-base-hover hover:text-text-secondary',
-          'data-popup-open:bg-state-base-hover data-popup-open:text-text-secondary',
+          'flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-text-tertiary hover:bg-state-base-hover hover:text-text-secondary',
+          open && 'bg-state-base-hover text-text-secondary',
         )}
         onMouseDown={(event) => {
           event.preventDefault()
@@ -50,7 +52,7 @@ const Operator = ({
         }}
         onClick={event => event.stopPropagation()}
       >
-        <span aria-hidden className="i-ri-more-fill size-4" />
+        <span aria-hidden className="i-ri-more-fill h-4 w-4" />
       </DropdownMenuTrigger>
       <DropdownMenuContent
         placement="bottom-end"
@@ -67,7 +69,7 @@ const Operator = ({
               }}
             >
               {t('common.copy', { ns: 'workflow' })}
-              <ShortcutKbd shortcut="workflow.copy" />
+              <ShortcutsName keys={['ctrl', 'c']} />
             </DropdownMenuItem>
             <DropdownMenuItem
               className="justify-between rounded-md px-3 text-sm text-text-secondary"
@@ -77,7 +79,7 @@ const Operator = ({
               }}
             >
               {t('common.duplicate', { ns: 'workflow' })}
-              <ShortcutKbd shortcut="workflow.duplicate" />
+              <ShortcutsName keys={['ctrl', 'd']} />
             </DropdownMenuItem>
           </div>
           <DropdownMenuSeparator className="my-0" />
@@ -105,7 +107,7 @@ const Operator = ({
               }}
             >
               {t('operation.delete', { ns: 'common' })}
-              <ShortcutKbd shortcut="workflow.delete" />
+              <ShortcutsName keys={['del']} />
             </DropdownMenuItem>
           </div>
         </div>

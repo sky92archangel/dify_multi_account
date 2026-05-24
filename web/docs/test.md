@@ -4,19 +4,25 @@ This document is the complete testing specification for the Dify frontend projec
 Goal: Readable, change-friendly, reusable, and debuggable tests.
 When I ask you to write/refactor/fix tests, follow these rules by default.
 
-## Running Tests
+## Tech Stack
 
-Run these commands from `web/`. From the repository root, prefix them with `pnpm -C web`.
+- **Framework**: Next.js 15 + React 19 + TypeScript
+- **Testing Tools**: Vitest 4.0.16 + React Testing Library 16.0
+- **Test Environment**: happy-dom
+- **File Naming**: `ComponentName.spec.tsx` inside a same-level `__tests__/` directory
+- **Placement Rule**: Component, hook, and utility tests must live in a sibling `__tests__/` folder at the same level as the source under test. For example, `foo/index.tsx` maps to `foo/__tests__/index.spec.tsx`, and `foo/bar.ts` maps to `foo/__tests__/bar.spec.ts`.
+
+## Running Tests
 
 ```bash
 # Run all tests
 pnpm test
 
 # Watch mode
-pnpm test --watch
+pnpm test:watch
 
 # Generate coverage report
-pnpm test --coverage
+pnpm test:coverage
 
 # Run specific file
 pnpm test path/to/file.spec.tsx
@@ -25,8 +31,6 @@ pnpm test path/to/file.spec.tsx
 ## Project Test Setup
 
 - **Configuration**: `vite.config.ts` sets the `happy-dom` environment, loads the Testing Library presets, and respects our path aliases (`@/...`). Check this file before adding new transformers or module name mappers.
-- **File naming**: `ComponentName.spec.tsx` inside a same-level `__tests__/` directory.
-- **Placement rule**: Component, hook, and utility tests must live in a sibling `__tests__/` folder at the same level as the source under test. For example, `foo/index.tsx` maps to `foo/__tests__/index.spec.tsx`, and `foo/bar.ts` maps to `foo/__tests__/bar.spec.ts`.
 - **Global setup**: `vitest.setup.ts` already imports `@testing-library/jest-dom`, runs `cleanup()` after every test, and defines shared mocks (for example `react-i18next`). Add any environment-level mocks (for example `ResizeObserver`, `matchMedia`, `IntersectionObserver`, `TextEncoder`, `crypto`) here so they are shared consistently.
 - **Reusable mocks**: Place shared mock factories inside `web/__mocks__/` and use `vi.mock('module-name')` to point to them rather than redefining mocks in every spec.
 - **Mocking behavior**: Modules are not mocked automatically. Use `vi.mock(...)` in tests, or place global mocks in `vitest.setup.ts`.
@@ -41,8 +45,6 @@ pnpm test path/to/file.spec.tsx
 
 - **Single behavior per test**: Each test verifies one user-observable behavior.
 - **Black-box first**: Assert external behavior and observable outputs, avoid internal implementation details. Prefer role-based queries (`getByRole`) and pattern matching (`/text/i`) over hardcoded string assertions.
-- **Accessibility selectors first**: Prefer `getByRole` with accessible `name`, then `getByLabelText`, `getByPlaceholderText`, `getByText`, and scoped `within(...)` queries. Avoid `getByTestId` unless the target has no user-observable semantics, such as a mocked non-visual integration boundary, virtualized/canvas output, or a third-party widget shim.
-- **Fix markup before selectors**: If a test cannot find a control by role, name, label, landmark, or dialog scope, treat that as a component accessibility problem first. Add semantic HTML, an accessible name, or an associated label instead of adding `data-testid`.
 - **Semantic naming**: Use `should <behavior> when <condition>` and group related cases with `describe(<subject or scenario>)`.
 - **AAA / Given–When–Then**: Separate Arrange, Act, and Assert clearly with code blocks or comments.
 - **Minimal but sufficient assertions**: Keep only the expectations that express the essence of the behavior.
@@ -81,22 +83,12 @@ Use `pnpm analyze-component <path>` to analyze component complexity and adopt di
 - ✅ TypeScript: No `any` types
 - ✅ **Cleanup**: `vi.clearAllMocks()` should be in `beforeEach()`, not `afterEach()`. This ensures mock call history is reset before each test, preventing test pollution when using assertions like `toHaveBeenCalledWith()` or `toHaveBeenCalledTimes()`.
 
-### Test ID Policy
-
-`data-testid` is a last resort because users and assistive technology cannot perceive it. It can hide broken semantics, such as a clickable `div` that should have been a button or an input without a label.
-
-- Prefer `screen.getByRole('button', { name: /save/i })`, `screen.getByRole('textbox', { name: /email/i })`, and scoped queries like `within(screen.getByRole('dialog', { name: /settings/i }))`.
-- Prefer `userEvent` for interactions that should match real user behavior.
-- Remove production `data-testid` attributes when they exist only to support tests and a semantic selector is available.
-- Keep `data-testid` only for justified boundaries that cannot expose stable semantics in the test environment: mocked non-visual children, browser/editor shims such as Monaco, canvas/chart output, or third-party widgets. In those cases, keep assertions focused on the boundary contract rather than internal DOM shape.
-- Do not assert decorative icons by test id. If the icon conveys meaning, give the control an accessible name and assert the control. If the icon is decorative, keep it `aria-hidden`.
-
 **⚠️ Mock components must accurately reflect actual component behavior**, especially conditional rendering based on props or state.
 
 **Rules**:
 
 1. **Match actual conditional rendering**: If the real component returns `null` or doesn't render under certain conditions, the mock must do the same. Always check the actual component implementation before creating mocks.
-1. **Use shared state variables when needed**: When mocking components that depend on shared context or state (for example, a parent overlay mock with a separate content component), use module-level variables to track state and reset them in `beforeEach`.
+1. **Use shared state variables when needed**: When mocking components that depend on shared context or state (e.g., `PortalToFollowElem` with `PortalToFollowElemContent`), use module-level variables to track state and reset them in `beforeEach`.
 1. **Always reset shared mock state in beforeEach**: Module-level variables used in mocks must be reset in `beforeEach` to ensure test isolation, even if you set default values elsewhere.
 1. **Use fake timers only when needed**: Only use `vi.useFakeTimers()` if:
    - Testing components that use real `setTimeout`/`setInterval` (not mocked)
@@ -224,8 +216,8 @@ Simulate the interactions that matter to users—primary clicks, change events, 
 
 **Guidelines**:
 
-- Prefer mocking `@/service/*` modules or spying on `global.fetch` / `ky` clients with deterministic responses over reaching out to the network.
-- Do not introduce an HTTP interception dependency such as MSW unless it is already declared in the workspace or adding it is part of the task.
+- Prefer spying on `global.fetch`/`axios`/`ky` and returning deterministic responses over reaching out to the network.
+- Use MSW (`msw` is already installed) when you need declarative request handlers across multiple specs.
 - Keep async assertions inside `await waitFor(...)` blocks or the async `findBy*` queries to avoid race conditions.
 
 ### 7. Next.js Routing
@@ -289,7 +281,7 @@ For complex inputs/entities, use Builders with solid defaults and chainable over
 
 Reserve snapshots for static, deterministic fragments (icons, badges, layout chrome). Keep them tight, prefer explicit assertions for behavior, and review any snapshot updates deliberately instead of accepting them wholesale.
 
-**Note**: Dify primarily targets desktop workflows, but the supported browsers list includes mobile browsers. Do not add responsive/mobile assertions to ordinary unit tests unless the component has responsive behavior, mobile-specific behavior, or accessibility behavior that must be covered.
+**Note**: Dify is a desktop application. **No need for** responsive/mobile testing.
 
 ## Code Style
 
@@ -385,16 +377,16 @@ describe('ComponentName', () => {
 
 ```tsx
 // ✅ CORRECT: Matches actual component behavior
-let mockOverlayOpenState = false
+let mockPortalOpenState = false
 
-vi.mock('external-overlay-library', () => ({
-  OverlayRoot: ({ children, open, ...props }) => {
-    mockOverlayOpenState = open || false // Update shared state
+vi.mock('@/app/components/base/portal-to-follow-elem', () => ({
+  PortalToFollowElem: ({ children, open, ...props }) => {
+    mockPortalOpenState = open || false // Update shared state
     return <div data-open={open}>{children}</div>
   },
-  OverlayContent: ({ children }) => {
+  PortalToFollowElemContent: ({ children }) => {
     // ✅ Matches actual: returns null when open is false
-    if (!mockOverlayOpenState)
+    if (!mockPortalOpenState)
       return null
     return <div>{children}</div>
   },
@@ -403,7 +395,7 @@ vi.mock('external-overlay-library', () => ({
 describe('Component', () => {
   beforeEach(() => {
     vi.clearAllMocks() // ✅ Reset mock call history
-    mockOverlayOpenState = false // ✅ Reset shared state
+    mockPortalOpenState = false // ✅ Reset shared state
   })
 })
 ```
@@ -547,4 +539,4 @@ Test examples in the project:
 [Testing Library Best Practices]: https://kentcdodds.com/blog/common-mistakes-with-react-testing-library
 [Vitest Documentation]: https://vitest.dev/guide
 [Vitest Mocking Guide]: https://vitest.dev/guide/mocking.html
-[index.spec.tsx]: ../app/components/base/action-button/__tests__/index.spec.tsx
+[index.spec.tsx]: ../app/components/base/radio/__tests__/index.spec.tsx

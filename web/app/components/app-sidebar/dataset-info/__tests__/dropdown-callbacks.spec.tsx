@@ -113,9 +113,7 @@ vi.mock('@/service/datasets', () => ({
 }))
 
 vi.mock('@langgenius/dify-ui/toast', () => ({
-  toast: {
-    error: (...args: unknown[]) => mockToast(...args),
-  },
+  toast: (...args: unknown[]) => mockToast(...args),
 }))
 
 vi.mock('@/app/components/datasets/rename-modal', () => ({
@@ -222,7 +220,7 @@ describe('Dropdown callback coverage', () => {
     await user.click(screen.getByText('datasetPipeline.operations.exportPipeline'))
 
     await waitFor(() => {
-      expect(mockToast).toHaveBeenCalledWith('app.exportFailed')
+      expect(mockToast).toHaveBeenCalledWith('app.exportFailed', { type: 'error' })
     })
   })
 
@@ -259,7 +257,7 @@ describe('Dropdown callback coverage', () => {
     await user.click(screen.getByText('common.operation.delete'))
 
     await waitFor(() => {
-      expect(mockToast).toHaveBeenCalledWith('check failed')
+      expect(mockToast).toHaveBeenCalledWith('check failed', { type: 'error' })
     })
     expect(screen.queryByText('dataset.deleteDatasetConfirmTitle')).not.toBeInTheDocument()
   })

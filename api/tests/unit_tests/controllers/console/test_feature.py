@@ -1,4 +1,3 @@
-from pytest_mock import MockerFixture
 from werkzeug.exceptions import Unauthorized
 
 
@@ -12,7 +11,7 @@ def unwrap(func):
 
 
 class TestFeatureApi:
-    def test_get_tenant_features_success(self, mocker: MockerFixture):
+    def test_get_tenant_features_success(self, mocker):
         from controllers.console.feature import FeatureApi
 
         mocker.patch(
@@ -20,10 +19,8 @@ class TestFeatureApi:
             return_value=("account_id", "tenant_123"),
         )
 
-        get_features = mocker.patch("controllers.console.feature.FeatureService.get_features")
-        get_features.return_value.model_dump.return_value = {
-            "features": {"feature_a": True},
-            "vector_space": {"size": 1, "limit": 2},
+        mocker.patch("controllers.console.feature.FeatureService.get_features").return_value.model_dump.return_value = {
+            "features": {"feature_a": True}
         }
 
         api = FeatureApi()
@@ -32,32 +29,10 @@ class TestFeatureApi:
         result = raw_get(api)
 
         assert result == {"features": {"feature_a": True}}
-        get_features.assert_called_once_with("tenant_123", exclude_vector_space=True)
-
-
-class TestFeatureVectorSpaceApi:
-    def test_get_vector_space_success(self, mocker: MockerFixture):
-        from controllers.console.feature import FeatureVectorSpaceApi
-
-        mocker.patch(
-            "controllers.console.feature.current_account_with_tenant",
-            return_value=("account_id", "tenant_123"),
-        )
-
-        get_vector_space = mocker.patch("controllers.console.feature.FeatureService.get_vector_space")
-        get_vector_space.return_value.model_dump.return_value = {"size": 5120, "limit": 20480}
-
-        api = FeatureVectorSpaceApi()
-
-        raw_get = unwrap(FeatureVectorSpaceApi.get)
-        result = raw_get(api)
-
-        assert result == {"size": 5120, "limit": 20480}
-        get_vector_space.assert_called_once_with("tenant_123")
 
 
 class TestSystemFeatureApi:
-    def test_get_system_features_authenticated(self, mocker: MockerFixture):
+    def test_get_system_features_authenticated(self, mocker):
         """
         current_user.is_authenticated == True
         """
@@ -81,7 +56,7 @@ class TestSystemFeatureApi:
 
         assert result == {"features": {"sys_feature": True}}
 
-    def test_get_system_features_unauthenticated(self, mocker: MockerFixture):
+    def test_get_system_features_unauthenticated(self, mocker):
         """
         current_user.is_authenticated raises Unauthorized
         """

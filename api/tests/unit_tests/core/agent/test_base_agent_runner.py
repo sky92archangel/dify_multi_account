@@ -3,7 +3,6 @@ from decimal import Decimal
 from unittest.mock import MagicMock
 
 import pytest
-from pytest_mock import MockerFixture
 
 import core.agent.base_agent_runner as module
 from core.agent.base_agent_runner import BaseAgentRunner
@@ -14,7 +13,7 @@ from core.agent.base_agent_runner import BaseAgentRunner
 
 
 @pytest.fixture
-def mock_db_session(mocker: MockerFixture):
+def mock_db_session(mocker):
     session = mocker.MagicMock()
     mocker.patch.object(module.db, "session", session)
     return session
@@ -42,13 +41,13 @@ def runner(mocker, mock_db_session):
 
 
 class TestRepack:
-    def test_sets_empty_if_none(self, runner, mocker: MockerFixture):
+    def test_sets_empty_if_none(self, runner, mocker):
         entity = mocker.MagicMock()
         entity.app_config.prompt_template.simple_prompt_template = None
         result = runner._repack_app_generate_entity(entity)
         assert result.app_config.prompt_template.simple_prompt_template == ""
 
-    def test_keeps_existing(self, runner, mocker: MockerFixture):
+    def test_keeps_existing(self, runner, mocker):
         entity = mocker.MagicMock()
         entity.app_config.prompt_template.simple_prompt_template = "abc"
         result = runner._repack_app_generate_entity(entity)
@@ -61,7 +60,7 @@ class TestRepack:
 
 
 class TestUpdatePromptTool:
-    def build_param(self, mocker: MockerFixture, **kwargs):
+    def build_param(self, mocker, **kwargs):
         p = mocker.MagicMock()
         p.form = kwargs.get("form")
 
@@ -76,7 +75,7 @@ class TestUpdatePromptTool:
         p.required = kwargs.get("required", False)
         return p
 
-    def test_skip_non_llm(self, runner, mocker: MockerFixture):
+    def test_skip_non_llm(self, runner, mocker):
         tool = mocker.MagicMock()
         param = self.build_param(mocker, form="NOT_LLM")
         tool.get_runtime_parameters.return_value = [param]
@@ -87,7 +86,7 @@ class TestUpdatePromptTool:
         result = runner.update_prompt_message_tool(tool, prompt_tool)
         assert result.parameters["properties"] == {}
 
-    def test_enum_and_required(self, runner, mocker: MockerFixture):
+    def test_enum_and_required(self, runner, mocker):
         option = mocker.MagicMock(value="opt1")
         param = self.build_param(
             mocker,
@@ -105,7 +104,7 @@ class TestUpdatePromptTool:
         result = runner.update_prompt_message_tool(tool, prompt_tool)
         assert "p1" in result.parameters["required"]
 
-    def test_skip_file_type_param(self, runner, mocker: MockerFixture):
+    def test_skip_file_type_param(self, runner, mocker):
         tool = mocker.MagicMock()
         param = self.build_param(mocker, form=module.ToolParameter.ToolParameterForm.LLM)
         param.type = module.ToolParameter.ToolParameterType.FILE
@@ -117,7 +116,7 @@ class TestUpdatePromptTool:
         result = runner.update_prompt_message_tool(tool, prompt_tool)
         assert result.parameters["properties"] == {}
 
-    def test_duplicate_required_not_duplicated(self, runner, mocker: MockerFixture):
+    def test_duplicate_required_not_duplicated(self, runner, mocker):
         tool = mocker.MagicMock()
 
         param = self.build_param(
@@ -142,7 +141,7 @@ class TestUpdatePromptTool:
 
 
 class TestCreateAgentThought:
-    def test_with_files(self, runner, mock_db_session, mocker: MockerFixture):
+    def test_with_files(self, runner, mock_db_session, mocker):
         mock_thought = mocker.MagicMock(id=10)
         mocker.patch.object(module, "MessageAgentThought", return_value=mock_thought)
 
@@ -150,7 +149,7 @@ class TestCreateAgentThought:
         assert result == "10"
         assert runner.agent_thought_count == 1
 
-    def test_without_files(self, runner, mock_db_session, mocker: MockerFixture):
+    def test_without_files(self, runner, mock_db_session, mocker):
         mock_thought = mocker.MagicMock(id=11)
         mocker.patch.object(module, "MessageAgentThought", return_value=mock_thought)
 
@@ -164,7 +163,7 @@ class TestCreateAgentThought:
 
 
 class TestSaveAgentThought:
-    def setup_agent(self, mocker: MockerFixture):
+    def setup_agent(self, mocker):
         agent = mocker.MagicMock()
         agent.tool = "tool1;tool2"
         agent.tool_labels = {}
@@ -176,7 +175,7 @@ class TestSaveAgentThought:
         with pytest.raises(ValueError):
             runner.save_agent_thought("id", None, None, None, None, None, None, [], None)
 
-    def test_full_update(self, runner, mock_db_session, mocker: MockerFixture):
+    def test_full_update(self, runner, mock_db_session, mocker):
         agent = self.setup_agent(mocker)
         mock_db_session.scalar.return_value = agent
 
@@ -211,7 +210,7 @@ class TestSaveAgentThought:
         assert agent.tokens == 3
         assert "tool1" in json.loads(agent.tool_labels_str)
 
-    def test_label_fallback_when_none(self, runner, mock_db_session, mocker: MockerFixture):
+    def test_label_fallback_when_none(self, runner, mock_db_session, mocker):
         agent = self.setup_agent(mocker)
         agent.tool = "unknown_tool"
         mock_db_session.scalar.return_value = agent
@@ -221,7 +220,7 @@ class TestSaveAgentThought:
         labels = json.loads(agent.tool_labels_str)
         assert "unknown_tool" in labels
 
-    def test_json_failure_paths(self, runner, mock_db_session, mocker: MockerFixture):
+    def test_json_failure_paths(self, runner, mock_db_session, mocker):
         agent = self.setup_agent(mocker)
         mock_db_session.scalar.return_value = agent
 
@@ -242,13 +241,13 @@ class TestSaveAgentThought:
 
         assert mock_db_session.commit.called
 
-    def test_messages_ids_none(self, runner, mock_db_session, mocker: MockerFixture):
+    def test_messages_ids_none(self, runner, mock_db_session, mocker):
         agent = self.setup_agent(mocker)
         mock_db_session.scalar.return_value = agent
         runner.save_agent_thought("id", None, None, None, None, None, None, None, None)
         assert mock_db_session.commit.called
 
-    def test_success_dict_serialization(self, runner, mock_db_session, mocker: MockerFixture):
+    def test_success_dict_serialization(self, runner, mock_db_session, mocker):
         agent = self.setup_agent(mocker)
         mock_db_session.scalar.return_value = agent
 
@@ -274,19 +273,19 @@ class TestSaveAgentThought:
 
 
 class TestOrganizeUserPrompt:
-    def test_no_files(self, runner, mock_db_session, mocker: MockerFixture):
+    def test_no_files(self, runner, mock_db_session, mocker):
         mock_db_session.scalars.return_value.all.return_value = []
         msg = mocker.MagicMock(id="1", query="hello", app_model_config=None)
         result = runner.organize_agent_user_prompt(msg)
         assert result.content == "hello"
 
-    def test_with_files_no_config(self, runner, mock_db_session, mocker: MockerFixture):
+    def test_with_files_no_config(self, runner, mock_db_session, mocker):
         mock_db_session.scalars.return_value.all.return_value = [mocker.MagicMock()]
         msg = mocker.MagicMock(id="1", query="hello", app_model_config=None)
         result = runner.organize_agent_user_prompt(msg)
         assert result.content == "hello"
 
-    def test_image_detail_low_fallback(self, runner, mock_db_session, mocker: MockerFixture):
+    def test_image_detail_low_fallback(self, runner, mock_db_session, mocker):
         mock_db_session.scalars.return_value.all.return_value = [mocker.MagicMock()]
         file_config = mocker.MagicMock()
         file_config.image_config = mocker.MagicMock(detail=None)
@@ -306,27 +305,27 @@ class TestOrganizeUserPrompt:
 
 
 class TestOrganizeHistory:
-    def test_empty(self, runner, mock_db_session, mocker: MockerFixture):
+    def test_empty(self, runner, mock_db_session, mocker):
         mock_db_session.execute.return_value.scalars.return_value.all.return_value = []
         mocker.patch.object(module, "extract_thread_messages", return_value=[])
         result = runner.organize_agent_history([])
         assert result == []
 
-    def test_with_answer_only(self, runner, mock_db_session, mocker: MockerFixture):
+    def test_with_answer_only(self, runner, mock_db_session, mocker):
         msg = mocker.MagicMock(id="m1", answer="ans", agent_thoughts=[], app_model_config=None)
         mock_db_session.execute.return_value.scalars.return_value.all.return_value = [msg]
         mocker.patch.object(module, "extract_thread_messages", return_value=[msg])
         result = runner.organize_agent_history([])
         assert any(isinstance(x, module.AssistantPromptMessage) for x in result)
 
-    def test_skip_current_message(self, runner, mock_db_session, mocker: MockerFixture):
+    def test_skip_current_message(self, runner, mock_db_session, mocker):
         msg = mocker.MagicMock(id="msg_current", agent_thoughts=[], answer="ans", app_model_config=None)
         mock_db_session.execute.return_value.scalars.return_value.all.return_value = [msg]
         mocker.patch.object(module, "extract_thread_messages", return_value=[msg])
         result = runner.organize_agent_history([])
         assert result == []
 
-    def test_with_tool_calls_invalid_json(self, runner, mock_db_session, mocker: MockerFixture):
+    def test_with_tool_calls_invalid_json(self, runner, mock_db_session, mocker):
         thought = mocker.MagicMock(
             tool="tool1",
             tool_input="invalid",
@@ -342,7 +341,7 @@ class TestOrganizeHistory:
         result = runner.organize_agent_history([])
         assert isinstance(result, list)
 
-    def test_empty_tool_name_split(self, runner, mock_db_session, mocker: MockerFixture):
+    def test_empty_tool_name_split(self, runner, mock_db_session, mocker):
         thought = mocker.MagicMock(tool=";", thought="thinking")
         msg = mocker.MagicMock(id="m5", agent_thoughts=[thought], answer=None, app_model_config=None)
 
@@ -351,7 +350,7 @@ class TestOrganizeHistory:
         result = runner.organize_agent_history([])
         assert isinstance(result, list)
 
-    def test_valid_json_tool_flow(self, runner, mock_db_session, mocker: MockerFixture):
+    def test_valid_json_tool_flow(self, runner, mock_db_session, mocker):
         thought = mocker.MagicMock(
             tool="tool1",
             tool_input=json.dumps({"tool1": {"x": 1}}),
@@ -380,7 +379,7 @@ class TestOrganizeHistory:
 
 
 class TestConvertToolToPromptMessageTool:
-    def test_basic_conversion(self, runner, mocker: MockerFixture):
+    def test_basic_conversion(self, runner, mocker):
         tool = mocker.MagicMock(tool_name="tool1")
 
         runtime_param = mocker.MagicMock()
@@ -405,7 +404,7 @@ class TestConvertToolToPromptMessageTool:
         prompt_tool, entity = runner._convert_tool_to_prompt_message_tool(tool)
         assert entity == tool_entity
 
-    def test_full_conversion_multiple_params(self, runner, mocker: MockerFixture):
+    def test_full_conversion_multiple_params(self, runner, mocker):
         tool = mocker.MagicMock(tool_name="tool1")
 
         # LLM param with input_schema override
@@ -442,7 +441,7 @@ class TestConvertToolToPromptMessageTool:
 
 
 class TestInitPromptToolsExtended:
-    def test_agent_tool_branch(self, runner, mocker: MockerFixture):
+    def test_agent_tool_branch(self, runner, mocker):
         agent_tool = mocker.MagicMock(tool_name="agent_tool")
         runner.app_config.agent = mocker.MagicMock(tools=[agent_tool])
         mocker.patch.object(runner, "_convert_tool_to_prompt_message_tool", return_value=(MagicMock(), "entity"))
@@ -450,7 +449,7 @@ class TestInitPromptToolsExtended:
         tools, prompts = runner._init_prompt_tools()
         assert "agent_tool" in tools
 
-    def test_exception_in_conversion(self, runner, mocker: MockerFixture):
+    def test_exception_in_conversion(self, runner, mocker):
         agent_tool = mocker.MagicMock(tool_name="bad_tool")
         runner.app_config.agent = mocker.MagicMock(tools=[agent_tool])
         mocker.patch.object(runner, "_convert_tool_to_prompt_message_tool", side_effect=Exception)
@@ -465,7 +464,7 @@ class TestInitPromptToolsExtended:
 
 
 class TestAdditionalCoverage:
-    def test_update_prompt_with_input_schema(self, runner, mocker: MockerFixture):
+    def test_update_prompt_with_input_schema(self, runner, mocker):
         tool = mocker.MagicMock()
 
         param = mocker.MagicMock()
@@ -488,7 +487,7 @@ class TestAdditionalCoverage:
         result = runner.update_prompt_message_tool(tool, prompt_tool)
         assert result.parameters["properties"]["p1"]["type"] == "number"
 
-    def test_save_agent_thought_existing_labels(self, runner, mock_db_session, mocker: MockerFixture):
+    def test_save_agent_thought_existing_labels(self, runner, mock_db_session, mocker):
         agent = mocker.MagicMock()
         agent.tool = "tool1"
         agent.tool_labels = {"tool1": {"en_US": "existing"}}
@@ -499,7 +498,7 @@ class TestAdditionalCoverage:
         labels = json.loads(agent.tool_labels_str)
         assert labels["tool1"]["en_US"] == "existing"
 
-    def test_save_agent_thought_tool_meta_string(self, runner, mock_db_session, mocker: MockerFixture):
+    def test_save_agent_thought_tool_meta_string(self, runner, mock_db_session, mocker):
         agent = mocker.MagicMock()
         agent.tool = "tool1"
         agent.tool_labels = {}
@@ -509,7 +508,7 @@ class TestAdditionalCoverage:
         runner.save_agent_thought("id", None, None, None, None, "meta_string", None, [], None)
         assert agent.tool_meta_str == "meta_string"
 
-    def test_convert_dataset_retriever_tool(self, runner, mocker: MockerFixture):
+    def test_convert_dataset_retriever_tool(self, runner, mocker):
         ds_tool = mocker.MagicMock()
         ds_tool.entity.identity.name = "ds"
         ds_tool.entity.description.llm = "desc"
@@ -526,7 +525,7 @@ class TestAdditionalCoverage:
         prompt = runner._convert_dataset_retriever_tool_to_prompt_message_tool(ds_tool)
         assert prompt is not None
 
-    def test_organize_user_prompt_with_file_objects(self, runner, mock_db_session, mocker: MockerFixture):
+    def test_organize_user_prompt_with_file_objects(self, runner, mock_db_session, mocker):
         mock_db_session.scalars.return_value.all.return_value = [mocker.MagicMock()]
 
         file_config = mocker.MagicMock()
@@ -545,7 +544,7 @@ class TestAdditionalCoverage:
         result = runner.organize_agent_user_prompt(msg)
         assert result is not None
 
-    def test_organize_history_without_tool_names(self, runner, mock_db_session, mocker: MockerFixture):
+    def test_organize_history_without_tool_names(self, runner, mock_db_session, mocker):
         thought = mocker.MagicMock(tool=None, thought="thinking")
         msg = mocker.MagicMock(id="m3", agent_thoughts=[thought], answer=None, app_model_config=None)
 
@@ -555,7 +554,7 @@ class TestAdditionalCoverage:
         result = runner.organize_agent_history([])
         assert isinstance(result, list)
 
-    def test_organize_history_multiple_tools_split(self, runner, mock_db_session, mocker: MockerFixture):
+    def test_organize_history_multiple_tools_split(self, runner, mock_db_session, mocker):
         thought = mocker.MagicMock(
             tool="tool1;tool2",
             tool_input=json.dumps({"tool1": {}, "tool2": {}}),
@@ -573,7 +572,7 @@ class TestAdditionalCoverage:
 
     # ================= Additional Surgical Coverage =================
 
-    def test_convert_tool_select_enum_branch(self, runner, mocker: MockerFixture):
+    def test_convert_tool_select_enum_branch(self, runner, mocker):
         tool = mocker.MagicMock(tool_name="tool1")
 
         param = mocker.MagicMock()
@@ -600,7 +599,7 @@ class TestAdditionalCoverage:
 
 
 class TestConvertDatasetRetrieverTool:
-    def test_required_param_added(self, runner, mocker: MockerFixture):
+    def test_required_param_added(self, runner, mocker):
         ds_tool = mocker.MagicMock()
         ds_tool.entity.identity.name = "ds"
         ds_tool.entity.description.llm = "desc"
@@ -620,7 +619,7 @@ class TestConvertDatasetRetrieverTool:
 
 
 class TestBaseAgentRunnerInit:
-    def test_init_sets_stream_tool_call_and_files(self, mocker: MockerFixture):
+    def test_init_sets_stream_tool_call_and_files(self, mocker):
         session = mocker.MagicMock()
         session.scalar.return_value = 2
         mocker.patch.object(module.db, "session", session)
@@ -663,7 +662,7 @@ class TestBaseAgentRunnerInit:
 
 
 class TestBaseAgentRunnerCoverage:
-    def test_convert_tool_skips_non_llm_param(self, runner, mocker: MockerFixture):
+    def test_convert_tool_skips_non_llm_param(self, runner, mocker):
         tool = mocker.MagicMock(tool_name="tool1")
 
         param = mocker.MagicMock()
@@ -681,7 +680,7 @@ class TestBaseAgentRunnerCoverage:
 
         assert prompt_tool.parameters["properties"] == {}
 
-    def test_init_prompt_tools_adds_dataset_tools(self, runner, mocker: MockerFixture):
+    def test_init_prompt_tools_adds_dataset_tools(self, runner, mocker):
         dataset_tool = mocker.MagicMock()
         dataset_tool.entity.identity.name = "ds"
         runner.dataset_tools = [dataset_tool]
@@ -693,7 +692,7 @@ class TestBaseAgentRunnerCoverage:
         assert tools["ds"] == dataset_tool
         assert len(prompt_tools) == 1
 
-    def test_update_prompt_message_tool_select_enum(self, runner, mocker: MockerFixture):
+    def test_update_prompt_message_tool_select_enum(self, runner, mocker):
         tool = mocker.MagicMock()
 
         option1 = mocker.MagicMock(value="A")
@@ -717,7 +716,7 @@ class TestBaseAgentRunnerCoverage:
 
         assert result.parameters["properties"]["select_param"]["enum"] == ["A", "B"]
 
-    def test_save_agent_thought_json_dumps_fallbacks(self, runner, mock_db_session, mocker: MockerFixture):
+    def test_save_agent_thought_json_dumps_fallbacks(self, runner, mock_db_session, mocker):
         agent = mocker.MagicMock()
         agent.tool = "tool1"
         agent.tool_labels = {}
@@ -755,7 +754,7 @@ class TestBaseAgentRunnerCoverage:
         assert isinstance(agent.observation, str)
         assert isinstance(agent.tool_meta_str, str)
 
-    def test_save_agent_thought_skips_empty_tool_name(self, runner, mock_db_session, mocker: MockerFixture):
+    def test_save_agent_thought_skips_empty_tool_name(self, runner, mock_db_session, mocker):
         agent = mocker.MagicMock()
         agent.tool = "tool1;;"
         agent.tool_labels = {}
@@ -769,7 +768,7 @@ class TestBaseAgentRunnerCoverage:
         labels = json.loads(agent.tool_labels_str)
         assert "" not in labels
 
-    def test_organize_history_includes_system_prompt(self, runner, mock_db_session, mocker: MockerFixture):
+    def test_organize_history_includes_system_prompt(self, runner, mock_db_session, mocker):
         mock_db_session.execute.return_value.scalars.return_value.all.return_value = []
         mocker.patch.object(module, "extract_thread_messages", return_value=[])
 
@@ -779,7 +778,7 @@ class TestBaseAgentRunnerCoverage:
 
         assert system_message in result
 
-    def test_organize_history_tool_inputs_and_observation_none(self, runner, mock_db_session, mocker: MockerFixture):
+    def test_organize_history_tool_inputs_and_observation_none(self, runner, mock_db_session, mocker):
         thought = mocker.MagicMock(
             tool="tool1",
             tool_input=None,

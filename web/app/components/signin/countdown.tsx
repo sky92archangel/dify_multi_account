@@ -41,15 +41,7 @@ export default function Countdown({ onResend }: CountdownProps) {
         </span>
       )}
       {
-        time <= 0 && (
-          <button
-            type="button"
-            className="cursor-pointer border-none bg-transparent p-0 text-left system-xs-medium text-text-accent-secondary focus-visible:ring-1 focus-visible:ring-components-input-border-active focus-visible:outline-hidden"
-            onClick={resend}
-          >
-            {t('checkCode.resend', { ns: 'login' })}
-          </button>
-        )
+        time <= 0 && <span className="cursor-pointer system-xs-medium text-text-accent-secondary" onClick={resend}>{t('checkCode.resend', { ns: 'login' })}</span>
       }
     </p>
   )

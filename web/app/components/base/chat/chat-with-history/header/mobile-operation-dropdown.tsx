@@ -32,16 +32,13 @@ const MobileOperationDropdown = ({
       onOpenChange={setOpen}
     >
       <DropdownMenuTrigger
-        render={(
-          <ActionButton
-            aria-label={t('operation.more', { ns: 'common' })}
-            size="l"
-            state={open ? ActionButtonState.Hover : ActionButtonState.Default}
-          >
-            <div className="i-ri-more-fill h-[18px] w-[18px]" aria-hidden="true" />
-          </ActionButton>
-        )}
-      />
+        render={<div />}
+        data-testid="mobile-more-btn"
+      >
+        <ActionButton size="l" state={open ? ActionButtonState.Hover : ActionButtonState.Default}>
+          <div className="i-ri-more-fill h-[18px] w-[18px]" />
+        </ActionButton>
+      </DropdownMenuTrigger>
       <DropdownMenuContent
         placement="bottom-end"
         sideOffset={4}

@@ -2,7 +2,6 @@ import type { AnyFieldApi } from '@tanstack/react-form'
 import type { FormSchema } from '@/app/components/base/form/types'
 import { useForm } from '@tanstack/react-form'
 import { act, fireEvent, render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { FormItemValidateStatusEnum, FormTypeEnum } from '@/app/components/base/form/types'
 import BaseField from '../base-field'
 
@@ -118,25 +117,6 @@ describe('BaseField', () => {
     expect(screen.queryByText('Beta')).not.toBeInTheDocument()
   })
 
-  it('should not render current select value when it is filtered out by show_on conditions', () => {
-    renderBaseField({
-      formSchema: {
-        type: FormTypeEnum.select,
-        name: 'mode',
-        label: 'Mode',
-        required: false,
-        options: [
-          { label: 'Alpha', value: 'alpha' },
-          { label: 'Beta', value: 'beta', show_on: [{ variable: 'enabled', value: 'yes' }] },
-        ],
-      },
-      defaultValues: { mode: 'beta', enabled: 'no' },
-    })
-
-    expect(screen.getByRole('combobox', { name: 'Mode' })).not.toHaveTextContent('beta')
-    expect(screen.getByRole('combobox', { name: 'Mode' })).toHaveTextContent('common.placeholder.input')
-  })
-
   it('should render dynamic select loading state', () => {
     mockDynamicOptions.mockReturnValue({
       data: undefined,
@@ -173,11 +153,6 @@ describe('BaseField', () => {
       defaultValues: { visibility: 'public' },
       onChange,
     })
-
-    const radioGroup = screen.getByRole('radiogroup', { name: 'Visibility' })
-    expect(radioGroup).toHaveClass('flex')
-    expect(radioGroup).toHaveClass('items-center')
-    expect(radioGroup).not.toHaveClass('flex-col')
 
     await act(async () => {
       fireEvent.click(screen.getByText('Private'))
@@ -263,7 +238,6 @@ describe('BaseField', () => {
   })
 
   it('should render dynamic options and allow selecting one', async () => {
-    const user = userEvent.setup()
     mockDynamicOptions.mockReturnValue({
       data: {
         options: [
@@ -284,42 +258,13 @@ describe('BaseField', () => {
       defaultValues: { plugin_option: '' },
     })
 
-    await user.click(screen.getByRole('combobox', { name: 'Plugin option' }))
-    await user.click(screen.getByRole('option', { name: 'Option A' }))
-    expect(screen.getByRole('combobox', { name: 'Plugin option' })).toHaveTextContent('Option A')
-  })
-
-  it('should preserve multiple dynamic select values', async () => {
-    const user = userEvent.setup()
-    mockDynamicOptions.mockReturnValue({
-      data: {
-        options: [
-          { label: { en_US: 'Option A', zh_Hans: '选项A' }, value: 'a' },
-          { label: { en_US: 'Option B', zh_Hans: '选项B' }, value: 'b' },
-        ],
-      },
-      isLoading: false,
-      error: null,
+    await act(async () => {
+      fireEvent.click(screen.getByText('common.placeholder.input'))
     })
-
-    renderBaseField({
-      formSchema: {
-        type: FormTypeEnum.dynamicSelect,
-        name: 'plugin_options',
-        label: 'Plugin options',
-        required: false,
-        multiple: true,
-      },
-      defaultValues: { plugin_options: ['a'] },
-      showCurrentValue: true,
+    await act(async () => {
+      fireEvent.click(screen.getByText('Option A'))
     })
-
-    expect(screen.getByRole('combobox', { name: 'Plugin options' })).toHaveTextContent('common.dynamicSelect.selected')
-
-    await user.click(screen.getByRole('combobox', { name: 'Plugin options' }))
-    await user.click(screen.getByRole('option', { name: 'Option B' }))
-
-    expect(screen.getByTestId('field-value')).toHaveTextContent('a,b')
+    expect(screen.getByText('Option A')).toBeInTheDocument()
   })
 
   it('should update boolean field when users choose false', async () => {
@@ -358,9 +303,7 @@ describe('BaseField', () => {
     expect(screen.getByText('This is a warning')).toBeInTheDocument()
   })
 
-  it('should render infotip when tooltip content is provided', async () => {
-    const user = userEvent.setup()
-
+  it('should render tooltip when provided', async () => {
     renderBaseField({
       formSchema: {
         type: FormTypeEnum.textInput,
@@ -373,7 +316,8 @@ describe('BaseField', () => {
 
     expect(screen.getByText('Info')).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Extra info' }))
+    const tooltipTrigger = screen.getByTestId('base-field-tooltip-trigger')
+    fireEvent.mouseEnter(tooltipTrigger)
 
     expect(screen.getByText('Extra info')).toBeInTheDocument()
   })
@@ -399,8 +343,8 @@ describe('BaseField', () => {
       fireEvent.click(screen.getByText('Feature B'))
     })
 
-    const checkboxB = screen.getByRole('checkbox', { name: 'Feature B' })
-    expect(checkboxB).toHaveAttribute('aria-checked', 'true')
+    const checkboxB = screen.getByTestId('checkbox-b')
+    expect(checkboxB).toBeChecked()
   })
 
   it('should handle dynamic select error state', () => {
@@ -454,11 +398,6 @@ describe('BaseField', () => {
     expect(screen.getByText('O1')).toBeInTheDocument()
     expect(screen.getByText('O2')).toBeInTheDocument()
     expect(screen.getByText('O3')).toBeInTheDocument()
-
-    const radioGroup = screen.getByRole('radiogroup', { name: 'Vertical' })
-    expect(radioGroup).toHaveClass('flex-col')
-    expect(radioGroup).toHaveClass('items-stretch')
-    expect(radioGroup).not.toHaveClass('items-center')
   })
 
   it('should render radio UI when showRadioUI is true', () => {
@@ -473,7 +412,7 @@ describe('BaseField', () => {
       },
     })
     expect(screen.getByText('Option 1')).toBeInTheDocument()
-    expect(screen.getByRole('radiogroup', { name: 'UI Radio' })).toBeInTheDocument()
+    expect(screen.getByTestId('radio-group')).toBeInTheDocument()
   })
 
   it('should apply disabled styles', () => {

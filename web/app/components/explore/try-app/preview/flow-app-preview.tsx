@@ -27,7 +27,7 @@ const FlowAppPreview: FC<Props> = ({
   if (!data)
     return null
   return (
-    <div className="size-full">
+    <div className="h-full w-full">
       <WorkflowPreview
         {...data.graph}
         className={cn(className)}

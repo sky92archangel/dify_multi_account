@@ -53,13 +53,25 @@ vi.mock('@/next/navigation', () => ({
   }),
 }))
 
-vi.mock('@tanstack/react-query', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@tanstack/react-query')>()
+// Mock headless UI Popover so it renders content without transition
+vi.mock('@headlessui/react', async () => {
+  const actual = await vi.importActual<typeof import('@headlessui/react')>('@headlessui/react')
   return {
     ...actual,
-    useQuery: () => ({
-      data: [],
-    }),
+    Popover: ({ children, className }: { children: ((bag: { open: boolean }) => React.ReactNode) | React.ReactNode, className?: string }) => (
+      <div className={className} data-testid="popover-wrapper">
+        {typeof children === 'function' ? children({ open: true }) : children}
+      </div>
+    ),
+    PopoverButton: ({ children, className, ref: _ref, ...rest }: Record<string, unknown>) => (
+      <button className={className as string} {...rest}>{children as React.ReactNode}</button>
+    ),
+    PopoverPanel: ({ children, className }: { children: ((bag: { close: () => void }) => React.ReactNode) | React.ReactNode, className?: string }) => (
+      <div className={className}>
+        {typeof children === 'function' ? children({ close: vi.fn() }) : children}
+      </div>
+    ),
+    Transition: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   }
 })
 

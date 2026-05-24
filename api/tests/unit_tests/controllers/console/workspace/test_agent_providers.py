@@ -1,7 +1,6 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from flask import Flask
 
 from controllers.console.error import AccountNotFound
 from controllers.console.workspace.agent_providers import (
@@ -17,7 +16,7 @@ def unwrap(func):
 
 
 class TestAgentProviderListApi:
-    def test_get_success(self, app: Flask):
+    def test_get_success(self, app):
         api = AgentProviderListApi()
         method = unwrap(api.get)
 
@@ -40,7 +39,7 @@ class TestAgentProviderListApi:
 
         assert result == providers
 
-    def test_get_empty_list(self, app: Flask):
+    def test_get_empty_list(self, app):
         api = AgentProviderListApi()
         method = unwrap(api.get)
 
@@ -62,7 +61,7 @@ class TestAgentProviderListApi:
 
         assert result == []
 
-    def test_get_account_not_found(self, app: Flask):
+    def test_get_account_not_found(self, app):
         api = AgentProviderListApi()
         method = unwrap(api.get)
 
@@ -78,7 +77,7 @@ class TestAgentProviderListApi:
 
 
 class TestAgentProviderApi:
-    def test_get_success(self, app: Flask):
+    def test_get_success(self, app):
         api = AgentProviderApi()
         method = unwrap(api.get)
 
@@ -102,7 +101,7 @@ class TestAgentProviderApi:
 
         assert result == provider_data
 
-    def test_get_provider_not_found(self, app: Flask):
+    def test_get_provider_not_found(self, app):
         api = AgentProviderApi()
         method = unwrap(api.get)
 
@@ -125,7 +124,7 @@ class TestAgentProviderApi:
 
         assert result is None
 
-    def test_get_account_not_found(self, app: Flask):
+    def test_get_account_not_found(self, app):
         api = AgentProviderApi()
         method = unwrap(api.get)
 

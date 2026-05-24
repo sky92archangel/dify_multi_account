@@ -146,7 +146,7 @@ describe('useEdgesInteractions', () => {
     })
   })
 
-  it('handleEdgeContextMenu should select the clicked edge and set the edge context menu target', async () => {
+  it('handleEdgeContextMenu should select the clicked edge and open edgeMenu', async () => {
     const preventDefault = vi.fn()
     const { result, store } = renderEdgesInteractions({
       nodes: [
@@ -196,7 +196,14 @@ describe('useEdgesInteractions', () => {
       expect(result.current.nodes.every(node => !getNodeRuntimeState(node).selected && !node.selected && !getNodeRuntimeState(node)._isBundled)).toBe(true)
     })
 
-    expect(store.getState().contextMenuTarget).toEqual({ type: 'edge', edgeId: 'e2' })
+    expect(store.getState().edgeMenu).toEqual({
+      clientX: 320,
+      clientY: 180,
+      edgeId: 'e2',
+    })
+    expect(store.getState().nodeMenu).toBeUndefined()
+    expect(store.getState().panelMenu).toBeUndefined()
+    expect(store.getState().selectionMenu).toBeUndefined()
   })
 
   it('handleEdgeDelete should remove selected edge and trigger sync + history', async () => {
@@ -219,7 +226,7 @@ describe('useEdgesInteractions', () => {
         }),
       ],
       initialStoreState: {
-        contextMenuTarget: { type: 'edge', edgeId: 'e1' },
+        edgeMenu: { clientX: 320, clientY: 180, edgeId: 'e1' },
       },
     })
 
@@ -232,7 +239,7 @@ describe('useEdgesInteractions', () => {
       expect(result.current.edges[0]?.id).toBe('e2')
     })
 
-    expect(store.getState().contextMenuTarget).toBeUndefined()
+    expect(store.getState().edgeMenu).toBeUndefined()
     expect(mockSaveStateToHistory).toHaveBeenCalledWith('EdgeDelete')
   })
 
@@ -266,7 +273,7 @@ describe('useEdgesInteractions', () => {
         }),
       ],
       initialStoreState: {
-        contextMenuTarget: { type: 'edge', edgeId: 'e2' },
+        edgeMenu: { clientX: 320, clientY: 180, edgeId: 'e2' },
       },
     })
 
@@ -280,7 +287,7 @@ describe('useEdgesInteractions', () => {
       expect(result.current.edges[0]?.selected).toBe(true)
     })
 
-    expect(store.getState().contextMenuTarget).toBeUndefined()
+    expect(store.getState().edgeMenu).toBeUndefined()
     expect(mockSaveStateToHistory).toHaveBeenCalledWith('EdgeDelete')
   })
 
@@ -298,7 +305,7 @@ describe('useEdgesInteractions', () => {
   it('handleEdgeDeleteByDeleteBranch should remove edges for the given branch', async () => {
     const { result, store } = renderEdgesInteractions({
       initialStoreState: {
-        contextMenuTarget: { type: 'edge', edgeId: 'e1' },
+        edgeMenu: { clientX: 320, clientY: 180, edgeId: 'e1' },
       },
     })
 
@@ -311,7 +318,7 @@ describe('useEdgesInteractions', () => {
       expect(result.current.edges[0]?.id).toBe('e2')
     })
 
-    expect(store.getState().contextMenuTarget).toBeUndefined()
+    expect(store.getState().edgeMenu).toBeUndefined()
     expect(mockSaveStateToHistory).toHaveBeenCalledWith('EdgeDeleteByDeleteBranch')
   })
 
@@ -339,7 +346,7 @@ describe('useEdgesInteractions', () => {
     })
   })
 
-  it('handleEdgeSourceHandleChange should clear the context menu target and save history for affected edges', async () => {
+  it('handleEdgeSourceHandleChange should clear edgeMenu and save history for affected edges', async () => {
     const { result, store } = renderEdgesInteractions({
       edges: [
         createEdge({
@@ -352,7 +359,7 @@ describe('useEdgesInteractions', () => {
         }),
       ],
       initialStoreState: {
-        contextMenuTarget: { type: 'edge', edgeId: 'n1-old-handle-n2-target' },
+        edgeMenu: { clientX: 120, clientY: 60, edgeId: 'n1-old-handle-n2-target' },
       },
     })
 
@@ -364,7 +371,7 @@ describe('useEdgesInteractions', () => {
       expect(result.current.edges[0]?.sourceHandle).toBe('new-handle')
     })
 
-    expect(store.getState().contextMenuTarget).toBeUndefined()
+    expect(store.getState().edgeMenu).toBeUndefined()
     expect(mockSaveStateToHistory).toHaveBeenCalledWith('EdgeSourceHandleChange')
   })
 
@@ -438,14 +445,13 @@ describe('useEdgesInteractions', () => {
       act(() => {
         result.current.handleEdgeContextMenu({
           preventDefault: vi.fn(),
-          stopPropagation: vi.fn(),
           clientX: 200,
           clientY: 120,
         } as never, result.current.edges[0] as never)
       })
 
       expect(result.current.edges.every(edge => !edge.selected)).toBe(true)
-      expect(store.getState().contextMenuTarget).toBeUndefined()
+      expect(store.getState().edgeMenu).toBeUndefined()
     })
 
     it('handleEdgeDeleteByDeleteBranch should do nothing', () => {

@@ -87,7 +87,7 @@ describe('UserActionItem', () => {
     fireEvent.change(screen.getByTestId('nodes.humanInput.userActions.actionNamePlaceholder'), { target: { value: 'Approve action' } })
     fireEvent.change(screen.getByTestId('nodes.humanInput.userActions.actionNamePlaceholder'), { target: { value: '1invalid' } })
     fireEvent.change(screen.getByTestId('nodes.humanInput.userActions.actionNamePlaceholder'), { target: { value: 'averyveryveryverylongidentifier' } })
-    fireEvent.change(screen.getByTestId('nodes.humanInput.userActions.buttonTextPlaceholder'), { target: { value: 'card_visa_enterprise_001' } })
+    fireEvent.change(screen.getByTestId('nodes.humanInput.userActions.buttonTextPlaceholder'), { target: { value: 'A very very very long button title' } })
 
     expect(onChange).toHaveBeenNthCalledWith(1, expect.objectContaining({
       id: 'Approve_action',
@@ -96,7 +96,7 @@ describe('UserActionItem', () => {
       id: 'averyveryveryverylon',
     }))
     expect(onChange).toHaveBeenNthCalledWith(3, expect.objectContaining({
-      title: 'card_visa_enterprise_001',
+      title: 'A very very very lon',
     }))
     expect(mockNotify).toHaveBeenNthCalledWith(1, expect.objectContaining({
       type: 'error',
@@ -106,7 +106,10 @@ describe('UserActionItem', () => {
       type: 'error',
       message: 'nodes.humanInput.userActions.actionIdTooLong',
     }))
-    expect(mockNotify).toHaveBeenCalledTimes(2)
+    expect(mockNotify).toHaveBeenNthCalledWith(3, expect.objectContaining({
+      type: 'error',
+      message: 'nodes.humanInput.userActions.buttonTextTooLong',
+    }))
   })
 
   it('should support clearing ids, updating button style, deleting, and readonly mode', () => {

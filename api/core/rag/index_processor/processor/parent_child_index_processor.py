@@ -29,7 +29,6 @@ from libs import helper
 from models import Account
 from models.dataset import ChildChunk, Dataset, DatasetProcessRule, DocumentSegment
 from models.dataset import Document as DatasetDocument
-from models.enums import ProcessRuleMode
 from services.account_service import AccountService
 from services.summary_index_service import SummaryIndexService
 
@@ -326,7 +325,7 @@ class ParentChildIndexProcessor(BaseIndexProcessor):
             # update document parent mode
             dataset_process_rule = DatasetProcessRule(
                 dataset_id=dataset.id,
-                mode=ProcessRuleMode.HIERARCHICAL,
+                mode="hierarchical",
                 rules=json.dumps(
                     {
                         "parent_mode": parent_childs.parent_mode,

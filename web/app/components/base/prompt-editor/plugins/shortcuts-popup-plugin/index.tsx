@@ -23,7 +23,6 @@ import {
 import { createPortal } from 'react-dom'
 
 export const SHORTCUTS_EMPTY_CONTENT = 'shortcuts_empty_content'
-export type ShortcutPopupInsertHandler = <Payload>(command: LexicalCommand<Payload>, params: Payload) => void
 
 // Hotkey can be:
 // - string: 'mod+/'
@@ -34,7 +33,7 @@ export type Hotkey = string | string[] | string[][] | ((e: KeyboardEvent) => boo
 
 type ShortcutPopupPluginProps = {
   hotkey?: Hotkey
-  children?: React.ReactNode | ((close: () => void, onInsert: ShortcutPopupInsertHandler) => React.ReactNode)
+  children?: React.ReactNode | ((close: () => void, onInsert: (command: LexicalCommand<unknown>, params: any[]) => void) => React.ReactNode)
   className?: string
   container?: Element | null
   onOpen?: () => void
@@ -159,9 +158,8 @@ export default function ShortcutsPopupPlugin({
         apply({ availableWidth, availableHeight, elements }) {
           Object.assign(elements.floating.style, {
             maxWidth: `${Math.min(400, availableWidth)}px`,
-            maxHeight: `${Math.max(0, availableHeight)}px`,
-            overflowX: 'hidden',
-            overflowY: 'auto',
+            maxHeight: `${Math.min(300, availableHeight)}px`,
+            overflow: 'auto',
           })
         },
         padding: 8,
@@ -238,7 +236,7 @@ export default function ShortcutsPopupPlugin({
 
     setOpen(true)
     onOpen?.()
-  }, [editor, onOpen, refs])
+  }, [onOpen])
 
   const closePortal = useCallback(() => {
     setOpen(false)
@@ -282,7 +280,7 @@ export default function ShortcutsPopupPlugin({
     return () => document.removeEventListener('mousedown', onMouseDown, false)
   }, [open, closePortal])
 
-  const handleInsert = useCallback(<Payload,>(command: LexicalCommand<Payload>, params: Payload) => {
+  const handleInsert = useCallback((command: LexicalCommand<unknown>, params: any) => {
     editor.dispatchCommand(command, params)
     closePortal()
   }, [editor, closePortal])

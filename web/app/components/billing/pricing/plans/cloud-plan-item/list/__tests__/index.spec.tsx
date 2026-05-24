@@ -1,5 +1,4 @@
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import * as React from 'react'
 import { Plan } from '../../../../../type'
 import List from '../index'
@@ -13,13 +12,11 @@ describe('CloudPlanItem/List', () => {
     expect(screen.getByText('billing.plansCommon.startNodes.limited:{"count":2}')).toBeInTheDocument()
   })
 
-  it('should show professional monthly quotas and tooltips', async () => {
-    const user = userEvent.setup()
+  it('should show professional monthly quotas and tooltips', () => {
     render(<List plan={Plan.professional} />)
 
     expect(screen.getByText('billing.plansCommon.messageRequest.titlePerMonth:{"count":5000}')).toBeInTheDocument()
-    await user.hover(screen.getByRole('button', { name: 'billing.plansCommon.vectorSpaceTooltip' }))
-    expect(await screen.findByText('billing.plansCommon.vectorSpaceTooltip')).toBeInTheDocument()
+    expect(screen.getByText('billing.plansCommon.vectorSpaceTooltip')).toBeInTheDocument()
     expect(screen.getByText('billing.plansCommon.workflowExecution.faster')).toBeInTheDocument()
   })
 

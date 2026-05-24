@@ -42,16 +42,6 @@ vi.mock('@/context/provider-context', () => ({
     selector({ plan: mockPlan, enableBilling: true }),
 }))
 
-vi.mock('@/service/use-billing', () => ({
-  useCurrentPlanVectorSpace: () => ({
-    data: {
-      size: mockPlan.usage.vectorSpace,
-      limit: mockPlan.total.vectorSpace,
-    },
-    isFetching: false,
-  }),
-}))
-
 vi.mock('@/context/dataset-detail', () => ({
   useDatasetDetailContextWithSelector: (selector: (state: { dataset: { pipeline_id: string } }) => unknown) =>
     selector({ dataset: { pipeline_id: 'test-pipeline-id' } }),
@@ -120,6 +110,18 @@ vi.mock('@/next/link', () => ({
 // Mock billing components (external dependencies)
 vi.mock('@/app/components/billing/vector-space-full', () => ({
   default: () => <div data-testid="vector-space-full">Vector Space Full</div>,
+}))
+
+vi.mock('@/app/components/billing/plan-upgrade-modal', () => ({
+  default: ({ show, onClose }: { show: boolean, onClose: () => void }) => (
+    show
+      ? (
+          <div data-testid="plan-upgrade-modal">
+            <button data-testid="close-modal" onClick={onClose}>Close</button>
+          </div>
+        )
+      : null
+  ),
 }))
 
 vi.mock('@/app/components/datasets/create/step-one/upgrade-card', () => ({
@@ -1337,7 +1339,7 @@ describe('useDatasourceActions', () => {
     const { result } = renderHook(() => useDatasourceActions(params))
 
     act(() => {
-      result.current.handleSelectAll(true)
+      result.current.handleSelectAll()
     })
 
     // Verify the callback was executed (no error thrown)
@@ -1361,7 +1363,7 @@ describe('useDatasourceActions', () => {
     const { result } = renderHook(() => useDatasourceActions(params))
 
     act(() => {
-      result.current.handleSelectAll(true)
+      result.current.handleSelectAll()
     })
 
     expect(true).toBe(true)
@@ -1971,7 +1973,7 @@ describe('useDatasourceActions - Async Functions', () => {
     const { result } = renderHook(() => useDatasourceActions(params))
 
     act(() => {
-      result.current.handleSelectAll(false)
+      result.current.handleSelectAll()
     })
 
     // Should deselect all since documents.length >= allIds.length
@@ -2012,7 +2014,7 @@ describe('useDatasourceActions - Async Functions', () => {
     const { result } = renderHook(() => useDatasourceActions(params))
 
     act(() => {
-      result.current.handleSelectAll(false)
+      result.current.handleSelectAll()
     })
 
     // Should deselect all since selectedFileIds.length >= allKeys.length
@@ -2541,7 +2543,7 @@ describe('useDatasourceActions - Edge Case Branches', () => {
     const { result } = renderHook(() => useDatasourceActions(params))
 
     act(() => {
-      result.current.handleSelectAll(false)
+      result.current.handleSelectAll()
     })
 
     // Should use empty array when currentWorkspacePages is undefined

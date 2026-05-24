@@ -13,7 +13,6 @@ from controllers.console.app.wraps import get_app_model
 from controllers.console.wraps import account_initialization_required, edit_permission_required, setup_required
 from extensions.ext_database import db
 from fields.base import ResponseModel
-from libs.helper import to_timestamp
 from libs.login import current_account_with_tenant, login_required
 from models.enums import AppMCPServerStatus
 from models.model import AppMCPServer
@@ -29,6 +28,12 @@ class MCPServerUpdatePayload(BaseModel):
     description: str | None = Field(default=None, description="Server description")
     parameters: dict[str, Any] = Field(..., description="Server parameters configuration")
     status: str | None = Field(default=None, description="Server status")
+
+
+def _to_timestamp(value: datetime | int | None) -> int | None:
+    if isinstance(value, datetime):
+        return int(value.timestamp())
+    return value
 
 
 class AppMCPServerResponse(ResponseModel):
@@ -54,7 +59,7 @@ class AppMCPServerResponse(ResponseModel):
     @field_validator("created_at", "updated_at", mode="before")
     @classmethod
     def _normalize_timestamp(cls, value: datetime | int | None) -> int | None:
-        return to_timestamp(value)
+        return _to_timestamp(value)
 
 
 register_schema_models(console_ns, MCPServerCreatePayload, MCPServerUpdatePayload, AppMCPServerResponse)

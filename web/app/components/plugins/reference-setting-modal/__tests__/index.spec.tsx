@@ -14,25 +14,28 @@ const mockSystemFeatures = { enable_marketplace: true }
 const render = (ui: ReactElement) =>
   renderWithSystemFeatures(ui, { systemFeatures: mockSystemFeatures })
 
-let mockDialogOnOpenChange: ((open: boolean) => void) | undefined
-
-vi.mock('@langgenius/dify-ui/dialog', () => ({
-  Dialog: ({ children, open, onOpenChange }: {
+// Mock Modal component
+vi.mock('@/app/components/base/modal', () => ({
+  default: ({ children, isShow, onClose, closable, className }: {
     children: React.ReactNode
-    open?: boolean
-    onOpenChange?: (open: boolean) => void
+    isShow: boolean
+    onClose: () => void
+    closable?: boolean
+    className?: string
   }) => {
-    mockDialogOnOpenChange = onOpenChange
-    return open === false ? null : <>{children}</>
+    if (!isShow)
+      return null
+    return (
+      <div data-testid="modal" className={className}>
+        {closable && (
+          <button data-testid="modal-close" onClick={onClose}>
+            Close
+          </button>
+        )}
+        {children}
+      </div>
+    )
   },
-  DialogContent: ({ children, className }: { children: React.ReactNode, className?: string }) => (
-    <div data-testid="modal" className={className}>{children}</div>
-  ),
-  DialogCloseButton: () => (
-    <button data-testid="modal-close" onClick={() => mockDialogOnOpenChange?.(false)}>
-      Close
-    </button>
-  ),
 }))
 
 // Mock OptionCard component

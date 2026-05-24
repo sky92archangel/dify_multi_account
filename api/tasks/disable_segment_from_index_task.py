@@ -9,7 +9,6 @@ from core.db.session_factory import session_factory
 from core.rag.index_processor.index_processor_factory import IndexProcessorFactory
 from extensions.ext_redis import redis_client
 from models.dataset import DocumentSegment
-from models.enums import SegmentStatus
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +30,7 @@ def disable_segment_from_index_task(segment_id: str):
             logger.info(click.style(f"Segment not found: {segment_id}", fg="red"))
             return
 
-        if segment.status != SegmentStatus.COMPLETED:
+        if segment.status != "completed":
             logger.info(click.style(f"Segment is not completed, disable is not allowed: {segment_id}", fg="red"))
             return
 
@@ -60,7 +59,6 @@ def disable_segment_from_index_task(segment_id: str):
 
             index_type = dataset_document.doc_form
             index_processor = IndexProcessorFactory(index_type).init_index_processor()
-            assert segment.index_node_id
             index_processor.clean(dataset, [segment.index_node_id])
 
             # Disable summary index for this segment

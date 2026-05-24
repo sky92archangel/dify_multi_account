@@ -14,7 +14,6 @@ import type {
   WorkflowVariableBlockType,
 } from '../../types'
 import type { PickerBlockMenuOption } from './menu'
-import type { EventEmitterValue } from '@/context/event-emitter'
 import {
   flip,
   offset,
@@ -40,7 +39,7 @@ import {
 } from 'react'
 import ReactDOM from 'react-dom'
 import { GeneratorType } from '@/app/components/app/configuration/config/automatic/types'
-import VarReferenceVars, { VAR_REFERENCE_CHILD_POPUP_CLASS_NAME } from '@/app/components/workflow/nodes/_base/components/variable/var-reference-vars'
+import VarReferenceVars from '@/app/components/workflow/nodes/_base/components/variable/var-reference-vars'
 import { useEventEmitterContextContext } from '@/context/event-emitter'
 import { useBasicTypeaheadTriggerMatch } from '../../hooks'
 import { $splitNodeContainingQuery } from '../../utils'
@@ -120,9 +119,7 @@ const ComponentPicker = ({
         (event) => {
           clearBlurTimer()
           const target = event?.relatedTarget as HTMLElement
-          const isVariableMenuTarget = target?.classList?.contains('var-search-input')
-            || target?.closest?.(`.${VAR_REFERENCE_CHILD_POPUP_CLASS_NAME}`)
-          if (!isVariableMenuTarget)
+          if (!target?.classList?.contains('var-search-input'))
             blurTimerRef.current = setTimeout(() => setBlurHidden(true), 200)
           return false
         },
@@ -146,8 +143,8 @@ const ComponentPicker = ({
     }
   }, [editor, clearBlurTimer])
 
-  eventEmitter?.useSubscription((v: EventEmitterValue) => {
-    if (typeof v !== 'string' && v.type === INSERT_VARIABLE_VALUE_BLOCK_COMMAND && typeof v.payload === 'string')
+  eventEmitter?.useSubscription((v: any) => {
+    if (v.type === INSERT_VARIABLE_VALUE_BLOCK_COMMAND)
       editor.dispatchCommand(INSERT_VARIABLE_VALUE_BLOCK_COMMAND, `{{${v.payload}}}`)
   })
 
@@ -238,7 +235,7 @@ const ComponentPicker = ({
             // The `LexicalMenu` will try to calculate the position of the floating menu based on the first child.
             // Since we use floating ui, we need to wrap it with a div to prevent the position calculation being affected.
             // See https://github.com/facebook/lexical/blob/ac97dfa9e14a73ea2d6934ff566282d7f758e8bb/packages/lexical-react/src/shared/LexicalMenu.ts#L493
-            <div className="size-0">
+            <div className="h-0 w-0">
               <div
                 className="w-[260px] rounded-lg border-[0.5px] border-components-panel-border bg-components-panel-bg-blur p-1 shadow-lg"
                 style={{
@@ -306,7 +303,7 @@ const ComponentPicker = ({
         }
       </>
     )
-  }, [blurHidden, allFlattenOptions.length, workflowVariableBlock?.show, floatingStyles, isPositioned, refs, workflowVariableOptions, isSupportFileVar, handleClose, currentBlock?.generatorType, handleSelectWorkflowVariable, queryString, triggerString, workflowVariableBlock?.showManageInputField, workflowVariableBlock?.onManageInputField])
+  }, [blurHidden, allFlattenOptions.length, workflowVariableBlock?.show, floatingStyles, isPositioned, refs, workflowVariableOptions, isSupportFileVar, handleClose, currentBlock?.generatorType, handleSelectWorkflowVariable, queryString, workflowVariableBlock?.showManageInputField, workflowVariableBlock?.onManageInputField])
 
   return (
     <LexicalTypeaheadMenuPlugin

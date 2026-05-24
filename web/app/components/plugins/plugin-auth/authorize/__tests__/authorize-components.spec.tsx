@@ -440,7 +440,7 @@ describe('AddOAuthButton', () => {
         { wrapper: createWrapper() },
       )
 
-      expect(screen.getByText('use oauth').closest('.custom-class')).toBeInTheDocument()
+      expect(screen.getByRole('button').className).toContain('custom-class')
     })
 
     it('should use oAuthData prop when provided', () => {
@@ -580,7 +580,8 @@ describe('AddOAuthButton', () => {
 
       render(<AddOAuthButton pluginPayload={pluginPayload} />, { wrapper: createWrapper() })
 
-      const settingsButton = screen.getByRole('button', { name: /plugin\.auth\.oauthClientSettings/i })
+      // Click the settings icon using data-testid for reliable selection
+      const settingsButton = screen.getByTestId('oauth-settings-button')
       fireEvent.click(settingsButton)
 
       await waitFor(() => {
@@ -668,7 +669,11 @@ describe('AddOAuthButton', () => {
 
       render(<AddOAuthButton pluginPayload={pluginPayload} />, { wrapper: createWrapper() })
 
-      fireEvent.click(screen.getByRole('button', { name: /plugin\.auth\.oauthClientSettings/i }))
+      // Open settings by clicking the gear icon
+      const button = screen.getByRole('button')
+      const gearIconContainer = button.querySelector('[class*="shrink-0"][class*="w-8"]')
+      if (gearIconContainer)
+        fireEvent.click(gearIconContainer)
 
       await waitFor(() => {
         expect(screen.getByText('plugin.auth.oauthClientSettings')).toBeInTheDocument()
@@ -701,7 +706,11 @@ describe('AddOAuthButton', () => {
 
       render(<AddOAuthButton pluginPayload={pluginPayload} />, { wrapper: createWrapper() })
 
-      fireEvent.click(screen.getByRole('button', { name: /plugin\.auth\.oauthClientSettings/i }))
+      // Click the settings icon
+      const button = screen.getByRole('button')
+      const gearIconContainer = button.querySelector('[class*="shrink-0"][class*="w-8"]')
+      if (gearIconContainer)
+        fireEvent.click(gearIconContainer)
 
       await waitFor(() => {
         // OAuthClientSettings modal should open

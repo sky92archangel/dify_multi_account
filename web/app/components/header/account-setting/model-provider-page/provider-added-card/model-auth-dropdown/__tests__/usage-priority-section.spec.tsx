@@ -4,8 +4,6 @@ import UsagePrioritySection from '../usage-priority-section'
 
 describe('UsagePrioritySection', () => {
   const onSelect = vi.fn()
-  const getAiCreditsButton = () => screen.getByRole('button', { name: /aiCreditsOption/ })
-  const getApiKeyButton = () => screen.getByRole('button', { name: /apiKeyOption/ })
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -17,8 +15,7 @@ describe('UsagePrioritySection', () => {
       render(<UsagePrioritySection value="credits" onSelect={onSelect} />)
 
       expect(screen.getByText(/usagePriority/))!.toBeInTheDocument()
-      expect(getAiCreditsButton()).toBeInTheDocument()
-      expect(getApiKeyButton()).toBeInTheDocument()
+      expect(screen.getAllByRole('button')).toHaveLength(2)
     })
   })
 
@@ -27,21 +24,24 @@ describe('UsagePrioritySection', () => {
     it('should highlight AI credits option when value is credits', () => {
       render(<UsagePrioritySection value="credits" onSelect={onSelect} />)
 
-      expect(getAiCreditsButton()).toHaveAttribute('aria-pressed', 'true')
-      expect(getApiKeyButton()).toHaveAttribute('aria-pressed', 'false')
+      const buttons = screen.getAllByRole('button')
+      expect(buttons[0]!.className).toContain('border-components-option-card-option-selected-border')
+      expect(buttons[1]!.className).not.toContain('border-components-option-card-option-selected-border')
     })
 
     it('should highlight API key option when value is apiKey', () => {
       render(<UsagePrioritySection value="apiKey" onSelect={onSelect} />)
 
-      expect(getAiCreditsButton()).toHaveAttribute('aria-pressed', 'false')
-      expect(getApiKeyButton()).toHaveAttribute('aria-pressed', 'true')
+      const buttons = screen.getAllByRole('button')
+      expect(buttons[0]!.className).not.toContain('border-components-option-card-option-selected-border')
+      expect(buttons[1]!.className).toContain('border-components-option-card-option-selected-border')
     })
 
     it('should highlight API key option when value is apiKeyOnly', () => {
       render(<UsagePrioritySection value="apiKeyOnly" onSelect={onSelect} />)
 
-      expect(getApiKeyButton()).toHaveAttribute('aria-pressed', 'true')
+      const buttons = screen.getAllByRole('button')
+      expect(buttons[1]!.className).toContain('border-components-option-card-option-selected-border')
     })
   })
 
@@ -50,7 +50,7 @@ describe('UsagePrioritySection', () => {
     it('should call onSelect with system when clicking AI credits option', () => {
       render(<UsagePrioritySection value="apiKey" onSelect={onSelect} />)
 
-      fireEvent.click(getAiCreditsButton())
+      fireEvent.click(screen.getAllByRole('button')[0]!)
 
       expect(onSelect).toHaveBeenCalledWith(PreferredProviderTypeEnum.system)
     })
@@ -58,7 +58,7 @@ describe('UsagePrioritySection', () => {
     it('should call onSelect with custom when clicking API key option', () => {
       render(<UsagePrioritySection value="credits" onSelect={onSelect} />)
 
-      fireEvent.click(getApiKeyButton())
+      fireEvent.click(screen.getAllByRole('button')[1]!)
 
       expect(onSelect).toHaveBeenCalledWith(PreferredProviderTypeEnum.custom)
     })

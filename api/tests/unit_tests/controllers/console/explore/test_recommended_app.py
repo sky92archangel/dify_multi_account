@@ -1,7 +1,5 @@
 from unittest.mock import MagicMock, patch
 
-from flask import Flask
-
 import controllers.console.explore.recommended_app as module
 from models.model import AppMode, IconType
 
@@ -13,7 +11,7 @@ def unwrap(func):
 
 
 class TestRecommendedAppListApi:
-    def test_get_with_language_param(self, app: Flask):
+    def test_get_with_language_param(self, app):
         api = module.RecommendedAppListApi()
         method = unwrap(api.get)
 
@@ -33,7 +31,7 @@ class TestRecommendedAppListApi:
         service_mock.assert_called_once_with("en-US")
         assert result == result_data
 
-    def test_get_fallback_to_user_language(self, app: Flask):
+    def test_get_fallback_to_user_language(self, app):
         api = module.RecommendedAppListApi()
         method = unwrap(api.get)
 
@@ -53,7 +51,7 @@ class TestRecommendedAppListApi:
         service_mock.assert_called_once_with("fr-FR")
         assert result == result_data
 
-    def test_get_fallback_to_default_language(self, app: Flask):
+    def test_get_fallback_to_default_language(self, app):
         api = module.RecommendedAppListApi()
         method = unwrap(api.get)
 
@@ -75,7 +73,7 @@ class TestRecommendedAppListApi:
 
 
 class TestRecommendedAppApi:
-    def test_get_success(self, app: Flask):
+    def test_get_success(self, app):
         api = module.RecommendedAppApi()
         method = unwrap(api.get)
 
@@ -126,7 +124,7 @@ class TestRecommendedAppResponseModels:
                         },
                         "app_id": "app-1",
                         "description": "desc",
-                        "categories": ["cat", "other"],
+                        "category": "cat",
                         "position": 1,
                         "is_listed": True,
                         "can_trial": False,
@@ -137,5 +135,4 @@ class TestRecommendedAppResponseModels:
         ).model_dump(mode="json")
 
         assert response["recommended_apps"][0]["app_id"] == "app-1"
-        assert response["recommended_apps"][0]["categories"] == ["cat", "other"]
         assert response["categories"] == ["cat"]

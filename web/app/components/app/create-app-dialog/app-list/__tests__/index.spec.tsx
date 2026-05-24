@@ -115,7 +115,7 @@ vi.mock('@/next/navigation', () => ({
 
 const createAppEntry = (name: string, category: string) => ({
   app_id: name,
-  categories: [category],
+  category,
   app: {
     id: name,
     name,
@@ -247,9 +247,7 @@ describe('Apps', () => {
     })
 
     expect(mockTrackCreateApp).toHaveBeenCalledWith({
-      source: 'studio_template_list',
       appMode: AppModeEnum.CHAT,
-      templateId: 'Alpha',
     })
     expect(mockToastSuccess).toHaveBeenCalledWith('app.newApp.appCreated')
     expect(onSuccess).toHaveBeenCalled()

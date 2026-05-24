@@ -110,9 +110,9 @@ export const useSelectOrDelete: UseSelectOrDeleteHandler = (nodeKey: string, com
   return [ref, isSelected]
 }
 
-type UseTriggerHandler = <T extends HTMLElement = HTMLDivElement>() => [RefObject<T | null>, boolean, Dispatch<SetStateAction<boolean>>]
-export const useTrigger: UseTriggerHandler = <T extends HTMLElement = HTMLDivElement>() => {
-  const triggerRef = useRef<T>(null)
+type UseTriggerHandler = () => [RefObject<HTMLDivElement | null>, boolean, Dispatch<SetStateAction<boolean>>]
+export const useTrigger: UseTriggerHandler = () => {
+  const triggerRef = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
   const handleOpen = useCallback((e: MouseEvent) => {
     e.stopPropagation()

@@ -163,8 +163,13 @@ describe('InputWithCopy component', () => {
     const mockOnChange = vi.fn()
     render(<InputWithCopy value="test value" onChange={mockOnChange} />)
 
-    const copyButton = screen.getByRole('button', { name: 'appOverview.overview.appInfo.embedded.copied' })
+    // The tooltip content should use the 'copied' translation
+    const copyButton = screen.getByRole('button')
     expect(copyButton).toBeInTheDocument()
+
+    // Verify the filled clipboard icon is rendered (not the line variant)
+    const filledIcon = screen.getByTestId('copied-icon')
+    expect(filledIcon).toBeInTheDocument()
   })
 
   it('shows copy tooltip text when copied state is false', () => {
@@ -172,16 +177,20 @@ describe('InputWithCopy component', () => {
     const mockOnChange = vi.fn()
     render(<InputWithCopy value="test value" onChange={mockOnChange} />)
 
-    const copyButton = screen.getByRole('button', { name: 'appOverview.overview.appInfo.embedded.copy' })
+    const copyButton = screen.getByRole('button')
     expect(copyButton).toBeInTheDocument()
+
+    const lineIcon = screen.getByTestId('copy-icon')
+    expect(lineIcon).toBeInTheDocument()
   })
 
   it('calls reset on mouse leave from copy button wrapper', () => {
     const mockOnChange = vi.fn()
     render(<InputWithCopy value="test value" onChange={mockOnChange} />)
 
-    const copyButton = screen.getByRole('button')
-    fireEvent.mouseLeave(copyButton)
+    const wrapper = screen.getByTestId('copy-button-wrapper')
+    expect(wrapper).toBeInTheDocument()
+    fireEvent.mouseLeave(wrapper)
 
     expect(mockReset).toHaveBeenCalled()
   })

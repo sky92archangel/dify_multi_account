@@ -9,7 +9,6 @@ from sqlalchemy import select
 
 from core.app.file_access import DatabaseFileAccessController
 from core.db.session_factory import session_factory
-from core.helper.trace_id_helper import ParentTraceContext, extract_parent_trace_context_from_args
 from core.tools.__base.tool import Tool
 from core.tools.__base.tool_runtime import ToolRuntime
 from core.tools.entities.tool_entities import (
@@ -37,8 +36,6 @@ class WorkflowTool(Tool):
     Workflow tool.
     """
 
-    _parent_trace_context: ParentTraceContext | None
-
     def __init__(
         self,
         workflow_app_id: str,
@@ -57,7 +54,6 @@ class WorkflowTool(Tool):
         self.workflow_call_depth = workflow_call_depth
         self.label = label
         self._latest_usage = LLMUsage.empty_usage()
-        self._parent_trace_context = None
 
         super().__init__(entity=entity, runtime=runtime)
 
@@ -98,17 +94,11 @@ class WorkflowTool(Tool):
 
         self._latest_usage = LLMUsage.empty_usage()
 
-        generator_args: dict[str, Any] = {"inputs": tool_parameters, "files": files}
-        if self._parent_trace_context:
-            generator_args.update(
-                extract_parent_trace_context_from_args({"parent_trace_context": self._parent_trace_context})
-            )
-
         result = generator.generate(
             app_model=app,
             workflow=workflow,
             user=user,
-            args=generator_args,
+            args={"inputs": tool_parameters, "files": files},
             invoke_from=self.runtime.invoke_from,
             streaming=False,
             call_depth=self.workflow_call_depth + 1,
@@ -204,7 +194,7 @@ class WorkflowTool(Tool):
 
         :return: the new tool
         """
-        forked = self.__class__(
+        return self.__class__(
             entity=self.entity.model_copy(),
             runtime=runtime,
             workflow_app_id=self.workflow_app_id,
@@ -214,24 +204,6 @@ class WorkflowTool(Tool):
             version=self.version,
             label=self.label,
         )
-        forked._parent_trace_context = self._parent_trace_context.model_copy() if self._parent_trace_context else None
-        return forked
-
-    def set_parent_trace_context(
-        self,
-        *,
-        parent_workflow_run_id: str,
-        parent_node_execution_id: str,
-    ) -> None:
-        """Attach outer workflow trace context without exposing it as tool input."""
-        self._parent_trace_context = ParentTraceContext(
-            parent_workflow_run_id=parent_workflow_run_id,
-            parent_node_execution_id=parent_node_execution_id,
-        )
-
-    def clear_parent_trace_context(self) -> None:
-        """Remove parent trace context before invoking this tool outside a nested workflow."""
-        self._parent_trace_context = None
 
     def _resolve_user(self, user_id: str) -> Account | EndUser | None:
         """

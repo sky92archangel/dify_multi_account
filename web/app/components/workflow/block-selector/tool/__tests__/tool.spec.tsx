@@ -1,4 +1,3 @@
-import { createPreviewCardHandle } from '@langgenius/dify-ui/preview-card'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { trackEvent } from '@/app/components/base/amplitude'
@@ -52,7 +51,6 @@ describe('Tool', () => {
             createTool('tool-b', 'Tool B'),
           ],
         })}
-        previewCardHandle={createPreviewCardHandle()}
         viewType={ViewType.flat}
         hasSearchText={false}
         onSelect={onSelect}
@@ -84,7 +82,6 @@ describe('Tool', () => {
           type: CollectionType.workflow,
           tools: [createTool('workflow-tool', 'Workflow Tool')],
         })}
-        previewCardHandle={createPreviewCardHandle()}
         viewType={ViewType.flat}
         hasSearchText={false}
         onSelect={onSelect}

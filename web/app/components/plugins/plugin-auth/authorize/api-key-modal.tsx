@@ -19,6 +19,7 @@ import AuthForm from '@/app/components/base/form/form-scenarios/auth'
 import { FormTypeEnum } from '@/app/components/base/form/types'
 import Loading from '@/app/components/base/loading'
 import { ReadmeEntrance } from '../../readme-panel/entrance'
+import { ReadmeShowType } from '../../readme-panel/store'
 import {
   useAddPluginCredentialHook,
   useGetPluginCredentialSchemaHook,
@@ -152,12 +153,13 @@ const ApiKeyModal = ({
               {t('auth.useApiAuthDesc', { ns: 'plugin' })}
             </div>
             <DialogCloseButton
-              className="top-5 right-5 size-8 rounded-lg"
+              data-testid="modal-close"
+              className="top-5 right-5 h-8 w-8 rounded-lg"
             />
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto px-6 py-3">
             {pluginPayload.detail && (
-              <ReadmeEntrance pluginDetail={pluginPayload.detail} presentation="dialog" />
+              <ReadmeEntrance pluginDetail={pluginPayload.detail} showType={ReadmeShowType.modal} />
             )}
             {
               isLoading && (

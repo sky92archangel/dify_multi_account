@@ -46,7 +46,7 @@ const SupportVarInput: FC<Props> = ({
   return (
     <div
       className={
-        cn(wrapClassName, 'flex size-full')
+        cn(wrapClassName, 'flex h-full w-full')
       }
       onClick={onFocus}
     >

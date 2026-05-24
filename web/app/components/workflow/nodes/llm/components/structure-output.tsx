@@ -1,12 +1,16 @@
 'use client'
+import type { FC } from 'react'
 import type { SchemaRoot, StructuredOutput } from '../types'
 import { Button } from '@langgenius/dify-ui/button'
 import { cn } from '@langgenius/dify-ui/cn'
+import { RiEditLine } from '@remixicon/react'
 import { useBoolean } from 'ahooks'
+import * as React from 'react'
+import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import ShowPanel from '@/app/components/workflow/nodes/_base/components/variable/object-child-tree-panel/show'
 import { Type } from '../types'
-import { JsonSchemaConfigModal } from './json-schema-config-modal'
+import JsonSchemaConfigModal from './json-schema-config-modal'
 
 type Props = {
   className?: string
@@ -14,23 +18,22 @@ type Props = {
   onChange: (value: StructuredOutput) => void
 }
 
-export function StructureOutput({
+const StructureOutput: FC<Props> = ({
   className,
   value,
   onChange,
-}: Props) {
+}) => {
   const { t } = useTranslation()
   const [showConfig, {
     setTrue: showConfigModal,
     setFalse: hideConfigModal,
   }] = useBoolean(false)
 
-  function handleChange(value: SchemaRoot) {
+  const handleChange = useCallback((value: SchemaRoot) => {
     onChange({
       schema: value,
     })
-  }
-
+  }, [onChange])
   return (
     <div className={cn(className)}>
       <div className="flex justify-between">
@@ -44,7 +47,7 @@ export function StructureOutput({
           className="flex"
           onClick={showConfigModal}
         >
-          <i className="mr-1 i-ri-edit-line size-3.5" aria-hidden="true" />
+          <RiEditLine className="mr-1 size-3.5" />
           <div className="system-xs-medium text-components-button-secondary-text">{t('structOutput.configure', { ns: 'app' })}</div>
         </Button>
       </div>
@@ -55,13 +58,7 @@ export function StructureOutput({
             />
           )
         : (
-            <button
-              type="button"
-              className="mt-1.5 flex h-10 w-full cursor-pointer items-center justify-center rounded-[10px] bg-background-section system-xs-regular text-text-tertiary"
-              onClick={showConfigModal}
-            >
-              {t('structOutput.notConfiguredTip', { ns: 'app' })}
-            </button>
+            <div className="mt-1.5 flex h-10 cursor-pointer items-center justify-center rounded-[10px] bg-background-section system-xs-regular text-text-tertiary" onClick={showConfigModal}>{t('structOutput.notConfiguredTip', { ns: 'app' })}</div>
           )}
 
       {showConfig && (
@@ -80,3 +77,4 @@ export function StructureOutput({
     </div>
   )
 }
+export default React.memo(StructureOutput)

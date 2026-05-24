@@ -189,8 +189,11 @@ describe('FileList', () => {
 
         render(<FileList {...props} />)
 
-        expect(screen.getByRole('checkbox', { name: 'file1.txt' })).toHaveAttribute('aria-checked', 'true')
-        expect(screen.getByRole('checkbox', { name: 'file2.txt' })).toHaveAttribute('aria-checked', 'false')
+        // Assert - The checkbox for file-1 should be checked (check icon present)
+        expect(screen.getByTestId('checkbox-file-1')).toBeInTheDocument()
+        expect(screen.getByTestId('check-icon-file-1')).toBeInTheDocument()
+        expect(screen.getByTestId('checkbox-file-2')).toBeInTheDocument()
+        expect(screen.queryByTestId('check-icon-file-2')).not.toBeInTheDocument()
       })
     })
 
@@ -233,7 +236,8 @@ describe('FileList', () => {
 
         render(<FileList {...props} />)
 
-        expect(screen.getByRole('checkbox', { name: 'file1.txt' })).toBeInTheDocument()
+        // Assert - Checkbox component has data-testid="checkbox-{id}"
+        expect(screen.getByTestId('checkbox-file-1')).toBeInTheDocument()
       })
 
       it('should render radio buttons when supportBatchUpload is false', () => {
@@ -245,7 +249,7 @@ describe('FileList', () => {
         // Assert - Radio is rendered as a div with rounded-full class
         expect(container.querySelector('.rounded-full')).toBeInTheDocument()
         // And checkbox should not be present
-        expect(screen.queryByRole('checkbox', { name: 'file1.txt' })).not.toBeInTheDocument()
+        expect(screen.queryByTestId('checkbox-file-1')).not.toBeInTheDocument()
       })
     })
   })
@@ -333,7 +337,7 @@ describe('FileList', () => {
         render(<FileList {...props} />)
 
         // Act - Click the clear icon div (it contains RiCloseCircleFill icon)
-        const clearButton = screen.getByRole('button', { name: 'common.operation.clear' })
+        const clearButton = screen.getByTestId('input-clear')
         expect(clearButton).toBeInTheDocument()
         fireEvent.click(clearButton!)
 
@@ -347,7 +351,7 @@ describe('FileList', () => {
         fireEvent.change(input, { target: { value: 'some-search' } })
 
         // Act - Find and click the clear icon
-        const clearButton = screen.getByRole('button', { name: 'common.operation.clear' })
+        const clearButton = screen.getByTestId('input-clear')
         expect(clearButton).toBeInTheDocument()
         fireEvent.click(clearButton!)
 

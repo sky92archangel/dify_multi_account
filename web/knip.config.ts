@@ -8,7 +8,6 @@ const config: KnipConfig = {
     'scripts/**/*.{js,ts,mjs}',
     'bin/**/*.{js,ts,mjs}',
     'tsslint.config.ts',
-    'dev-proxy.config.ts',
   ],
   ignore: [
     'public/**',

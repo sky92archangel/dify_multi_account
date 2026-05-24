@@ -10,6 +10,7 @@ import {
 import {
   Fragment,
   memo,
+  useState,
 } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -17,18 +18,16 @@ import {
   useViewport,
 } from 'reactflow'
 import TipPopup from '@/app/components/workflow/operator/tip-popup'
-import { ShortcutKbd } from '@/app/components/workflow/shortcuts/shortcut-kbd'
+import ShortcutsName from '@/app/components/workflow/shortcuts-name'
 
-const ZoomType = {
-  zoomToFit: 'zoomToFit',
-  zoomTo25: 'zoomTo25',
-  zoomTo50: 'zoomTo50',
-  zoomTo75: 'zoomTo75',
-  zoomTo100: 'zoomTo100',
-  zoomTo200: 'zoomTo200',
-} as const
-
-type ZoomType = typeof ZoomType[keyof typeof ZoomType]
+enum ZoomType {
+  zoomToFit = 'zoomToFit',
+  zoomTo25 = 'zoomTo25',
+  zoomTo50 = 'zoomTo50',
+  zoomTo75 = 'zoomTo75',
+  zoomTo100 = 'zoomTo100',
+  zoomTo200 = 'zoomTo200',
+}
 
 const ZoomInOut: FC = () => {
   const { t } = useTranslation()
@@ -39,6 +38,7 @@ const ZoomInOut: FC = () => {
     fitView,
   } = useReactFlow()
   const { zoom } = useViewport()
+  const [open, setOpen] = useState(false)
 
   const zoomOptions = [
     [
@@ -71,7 +71,9 @@ const ZoomInOut: FC = () => {
     ],
   ]
 
-  const handleZoom = (type: ZoomType) => {
+  const handleZoom = (type: string) => {
+    setOpen(false)
+
     if (type === ZoomType.zoomToFit)
       fitView()
 
@@ -102,13 +104,10 @@ const ZoomInOut: FC = () => {
       <div className="flex h-8 w-[98px] items-center justify-between rounded-lg">
         <TipPopup
           title={t('operator.zoomOut', { ns: 'workflow' })}
-          shortcut="workflow.zoom-out"
+          shortcuts={['ctrl', '-']}
         >
-          <button
-            type="button"
-            aria-label={t('operator.zoomOut', { ns: 'workflow' })}
-            disabled={zoom <= 0.25}
-            className={`flex size-8 items-center justify-center rounded-lg ${zoom <= 0.25 ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-black/5'}`}
+          <div
+            className={`flex h-8 w-8 items-center justify-center rounded-lg ${zoom <= 0.25 ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-black/5'}`}
             onClick={(e) => {
               if (zoom <= 0.25)
                 return
@@ -117,11 +116,14 @@ const ZoomInOut: FC = () => {
               zoomOut()
             }}
           >
-            <span aria-hidden className="i-ri-zoom-out-line size-4 text-text-tertiary hover:text-text-secondary" />
-          </button>
+            <span aria-hidden className="i-ri-zoom-out-line h-4 w-4 text-text-tertiary hover:text-text-secondary" />
+          </div>
         </TipPopup>
-        <DropdownMenu>
-          <DropdownMenuTrigger className="flex h-8 w-[34px] items-center justify-center rounded-lg system-sm-medium text-text-tertiary hover:bg-black/5 hover:text-text-secondary data-popup-open:bg-black/5 data-popup-open:text-text-secondary">
+        <DropdownMenu
+          open={open}
+          onOpenChange={setOpen}
+        >
+          <DropdownMenuTrigger className={cn('flex h-8 w-[34px] items-center justify-center rounded-lg system-sm-medium text-text-tertiary hover:bg-black/5 hover:text-text-secondary', open && 'bg-black/5 text-text-secondary')}>
             {Number.parseFloat(`${zoom * 100}`).toFixed(0)}
             %
           </DropdownMenuTrigger>
@@ -147,13 +149,13 @@ const ZoomInOut: FC = () => {
                         <span>{option.text}</span>
                         <div className="flex items-center space-x-0.5">
                           {option.key === ZoomType.zoomToFit && (
-                            <ShortcutKbd shortcut="workflow.zoom-to-fit" />
+                            <ShortcutsName keys={['ctrl', '1']} />
                           )}
                           {option.key === ZoomType.zoomTo50 && (
-                            <ShortcutKbd shortcut="workflow.zoom-to-50" />
+                            <ShortcutsName keys={['shift', '5']} />
                           )}
                           {option.key === ZoomType.zoomTo100 && (
-                            <ShortcutKbd shortcut="workflow.zoom-to-100" />
+                            <ShortcutsName keys={['shift', '1']} />
                           )}
                         </div>
                       </DropdownMenuItem>
@@ -166,13 +168,10 @@ const ZoomInOut: FC = () => {
         </DropdownMenu>
         <TipPopup
           title={t('operator.zoomIn', { ns: 'workflow' })}
-          shortcut="workflow.zoom-in"
+          shortcuts={['ctrl', '+']}
         >
-          <button
-            type="button"
-            aria-label={t('operator.zoomIn', { ns: 'workflow' })}
-            disabled={zoom >= 2}
-            className={`flex size-8 items-center justify-center rounded-lg ${zoom >= 2 ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-black/5'}`}
+          <div
+            className={`flex h-8 w-8 items-center justify-center rounded-lg ${zoom >= 2 ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-black/5'}`}
             onClick={(e) => {
               if (zoom >= 2)
                 return
@@ -181,8 +180,8 @@ const ZoomInOut: FC = () => {
               zoomIn()
             }}
           >
-            <span aria-hidden className="i-ri-zoom-in-line size-4 text-text-tertiary hover:text-text-secondary" />
-          </button>
+            <span aria-hidden className="i-ri-zoom-in-line h-4 w-4 text-text-tertiary hover:text-text-secondary" />
+          </div>
         </TipPopup>
       </div>
     </div>

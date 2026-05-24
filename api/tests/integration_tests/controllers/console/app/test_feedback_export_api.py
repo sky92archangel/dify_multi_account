@@ -14,7 +14,7 @@ from controllers.console.app import wraps
 from libs.datetime_utils import naive_utc_now
 from models import App, Tenant
 from models.account import Account, TenantAccountJoin, TenantAccountRole
-from models.enums import AppStatus, FeedbackFromSource, FeedbackRating
+from models.enums import FeedbackFromSource, FeedbackRating
 from models.model import AppMode, MessageFeedback
 from services.feedback_service import FeedbackService
 
@@ -29,7 +29,7 @@ class TestFeedbackExportApi:
         app.id = str(uuid.uuid4())
         app.mode = AppMode.CHAT
         app.tenant_id = str(uuid.uuid4())
-        app.status = AppStatus.NORMAL
+        app.status = "normal"
         app.name = "Test App"
         return app
 
@@ -135,7 +135,7 @@ class TestFeedbackExportApi:
         self,
         test_client: FlaskClient,
         auth_header,
-        monkeypatch: pytest.MonkeyPatch,
+        monkeypatch,
         mock_app_model,
         mock_account,
         role: TenantAccountRole,
@@ -167,13 +167,7 @@ class TestFeedbackExportApi:
             mock_export_feedbacks.assert_called_once()
 
     def test_feedback_export_csv_format(
-        self,
-        test_client: FlaskClient,
-        auth_header,
-        monkeypatch: pytest.MonkeyPatch,
-        mock_app_model,
-        mock_account,
-        sample_feedback_data,
+        self, test_client: FlaskClient, auth_header, monkeypatch, mock_app_model, mock_account, sample_feedback_data
     ):
         """Test feedback export in CSV format."""
 
@@ -208,13 +202,7 @@ class TestFeedbackExportApi:
         assert "text/csv" in response.content_type
 
     def test_feedback_export_json_format(
-        self,
-        test_client: FlaskClient,
-        auth_header,
-        monkeypatch: pytest.MonkeyPatch,
-        mock_app_model,
-        mock_account,
-        sample_feedback_data,
+        self, test_client: FlaskClient, auth_header, monkeypatch, mock_app_model, mock_account, sample_feedback_data
     ):
         """Test feedback export in JSON format."""
 
@@ -258,7 +246,7 @@ class TestFeedbackExportApi:
         assert "application/json" in response.content_type
 
     def test_feedback_export_with_filters(
-        self, test_client: FlaskClient, auth_header, monkeypatch: pytest.MonkeyPatch, mock_app_model, mock_account
+        self, test_client: FlaskClient, auth_header, monkeypatch, mock_app_model, mock_account
     ):
         """Test feedback export with various filters."""
 
@@ -299,7 +287,7 @@ class TestFeedbackExportApi:
         )
 
     def test_feedback_export_invalid_date_format(
-        self, test_client: FlaskClient, auth_header, monkeypatch: pytest.MonkeyPatch, mock_app_model, mock_account
+        self, test_client: FlaskClient, auth_header, monkeypatch, mock_app_model, mock_account
     ):
         """Test feedback export with invalid date format."""
 
@@ -324,7 +312,7 @@ class TestFeedbackExportApi:
         assert "Parameter validation error" in response_json["error"]
 
     def test_feedback_export_server_error(
-        self, test_client: FlaskClient, auth_header, monkeypatch: pytest.MonkeyPatch, mock_app_model, mock_account
+        self, test_client: FlaskClient, auth_header, monkeypatch, mock_app_model, mock_account
     ):
         """Test feedback export with server error."""
 

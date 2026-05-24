@@ -4,15 +4,17 @@ import type { AppIconSelection } from '@/app/components/base/app-icon-picker'
 import type { ToolWithProvider } from '@/app/components/workflow/types'
 import type { AppIconType } from '@/types/app'
 import { Button } from '@langgenius/dify-ui/button'
-import { Dialog, DialogContent } from '@langgenius/dify-ui/dialog'
+import { cn } from '@langgenius/dify-ui/cn'
 import { toast } from '@langgenius/dify-ui/toast'
 import { RiCloseLine, RiEditLine } from '@remixicon/react'
 import { useHover } from 'ahooks'
+import { noop } from 'es-toolkit/function'
 import { useTranslation } from 'react-i18next'
 import AppIcon from '@/app/components/base/app-icon'
 import AppIconPicker from '@/app/components/base/app-icon-picker'
 import { Mcp } from '@/app/components/base/icons/src/vender/other'
 import Input from '@/app/components/base/input'
+import Modal from '@/app/components/base/modal'
 import TabSlider from '@/app/components/base/tab-slider'
 import { MCPAuthMethod } from '@/app/components/tools/types'
 import { shouldUseMcpIconForAppIcon } from '@/utils/mcp'
@@ -129,14 +131,9 @@ const MCPModalContent: FC<MCPModalContentProps> = ({
 
   return (
     <>
-      <button
-        type="button"
-        aria-label={t('operation.close', { ns: 'common' })}
-        className="absolute top-5 right-5 z-10 cursor-pointer border-none bg-transparent p-1.5 focus-visible:ring-1 focus-visible:ring-components-input-border-active focus-visible:outline-hidden"
-        onClick={onHide}
-      >
-        <RiCloseLine className="size-5 text-text-tertiary" aria-hidden="true" />
-      </button>
+      <div className="absolute top-5 right-5 z-10 cursor-pointer p-1.5" onClick={onHide}>
+        <RiCloseLine className="h-5 w-5 text-text-tertiary" />
+      </div>
       <div className="relative pb-3 title-2xl-semi-bold text-xl text-text-primary">
         {!isCreate ? t('mcp.modal.editTitle', { ns: 'tools' }) : t('mcp.modal.title', { ns: 'tools' })}
       </div>
@@ -178,7 +175,7 @@ const MCPModalContent: FC<MCPModalContentProps> = ({
               icon={state.appIcon.type === 'emoji' ? state.appIcon.icon : state.appIcon.fileId}
               background={state.appIcon.type === 'emoji' ? state.appIcon.background : undefined}
               imageUrl={state.appIcon.type === 'image' ? state.appIcon.url : undefined}
-              innerIcon={shouldUseMcpIconForAppIcon(state.appIcon.type, state.appIcon.type === 'emoji' ? state.appIcon.icon : '') ? <Mcp className="size-8 text-text-primary-on-surface" /> : undefined}
+              innerIcon={shouldUseMcpIconForAppIcon(state.appIcon.type, state.appIcon.type === 'emoji' ? state.appIcon.icon : '') ? <Mcp className="h-8 w-8 text-text-primary-on-surface" /> : undefined}
               size="xxl"
               className="relative cursor-pointer rounded-2xl"
               coverElement={
@@ -284,16 +281,18 @@ const MCPModal: FC<DuplicateAppModalProps> = ({
   const formKey = data?.id ?? 'create'
 
   return (
-    <Dialog open={show}>
-      <DialogContent className="w-full max-w-[520px]! border-none p-6 text-left align-middle">
-        <MCPModalContent
-          key={formKey}
-          data={data}
-          onConfirm={onConfirm}
-          onHide={onHide}
-        />
-      </DialogContent>
-    </Dialog>
+    <Modal
+      isShow={show}
+      onClose={noop}
+      className={cn('relative max-w-[520px]!', 'p-6')}
+    >
+      <MCPModalContent
+        key={formKey}
+        data={data}
+        onConfirm={onConfirm}
+        onHide={onHide}
+      />
+    </Modal>
   )
 }
 

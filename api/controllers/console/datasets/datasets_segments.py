@@ -10,8 +10,7 @@ from werkzeug.exceptions import Forbidden, NotFound
 import services
 from configs import dify_config
 from controllers.common.controller_schemas import ChildChunkCreatePayload, ChildChunkUpdatePayload
-from controllers.common.fields import SimpleResultResponse
-from controllers.common.schema import register_response_schema_models, register_schema_models
+from controllers.common.schema import register_schema_models
 from controllers.console import console_ns
 from controllers.console.app.error import ProviderNotInitializeError
 from controllers.console.datasets.error import (
@@ -31,7 +30,6 @@ from core.model_manager import ModelManager
 from core.rag.index_processor.constant.index_type import IndexTechniqueType
 from extensions.ext_database import db
 from extensions.ext_redis import redis_client
-from fields.base import ResponseModel
 from fields.segment_fields import child_chunk_fields, segment_fields
 from graphon.model_runtime.entities.model_entities import ModelType
 from libs.helper import escape_like_pattern
@@ -85,11 +83,6 @@ class BatchImportPayload(BaseModel):
     upload_file_id: str
 
 
-class SegmentBatchImportStatusResponse(ResponseModel):
-    job_id: str
-    job_status: str
-
-
 class ChildChunkBatchUpdatePayload(BaseModel):
     chunks: list[ChildChunkUpdateArgs]
 
@@ -105,7 +98,6 @@ register_schema_models(
     ChildChunkBatchUpdatePayload,
     ChildChunkUpdateArgs,
 )
-register_response_schema_models(console_ns, SegmentBatchImportStatusResponse, SimpleResultResponse)
 
 
 @console_ns.route("/datasets/<uuid:dataset_id>/documents/<uuid:document_id>/segments")
@@ -225,7 +217,6 @@ class DatasetDocumentSegmentListApi(Resource):
     @login_required
     @account_initialization_required
     @cloud_edition_billing_rate_limit_check("knowledge")
-    @console_ns.response(204, "Segments deleted successfully")
     def delete(self, dataset_id, document_id):
         current_user, _ = current_account_with_tenant()
 
@@ -251,7 +242,7 @@ class DatasetDocumentSegmentListApi(Resource):
         except services.errors.account.NoPermissionError as e:
             raise Forbidden(str(e))
         SegmentService.delete_segments(segment_ids, document, dataset)
-        return "", 204
+        return {"result": "success"}, 204
 
 
 @console_ns.route("/datasets/<uuid:dataset_id>/documents/<uuid:document_id>/segment/<string:action>")
@@ -261,7 +252,6 @@ class DatasetDocumentSegmentApi(Resource):
     @account_initialization_required
     @cloud_edition_billing_resource_check("vector_space")
     @cloud_edition_billing_rate_limit_check("knowledge")
-    @console_ns.response(200, "Success", console_ns.models[SimpleResultResponse.__name__])
     def patch(self, dataset_id, document_id, action):
         current_user, current_tenant_id = current_account_with_tenant()
 
@@ -434,7 +424,6 @@ class DatasetDocumentSegmentUpdateApi(Resource):
     @login_required
     @account_initialization_required
     @cloud_edition_billing_rate_limit_check("knowledge")
-    @console_ns.response(204, "Segment deleted successfully")
     def delete(self, dataset_id, document_id, segment_id):
         current_user, current_tenant_id = current_account_with_tenant()
 
@@ -467,7 +456,7 @@ class DatasetDocumentSegmentUpdateApi(Resource):
         except services.errors.account.NoPermissionError as e:
             raise Forbidden(str(e))
         SegmentService.delete_segment(segment, document, dataset)
-        return "", 204
+        return {"result": "success"}, 204
 
 
 @console_ns.route(
@@ -475,7 +464,6 @@ class DatasetDocumentSegmentUpdateApi(Resource):
     "/datasets/batch_import_status/<uuid:job_id>",
 )
 class DatasetDocumentSegmentBatchImportApi(Resource):
-    @console_ns.response(200, "Batch import started", console_ns.models[SegmentBatchImportStatusResponse.__name__])
     @setup_required
     @login_required
     @account_initialization_required
@@ -526,7 +514,6 @@ class DatasetDocumentSegmentBatchImportApi(Resource):
             return {"error": str(e)}, 500
         return {"job_id": job_id, "job_status": "waiting"}, 200
 
-    @console_ns.response(200, "Batch import status", console_ns.models[SegmentBatchImportStatusResponse.__name__])
     @setup_required
     @login_required
     @account_initialization_required
@@ -704,7 +691,6 @@ class ChildChunkUpdateApi(Resource):
     @login_required
     @account_initialization_required
     @cloud_edition_billing_rate_limit_check("knowledge")
-    @console_ns.response(204, "Child chunk deleted successfully")
     def delete(self, dataset_id, document_id, segment_id, child_chunk_id):
         current_user, current_tenant_id = current_account_with_tenant()
 
@@ -754,7 +740,7 @@ class ChildChunkUpdateApi(Resource):
             SegmentService.delete_child_chunk(child_chunk, dataset)
         except ChildChunkDeleteIndexServiceError as e:
             raise ChildChunkDeleteIndexError(str(e))
-        return "", 204
+        return {"result": "success"}, 204
 
     @setup_required
     @login_required

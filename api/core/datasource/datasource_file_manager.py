@@ -35,11 +35,8 @@ class DatasourceFileManager:
         timestamp = str(int(time.time()))
         nonce = os.urandom(16).hex()
         data_to_sign = f"file-preview|{datasource_file_id}|{timestamp}|{nonce}"
-        sign = hmac.new(
-            dify_config.SECRET_KEY.encode(),
-            data_to_sign.encode(),
-            hashlib.sha256,
-        ).digest()
+        secret_key = dify_config.SECRET_KEY.encode() if dify_config.SECRET_KEY else b""
+        sign = hmac.new(secret_key, data_to_sign.encode(), hashlib.sha256).digest()
         encoded_sign = base64.urlsafe_b64encode(sign).decode()
 
         return f"{file_preview_url}?timestamp={timestamp}&nonce={nonce}&sign={encoded_sign}"
@@ -50,11 +47,8 @@ class DatasourceFileManager:
         verify signature
         """
         data_to_sign = f"file-preview|{datasource_file_id}|{timestamp}|{nonce}"
-        recalculated_sign = hmac.new(
-            dify_config.SECRET_KEY.encode(),
-            data_to_sign.encode(),
-            hashlib.sha256,
-        ).digest()
+        secret_key = dify_config.SECRET_KEY.encode() if dify_config.SECRET_KEY else b""
+        recalculated_sign = hmac.new(secret_key, data_to_sign.encode(), hashlib.sha256).digest()
         recalculated_encoded_sign = base64.urlsafe_b64encode(recalculated_sign).decode()
 
         # verify signature

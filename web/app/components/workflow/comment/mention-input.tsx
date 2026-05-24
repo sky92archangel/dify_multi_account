@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import type { UserProfile } from '@/contract/console/workflow-comment'
+import type { UserProfile } from '@/service/workflow-comment'
 import { Avatar } from '@langgenius/dify-ui/avatar'
 import { Button } from '@langgenius/dify-ui/button'
 import { cn } from '@langgenius/dify-ui/cn'
@@ -22,7 +22,7 @@ import { useTranslation } from 'react-i18next'
 import Textarea from 'react-textarea-autosize'
 import EnterKey from '@/app/components/base/icons/src/public/common/EnterKey'
 import { useParams } from '@/next/navigation'
-import { consoleClient } from '@/service/client'
+import { fetchMentionableUsers } from '@/service/workflow-comment'
 import { useStore, useWorkflowStore } from '../store'
 
 type MentionInputProps = {
@@ -37,8 +37,6 @@ type MentionInputProps = {
   isEditing?: boolean
   autoFocus?: boolean
 }
-
-const EMPTY_USERS: UserProfile[] = []
 
 const MentionInputInner = forwardRef<HTMLTextAreaElement, MentionInputProps>(({
   value,
@@ -68,7 +66,7 @@ const MentionInputInner = forwardRef<HTMLTextAreaElement, MentionInputProps>(({
   const mentionUsersFromStore = useStore(state => (
     appId ? state.mentionableUsersCache[appId] : undefined
   ))
-  const mentionUsers = useMemo(() => mentionUsersFromStore ?? EMPTY_USERS, [mentionUsersFromStore])
+  const mentionUsers = mentionUsersFromStore ?? []
 
   const [showMentionDropdown, setShowMentionDropdown] = useState(false)
   const [mentionQuery, setMentionQuery] = useState('')
@@ -165,10 +163,8 @@ const MentionInputInner = forwardRef<HTMLTextAreaElement, MentionInputProps>(({
 
     state.setMentionableUsersLoading(appId, true)
     try {
-      const response = await consoleClient.workflowComments.mentionUsers({
-        params: { appId },
-      })
-      workflowStore.getState().setMentionableUsersCache(appId, response.users)
+      const users = await fetchMentionableUsers(appId)
+      workflowStore.getState().setMentionableUsersCache(appId, users)
     }
     catch (error) {
       console.error('Failed to load mentionable users:', error)
@@ -499,17 +495,14 @@ const MentionInputInner = forwardRef<HTMLTextAreaElement, MentionInputProps>(({
   }, [value, resetMentionState])
 
   useEffect(() => {
-    if (!autoFocus || !textareaRef.current)
-      return
-
-    const textarea = textareaRef.current
-    const timeout = window.setTimeout(() => {
-      textarea.focus()
-      const length = textarea.value.length
-      textarea.setSelectionRange(length, length)
-    }, 0)
-
-    return () => window.clearTimeout(timeout)
+    if (autoFocus && textareaRef.current) {
+      const textarea = textareaRef.current
+      setTimeout(() => {
+        textarea.focus()
+        const length = textarea.value.length
+        textarea.setSelectionRange(length, length)
+      }, 0)
+    }
   }, [autoFocus])
 
   return (
@@ -518,7 +511,7 @@ const MentionInputInner = forwardRef<HTMLTextAreaElement, MentionInputProps>(({
         <div
           aria-hidden
           className={cn(
-            'pointer-events-none absolute inset-0 z-0 overflow-hidden p-1 leading-6 wrap-break-word whitespace-pre-wrap',
+            'pointer-events-none absolute inset-0 z-0 overflow-hidden p-1 leading-6 break-words whitespace-pre-wrap',
             'body-lg-regular text-text-primary',
           )}
           style={{ paddingRight, paddingBottom }}
@@ -535,7 +528,7 @@ const MentionInputInner = forwardRef<HTMLTextAreaElement, MentionInputProps>(({
         <Textarea
           ref={textareaRef}
           className={cn(
-            'relative z-10 w-full resize-none bg-transparent p-1 body-lg-regular leading-6 text-transparent caret-primary-500 outline-hidden',
+            'relative z-10 w-full resize-none bg-transparent p-1 body-lg-regular leading-6 text-transparent caret-primary-500 outline-none',
             'placeholder:text-text-tertiary',
           )}
           style={{ paddingRight, paddingBottom }}
@@ -557,14 +550,14 @@ const MentionInputInner = forwardRef<HTMLTextAreaElement, MentionInputProps>(({
           >
             <div
               className={cn(
-                'z-20 flex size-8 items-center justify-center rounded-lg transition-opacity',
+                'z-20 flex h-8 w-8 items-center justify-center rounded-lg transition-opacity',
                 shouldDisableMentionButton
                   ? 'cursor-not-allowed opacity-40'
                   : 'cursor-pointer hover:bg-state-base-hover',
               )}
               onClick={shouldDisableMentionButton ? undefined : handleMentionButtonClick}
             >
-              <RiAtLine className="size-4 text-text-tertiary" />
+              <RiAtLine className="h-4 w-4 text-text-tertiary" />
             </div>
             <Button
               className="z-20 ml-2 w-8 px-0"
@@ -573,8 +566,8 @@ const MentionInputInner = forwardRef<HTMLTextAreaElement, MentionInputProps>(({
               onClick={handleSubmit}
             >
               {loading
-                ? <RiLoader2Line className="size-4 animate-spin text-components-button-primary-text" />
-                : <RiArrowUpLine className="size-4 text-components-button-primary-text" />}
+                ? <RiLoader2Line className="h-4 w-4 animate-spin text-components-button-primary-text" />
+                : <RiArrowUpLine className="h-4 w-4 text-components-button-primary-text" />}
             </Button>
           </div>
         )}
@@ -582,18 +575,18 @@ const MentionInputInner = forwardRef<HTMLTextAreaElement, MentionInputProps>(({
         {isEditing && (
           <div
             ref={setActionContainerRef}
-            className="absolute inset-x-1 bottom-0 z-20 flex items-end justify-between"
+            className="absolute right-1 bottom-0 left-1 z-20 flex items-end justify-between"
           >
             <div
               className={cn(
-                'z-20 flex size-8 items-center justify-center rounded-lg transition-opacity',
+                'z-20 flex h-8 w-8 items-center justify-center rounded-lg transition-opacity',
                 shouldDisableMentionButton
                   ? 'cursor-not-allowed opacity-40'
                   : 'cursor-pointer hover:bg-state-base-hover',
               )}
               onClick={shouldDisableMentionButton ? undefined : handleMentionButtonClick}
             >
-              <RiAtLine className="size-4 text-text-tertiary" />
+              <RiAtLine className="h-4 w-4 text-text-tertiary" />
             </div>
             <div
               ref={setActionRightRef}
@@ -609,10 +602,10 @@ const MentionInputInner = forwardRef<HTMLTextAreaElement, MentionInputProps>(({
                 onClick={() => handleSubmit()}
                 className="gap-1"
               >
-                {loading && <RiLoader2Line className="mr-1 size-3.5 animate-spin" />}
+                {loading && <RiLoader2Line className="mr-1 h-3.5 w-3.5 animate-spin" />}
                 <span>{t('operation.save', { ns: 'common' })}</span>
                 {!loading && (
-                  <EnterKey className="size-4" />
+                  <EnterKey className="h-4 w-4" />
                 )}
               </Button>
             </div>
@@ -622,7 +615,7 @@ const MentionInputInner = forwardRef<HTMLTextAreaElement, MentionInputProps>(({
 
       {showMentionDropdown && filteredMentionUsers.length > 0 && typeof document !== 'undefined' && createPortal(
         <div
-          className="fixed z-9999 max-h-[248px] w-[280px] overflow-y-auto rounded-xl border-[0.5px] border-components-panel-border bg-components-panel-bg/95 shadow-lg backdrop-blur-[10px]"
+          className="fixed z-[9999] max-h-[248px] w-[280px] overflow-y-auto rounded-xl border-[0.5px] border-components-panel-border bg-components-panel-bg/95 shadow-lg backdrop-blur-[10px]"
           style={{
             left: dropdownPosition.x,
             [dropdownPosition.placement === 'top' ? 'bottom' : 'top']: dropdownPosition.placement === 'top'

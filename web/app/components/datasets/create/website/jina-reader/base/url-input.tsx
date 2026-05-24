@@ -1,11 +1,11 @@
 'use client'
 import type { FC } from 'react'
 import { Button } from '@langgenius/dify-ui/button'
-import { Input } from '@langgenius/dify-ui/input'
 import * as React from 'react'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDocLink } from '@/context/i18n'
+import Input from '../../base/input'
 
 const I18N_PREFIX = 'stepOne.website'
 
@@ -21,6 +21,9 @@ const UrlInput: FC<Props> = ({
   const { t } = useTranslation()
   const docLink = useDocLink()
   const [url, setUrl] = useState('')
+  const handleUrlChange = useCallback((url: string | number) => {
+    setUrl(url as string)
+  }, [])
   const handleOnRun = useCallback(() => {
     if (isRunning)
       return
@@ -31,16 +34,15 @@ const UrlInput: FC<Props> = ({
     <div className="flex items-center justify-between">
       <Input
         value={url}
-        onValueChange={setUrl}
+        onChange={handleUrlChange}
         placeholder={docLink()}
-        size="small"
       />
       <Button
         variant="primary"
         onClick={handleOnRun}
         className="ml-2"
         loading={isRunning}
-        aria-label={t(`${I18N_PREFIX}.run`, { ns: 'datasetCreation' })}
+        data-testid="url-input-run-button"
       >
         {!isRunning ? t(`${I18N_PREFIX}.run`, { ns: 'datasetCreation' }) : ''}
       </Button>

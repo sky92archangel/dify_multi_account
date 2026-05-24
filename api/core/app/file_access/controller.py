@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import override
 
-from sqlalchemy import and_, or_, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import Select
 
@@ -19,8 +18,7 @@ class DatabaseFileAccessController(FileAccessControllerProtocol):
 
     Tenant scoping remains mandatory. When the current execution belongs to an
     end user, the lookup is additionally constrained to that end user's file
-    ownership markers, plus upload files explicitly granted by the current
-    execution context.
+    ownership markers.
     """
 
     _scope_getter: Callable[[], FileAccessScope | None]
@@ -32,11 +30,9 @@ class DatabaseFileAccessController(FileAccessControllerProtocol):
     ) -> None:
         self._scope_getter = scope_getter
 
-    @override
     def current_scope(self) -> FileAccessScope | None:
         return self._scope_getter()
 
-    @override
     def apply_upload_file_filters(
         self,
         stmt: Select[tuple[UploadFile]],
@@ -51,21 +47,11 @@ class DatabaseFileAccessController(FileAccessControllerProtocol):
         if not resolved_scope.requires_user_ownership:
             return scoped_stmt
 
-        user_owned_filter = and_(
+        return scoped_stmt.where(
             UploadFile.created_by_role == CreatorUserRole.END_USER,
             UploadFile.created_by == resolved_scope.user_id,
         )
-        if not resolved_scope.granted_upload_file_ids:
-            return scoped_stmt.where(user_owned_filter)
 
-        return scoped_stmt.where(
-            or_(
-                user_owned_filter,
-                UploadFile.id.in_(resolved_scope.granted_upload_file_ids),
-            )
-        )
-
-    @override
     def apply_tool_file_filters(
         self,
         stmt: Select[tuple[ToolFile]],
@@ -82,7 +68,6 @@ class DatabaseFileAccessController(FileAccessControllerProtocol):
 
         return scoped_stmt.where(ToolFile.user_id == resolved_scope.user_id)
 
-    @override
     def get_upload_file(
         self,
         *,
@@ -100,7 +85,6 @@ class DatabaseFileAccessController(FileAccessControllerProtocol):
         )
         return session.scalar(stmt)
 
-    @override
     def get_tool_file(
         self,
         *,

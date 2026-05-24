@@ -19,7 +19,6 @@ from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 import pytest
-from flask import Flask
 from werkzeug.exceptions import BadRequest, InternalServerError, NotFound
 
 from controllers.service_api.app.error import NotChatAppError
@@ -381,7 +380,7 @@ class TestMessageService:
 
 
 class TestMessageListApi:
-    def test_not_chat_app(self, app: Flask) -> None:
+    def test_not_chat_app(self, app) -> None:
         api = MessageListApi()
         handler = _unwrap(api.get)
         app_model = SimpleNamespace(mode=AppMode.COMPLETION.value)
@@ -391,7 +390,7 @@ class TestMessageListApi:
             with pytest.raises(NotChatAppError):
                 handler(api, app_model=app_model, end_user=end_user)
 
-    def test_conversation_not_found(self, app: Flask, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_conversation_not_found(self, app, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
             MessageService,
             "pagination_by_first_id",
@@ -410,7 +409,7 @@ class TestMessageListApi:
             with pytest.raises(NotFound):
                 handler(api, app_model=app_model, end_user=end_user)
 
-    def test_first_message_not_found(self, app: Flask, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_first_message_not_found(self, app, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
             MessageService,
             "pagination_by_first_id",
@@ -431,7 +430,7 @@ class TestMessageListApi:
 
 
 class TestMessageFeedbackApi:
-    def test_not_found(self, app: Flask, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_not_found(self, app, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
             MessageService,
             "create_feedback",
@@ -453,7 +452,7 @@ class TestMessageFeedbackApi:
 
 
 class TestAppGetFeedbacksApi:
-    def test_success(self, app: Flask, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_success(self, app, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(MessageService, "get_all_messages_feedbacks", lambda *_args, **_kwargs: ["f1"])
 
         api = AppGetFeedbacksApi()
@@ -467,7 +466,7 @@ class TestAppGetFeedbacksApi:
 
 
 class TestMessageSuggestedApi:
-    def test_not_chat(self, app: Flask) -> None:
+    def test_not_chat(self, app) -> None:
         api = MessageSuggestedApi()
         handler = _unwrap(api.get)
         app_model = SimpleNamespace(mode=AppMode.COMPLETION.value)
@@ -477,7 +476,7 @@ class TestMessageSuggestedApi:
             with pytest.raises(NotChatAppError):
                 handler(api, app_model=app_model, end_user=end_user, message_id="m1")
 
-    def test_not_found(self, app: Flask, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_not_found(self, app, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
             MessageService,
             "get_suggested_questions_after_answer",
@@ -493,7 +492,7 @@ class TestMessageSuggestedApi:
             with pytest.raises(NotFound):
                 handler(api, app_model=app_model, end_user=end_user, message_id="m1")
 
-    def test_disabled(self, app: Flask, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_disabled(self, app, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
             MessageService,
             "get_suggested_questions_after_answer",
@@ -509,7 +508,7 @@ class TestMessageSuggestedApi:
             with pytest.raises(BadRequest):
                 handler(api, app_model=app_model, end_user=end_user, message_id="m1")
 
-    def test_internal_error(self, app: Flask, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_internal_error(self, app, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
             MessageService,
             "get_suggested_questions_after_answer",
@@ -525,7 +524,7 @@ class TestMessageSuggestedApi:
             with pytest.raises(InternalServerError):
                 handler(api, app_model=app_model, end_user=end_user, message_id="m1")
 
-    def test_success(self, app: Flask, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_success(self, app, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
             MessageService,
             "get_suggested_questions_after_answer",

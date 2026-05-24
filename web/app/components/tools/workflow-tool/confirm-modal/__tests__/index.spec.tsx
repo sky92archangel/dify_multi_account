@@ -110,7 +110,10 @@ describe('ConfirmModal', () => {
       const onClose = vi.fn()
       renderComponent({ onClose })
 
-      await user.click(screen.getByRole('button', { name: 'common.operation.close' }))
+      // Act - Find the close button and click it
+      const closeButton = document.querySelector('.cursor-pointer')
+      expect(closeButton).toBeInTheDocument() // Ensure the button is found before clicking
+      await user.click(closeButton!)
 
       // Assert
       expect(onClose).toHaveBeenCalledTimes(1)
@@ -240,9 +243,10 @@ describe('ConfirmModal', () => {
       renderComponent()
 
       // Assert
-      expect(screen.getByRole('button', { name: 'common.operation.close' })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: 'common.operation.cancel' })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: 'common.operation.confirm' })).toBeInTheDocument()
+      const buttons = screen.getAllByRole('button')
+      expect(buttons).toHaveLength(2)
+      expect(buttons[0]).toHaveTextContent('common.operation.cancel')
+      expect(buttons[1]).toHaveTextContent('common.operation.confirm')
     })
 
     it('should have proper text hierarchy', () => {

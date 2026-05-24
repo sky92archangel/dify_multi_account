@@ -3,7 +3,6 @@ from collections.abc import Mapping
 from typing import Any, cast
 from unittest.mock import MagicMock
 
-import pytest
 from dify_trace_aliyun.entities.semconv import (
     GEN_AI_FRAMEWORK,
     GEN_AI_SESSION_ID,
@@ -32,7 +31,7 @@ from graphon.enums import WorkflowNodeExecutionStatus
 from models import EndUser
 
 
-def test_get_user_id_from_message_data_no_end_user(monkeypatch: pytest.MonkeyPatch):
+def test_get_user_id_from_message_data_no_end_user(monkeypatch):
     message_data = MagicMock()
     message_data.from_account_id = "account_id"
     message_data.from_end_user_id = None
@@ -40,7 +39,7 @@ def test_get_user_id_from_message_data_no_end_user(monkeypatch: pytest.MonkeyPat
     assert get_user_id_from_message_data(message_data) == "account_id"
 
 
-def test_get_user_id_from_message_data_with_end_user(monkeypatch: pytest.MonkeyPatch):
+def test_get_user_id_from_message_data_with_end_user(monkeypatch):
     message_data = MagicMock()
     message_data.from_account_id = "account_id"
     message_data.from_end_user_id = "end_user_id"
@@ -58,7 +57,7 @@ def test_get_user_id_from_message_data_with_end_user(monkeypatch: pytest.MonkeyP
     assert get_user_id_from_message_data(message_data) == "session_id"
 
 
-def test_get_user_id_from_message_data_end_user_not_found(monkeypatch: pytest.MonkeyPatch):
+def test_get_user_id_from_message_data_end_user_not_found(monkeypatch):
     message_data = MagicMock()
     message_data.from_account_id = "account_id"
     message_data.from_end_user_id = "end_user_id"
@@ -112,7 +111,7 @@ def test_get_workflow_node_status():
     assert status.status_code == StatusCode.UNSET
 
 
-def test_create_links_from_trace_id(monkeypatch: pytest.MonkeyPatch):
+def test_create_links_from_trace_id(monkeypatch):
     # Mock create_link
     mock_link = MagicMock(spec=Link)
     import dify_trace_aliyun.data_exporter.traceclient

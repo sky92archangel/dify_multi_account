@@ -49,7 +49,7 @@ const ChangePasswordForm = () => {
   }, [password, confirmPassword, showErrorMessage, t])
 
   const handleChangePassword = useCallback(async () => {
-    const resetToken = verifyTokenRes?.token ?? ''
+    const token = searchParams.get('token') || ''
 
     if (!valid())
       return
@@ -57,7 +57,7 @@ const ChangePasswordForm = () => {
       await changePasswordWithToken({
         url: '/forgot-password/resets',
         body: {
-          token: resetToken,
+          token,
           new_password: password,
           password_confirm: confirmPassword,
         },
@@ -67,7 +67,7 @@ const ChangePasswordForm = () => {
     catch {
       await revalidateToken()
     }
-  }, [confirmPassword, password, revalidateToken, verifyTokenRes?.token, valid])
+  }, [confirmPassword, password, revalidateToken, searchParams, valid])
 
   return (
     <div className={

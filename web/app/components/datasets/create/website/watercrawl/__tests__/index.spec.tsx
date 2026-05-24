@@ -502,9 +502,11 @@ describe('WaterCrawl', () => {
 
       render(<WaterCrawl {...props} />)
 
-      const checkbox = screen.getByRole('checkbox', { name: /crawlSubPage/ })
+      // Find and click the checkbox by data-testid
+      const checkbox = screen.getByTestId('checkbox-crawl-sub-pages')
       fireEvent.click(checkbox)
 
+      // Assert - onCrawlOptionsChange should be called
       expect(onCrawlOptionsChange).toHaveBeenCalled()
     })
 

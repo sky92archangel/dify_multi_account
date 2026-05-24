@@ -54,12 +54,6 @@ const NodePanelWrapper = ({ children }: { children: ReactNode }) => {
   )
 }
 
-const getVisibleText = (text: string) => {
-  const element = screen.getAllByText(text).find(element => !element.classList.contains('sr-only'))
-  expect(element).toBeDefined()
-  return element!
-}
-
 describe('NodePanelField', () => {
   it('should render text input field', () => {
     render(<FieldHarness config={createConfig({ label: 'Node Name' })} initialData={{ fieldA: '' }} />)
@@ -136,7 +130,7 @@ describe('NodePanelField', () => {
 
     for (const scenario of scenarios) {
       const { unmount } = render(<FieldHarness config={scenario.config} initialData={scenario.initialData} />)
-      expect(getVisibleText(scenario.config.label)).toBeInTheDocument()
+      expect(screen.getByText(scenario.config.label)).toBeInTheDocument()
       unmount()
     }
 

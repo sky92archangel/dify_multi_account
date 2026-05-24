@@ -4,6 +4,7 @@ import type {
   AppDailyConversationsResponse,
   AppDailyEndUsersResponse,
   AppDailyMessagesResponse,
+  AppListResponse,
   AppStatisticsResponse,
   AppTokenCostsResponse,
   AppVoicesListResponse,
@@ -11,19 +12,65 @@ import type {
 } from '@/models/app'
 import type { App } from '@/types/app'
 import {
+  keepPreviousData,
+  useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
 import { consoleClient, consoleQuery } from '@/service/client'
+import { AppModeEnum } from '@/types/app'
 import { get, post } from './base'
 
 const NAME_SPACE = 'apps'
+
+type AppListParams = {
+  page?: number
+  limit?: number
+  name?: string
+  mode?: AppModeEnum | 'all'
+  tag_ids?: string[]
+  is_created_by_me?: boolean
+}
 
 type DateRangeParams = {
   start?: string
   end?: string
 }
+
+// Allowed app modes for filtering; defined at module scope to avoid re-creating on every call
+const allowedModes = new Set<AppModeEnum | 'all'>([
+  'all',
+  AppModeEnum.WORKFLOW,
+  AppModeEnum.ADVANCED_CHAT,
+  AppModeEnum.CHAT,
+  AppModeEnum.AGENT_CHAT,
+  AppModeEnum.COMPLETION,
+])
+
+const normalizeAppListParams = (params: AppListParams) => {
+  const {
+    page = 1,
+    limit = 30,
+    name = '',
+    mode,
+    tag_ids,
+    is_created_by_me,
+  } = params
+
+  const safeMode = allowedModes.has((mode as any)) ? mode : undefined
+
+  return {
+    page,
+    limit,
+    name,
+    ...(safeMode && safeMode !== 'all' ? { mode: safeMode } : {}),
+    ...(tag_ids?.length ? { tag_ids } : {}),
+    ...(is_created_by_me ? { is_created_by_me } : {}),
+  }
+}
+
+const appListKey = (params: AppListParams) => [NAME_SPACE, 'list', params]
 
 const useAppFullListKey = [NAME_SPACE, 'full-list']
 
@@ -48,11 +95,32 @@ export const useAppDetail = (appID: string) => {
   })
 }
 
+export const useAppList = (params: AppListParams, options?: { enabled?: boolean }) => {
+  const normalizedParams = normalizeAppListParams(params)
+  return useQuery<AppListResponse>({
+    queryKey: appListKey(normalizedParams),
+    queryFn: () => get<AppListResponse>('/apps', { params: normalizedParams }),
+    ...options,
+  })
+}
+
+export const useInfiniteAppList = (params: AppListParams, options?: { enabled?: boolean }) => {
+  const normalizedParams = normalizeAppListParams(params)
+  return useInfiniteQuery<AppListResponse>({
+    queryKey: appListKey(normalizedParams),
+    queryFn: ({ pageParam = normalizedParams.page }) => get<AppListResponse>('/apps', { params: { ...normalizedParams, page: pageParam } }),
+    getNextPageParam: lastPage => lastPage.has_more ? lastPage.page + 1 : undefined,
+    initialPageParam: normalizedParams.page,
+    placeholderData: keepPreviousData,
+    ...options,
+  })
+}
+
 export const useInvalidateAppList = () => {
   const queryClient = useQueryClient()
   return () => {
     queryClient.invalidateQueries({
-      queryKey: consoleQuery.apps.list.key(),
+      queryKey: [NAME_SPACE, 'list'],
     })
   }
 }
@@ -70,7 +138,7 @@ export const useDeleteAppMutation = () => {
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: consoleQuery.apps.list.key(),
+          queryKey: [NAME_SPACE, 'list'],
         }),
         queryClient.invalidateQueries({
           queryKey: useAppFullListKey,

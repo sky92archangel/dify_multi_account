@@ -60,10 +60,8 @@ const Template = useMemo(() => {
 **After** (complexity: ~3):
 
 ```typescript
-import type { ComponentType } from 'react'
-
 // Define lookup table outside component
-const TEMPLATE_MAP: Record<AppModeEnum, Record<string, ComponentType<TemplateProps>>> = {
+const TEMPLATE_MAP: Record<AppModeEnum, Record<string, FC<TemplateProps>>> = {
   [AppModeEnum.CHAT]: {
     [LanguagesSupported[1]]: TemplateChatZh,
     [LanguagesSupported[7]]: TemplateChatJa,

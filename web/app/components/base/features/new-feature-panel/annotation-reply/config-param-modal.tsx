@@ -2,11 +2,11 @@
 import type { FC } from 'react'
 import type { AnnotationReplyConfig } from '@/models/debug'
 import { Button } from '@langgenius/dify-ui/button'
-import { Dialog, DialogContent } from '@langgenius/dify-ui/dialog'
 import { toast } from '@langgenius/dify-ui/toast'
 import * as React from 'react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import Modal from '@/app/components/base/modal'
 import { ModelTypeEnum } from '@/app/components/header/account-setting/model-provider-page/declarations'
 import { useModelListAndDefaultModelAndCurrentProviderAndModel } from '@/app/components/header/account-setting/model-provider-page/hooks'
 import ModelSelector from '@/app/components/header/account-setting/model-provider-page/model-selector'
@@ -58,61 +58,52 @@ const ConfigParamModal: FC<Props> = ({ isShow, onHide: doHide, onSave, isInit, a
     setLoading(false)
   }
   return (
-    <Dialog
-      open={isShow}
-      onOpenChange={(open) => {
-        if (!open)
-          onHide()
-      }}
-    >
-      <DialogContent className="mt-14! w-[640px]! max-w-none! border-none p-6! text-left align-middle">
+    <Modal isShow={isShow} onClose={onHide} className="!mt-14 !w-[640px] !max-w-none !p-6">
+      <div className="mb-2 title-2xl-semi-bold text-text-primary">
+        {t(`initSetup.${isInit ? 'title' : 'configTitle'}`, { ns: 'appAnnotation' })}
+      </div>
 
-        <div className="mb-2 title-2xl-semi-bold text-text-primary">
-          {t(`initSetup.${isInit ? 'title' : 'configTitle'}`, { ns: 'appAnnotation' })}
-        </div>
+      <div className="mt-6 space-y-3">
+        <Item title={t('feature.annotation.scoreThreshold.title', { ns: 'appDebug' })} tooltip={t('feature.annotation.scoreThreshold.description', { ns: 'appDebug' })}>
+          <ScoreSlider
+            className="mt-1"
+            value={(annotationConfig.score_threshold || ANNOTATION_DEFAULT.score_threshold) * 100}
+            onChange={(val) => {
+              setAnnotationConfig({
+                ...annotationConfig,
+                score_threshold: val / 100,
+              })
+            }}
+          />
+        </Item>
 
-        <div className="mt-6 space-y-3">
-          <Item title={t('feature.annotation.scoreThreshold.title', { ns: 'appDebug' })} tooltip={t('feature.annotation.scoreThreshold.description', { ns: 'appDebug' })}>
-            <ScoreSlider
-              className="mt-1"
-              value={(annotationConfig.score_threshold ?? ANNOTATION_DEFAULT.score_threshold) * 100}
-              onChange={(val) => {
-                setAnnotationConfig({
-                  ...annotationConfig,
-                  score_threshold: val / 100,
+        <Item title={t('modelProvider.embeddingModel.key', { ns: 'common' })} tooltip={t('embeddingModelSwitchTip', { ns: 'appAnnotation' })}>
+          <div className="pt-1">
+            <ModelSelector
+              defaultModel={embeddingModel && {
+                provider: embeddingModel.providerName,
+                model: embeddingModel.modelName,
+              }}
+              modelList={embeddingsModelList}
+              onSelect={(val) => {
+                setEmbeddingModel({
+                  providerName: val.provider,
+                  modelName: val.model,
                 })
               }}
             />
-          </Item>
+          </div>
+        </Item>
+      </div>
 
-          <Item title={t('modelProvider.embeddingModel.key', { ns: 'common' })} tooltip={t('embeddingModelSwitchTip', { ns: 'appAnnotation' })}>
-            <div className="pt-1">
-              <ModelSelector
-                defaultModel={embeddingModel && {
-                  provider: embeddingModel.providerName,
-                  model: embeddingModel.modelName,
-                }}
-                modelList={embeddingsModelList}
-                onSelect={(val) => {
-                  setEmbeddingModel({
-                    providerName: val.provider,
-                    modelName: val.model,
-                  })
-                }}
-              />
-            </div>
-          </Item>
-        </div>
-
-        <div className="mt-6 flex justify-end gap-2">
-          <Button onClick={onHide}>{t('operation.cancel', { ns: 'common' })}</Button>
-          <Button variant="primary" onClick={handleSave} loading={isLoading}>
-            <div></div>
-            <div>{t(`initSetup.${isInit ? 'confirmBtn' : 'configConfirmBtn'}`, { ns: 'appAnnotation' })}</div>
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+      <div className="mt-6 flex justify-end gap-2">
+        <Button onClick={onHide}>{t('operation.cancel', { ns: 'common' })}</Button>
+        <Button variant="primary" onClick={handleSave} loading={isLoading}>
+          <div></div>
+          <div>{t(`initSetup.${isInit ? 'confirmBtn' : 'configConfirmBtn'}`, { ns: 'appAnnotation' })}</div>
+        </Button>
+      </div>
+    </Modal>
   )
 }
 export default React.memo(ConfigParamModal)

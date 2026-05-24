@@ -59,7 +59,7 @@ const Actions = ({
               aria-label={t('operation.more', { ns: 'common' })}
               className={cn(
                 'flex size-8 cursor-pointer items-center justify-center rounded-lg p-0 shadow-xs shadow-shadow-shadow-3',
-                'data-popup-open:bg-state-base-hover',
+                isMoreOperationsOpen && 'bg-state-base-hover',
               )}
               onClick={e => e.stopPropagation()}
             >

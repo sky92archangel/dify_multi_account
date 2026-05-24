@@ -2,6 +2,7 @@ import logging
 from collections.abc import Sequence
 from typing import cast
 
+from pydantic import TypeAdapter
 from sqlalchemy import select
 from sqlalchemy.orm import sessionmaker
 
@@ -22,6 +23,7 @@ from models.model import (
     App,
     AppMode,
     AppModelConfig,
+    AppModelConfigDict,
     EndUser,
     Message,
     MessageFeedback,
@@ -40,6 +42,7 @@ from services.errors.message import (
 )
 from services.workflow_service import WorkflowService
 
+_app_model_config_adapter: TypeAdapter[AppModelConfigDict] = TypeAdapter(AppModelConfigDict)
 logger = logging.getLogger(__name__)
 
 
@@ -294,12 +297,14 @@ class MessageService:
                     .limit(1)
                 )
             else:
+                conversation_override_model_configs = _app_model_config_adapter.validate_json(
+                    conversation.override_model_configs
+                )
                 app_model_config = AppModelConfig(
                     app_id=app_model.id,
                 )
-                # Reuse Conversation.model_config so suggested-questions reads the same
-                # compatibility-normalized config as the rest of the message flow.
-                app_model_config = app_model_config.from_model_config_dict(conversation.model_config)
+                app_model_config.id = conversation.app_model_config_id
+                app_model_config = app_model_config.from_model_config_dict(conversation_override_model_configs)
             if not app_model_config:
                 raise ValueError("did not find app model config")
 

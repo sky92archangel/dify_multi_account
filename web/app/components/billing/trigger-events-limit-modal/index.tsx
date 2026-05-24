@@ -1,7 +1,9 @@
 'use client'
+import type { FC } from 'react'
+import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import { TriggerAll } from '@/app/components/base/icons/src/vender/workflow'
-import { PlanUpgradeModal } from '@/app/components/billing/plan-upgrade-modal'
+import PlanUpgradeModal from '@/app/components/billing/plan-upgrade-modal'
 import UsageInfo from '@/app/components/billing/usage-info'
 
 type Props = {
@@ -13,14 +15,14 @@ type Props = {
   resetInDays?: number
 }
 
-export default function TriggerEventsLimitModal({
+const TriggerEventsLimitModal: FC<Props> = ({
   show,
   onClose,
   onUpgrade,
   usage,
   total,
   resetInDays,
-}: Props) {
+}) => {
   const { t } = useTranslation()
 
   return (
@@ -28,7 +30,7 @@ export default function TriggerEventsLimitModal({
       show={show}
       onClose={onClose}
       onUpgrade={onUpgrade}
-      Icon={TriggerAll}
+      Icon={TriggerAll as React.ComponentType<React.SVGProps<SVGSVGElement>>}
       title={t('triggerLimitModal.title', { ns: 'billing' })}
       description={t('triggerLimitModal.description', { ns: 'billing' })}
       extraInfo={(
@@ -45,3 +47,5 @@ export default function TriggerEventsLimitModal({
     />
   )
 }
+
+export default React.memo(TriggerEventsLimitModal)

@@ -56,7 +56,7 @@ def _patch_all_extractors(monkeypatch) -> _ExtractorFactory:
 
 
 class TestExtractProcessorLoaders:
-    def test_load_from_upload_file_return_docs_and_text(self, monkeypatch: pytest.MonkeyPatch):
+    def test_load_from_upload_file_return_docs_and_text(self, monkeypatch):
         monkeypatch.setattr(processor_module, "ExtractSetting", lambda **kwargs: SimpleNamespace(**kwargs))
 
         monkeypatch.setattr(
@@ -93,9 +93,7 @@ class TestExtractProcessorLoaders:
             ),
         ],
     )
-    def test_load_from_url_builds_temp_file_with_correct_suffix(
-        self, monkeypatch: pytest.MonkeyPatch, url, headers, expected_suffix
-    ):
+    def test_load_from_url_builds_temp_file_with_correct_suffix(self, monkeypatch, url, headers, expected_suffix):
         response = SimpleNamespace(headers=headers, content=b"body")
         monkeypatch.setattr(processor_module.ssrf_proxy, "get", lambda *args, **kwargs: response)
         monkeypatch.setattr(processor_module, "ExtractSetting", lambda **kwargs: SimpleNamespace(**kwargs))
@@ -121,13 +119,11 @@ class TestExtractProcessorLoaders:
 
 class TestExtractProcessorFileRouting:
     @pytest.fixture(autouse=True)
-    def _set_unstructured_config(self, monkeypatch: pytest.MonkeyPatch):
+    def _set_unstructured_config(self, monkeypatch):
         monkeypatch.setattr(processor_module.dify_config, "UNSTRUCTURED_API_URL", "https://unstructured")
         monkeypatch.setattr(processor_module.dify_config, "UNSTRUCTURED_API_KEY", "key")
 
-    def _run_extract_for_extension(
-        self, monkeypatch: pytest.MonkeyPatch, extension: str, etl_type: str, is_automatic: bool = False
-    ):
+    def _run_extract_for_extension(self, monkeypatch, extension: str, etl_type: str, is_automatic: bool = False):
         factory = _patch_all_extractors(monkeypatch)
         monkeypatch.setattr(processor_module.dify_config, "ETL_TYPE", etl_type)
 
@@ -171,7 +167,7 @@ class TestExtractProcessorFileRouting:
         ],
     )
     def test_extract_routes_file_extensions_for_unstructured_mode(
-        self, monkeypatch: pytest.MonkeyPatch, extension, expected_extractor, is_automatic
+        self, monkeypatch, extension, expected_extractor, is_automatic
     ):
         extractor_name, args, kwargs = self._run_extract_for_extension(
             monkeypatch, extension, etl_type="Unstructured", is_automatic=is_automatic
@@ -193,9 +189,7 @@ class TestExtractProcessorFileRouting:
             (".txt", "TextExtractor"),
         ],
     )
-    def test_extract_routes_file_extensions_for_default_mode(
-        self, monkeypatch: pytest.MonkeyPatch, extension, expected_extractor
-    ):
+    def test_extract_routes_file_extensions_for_default_mode(self, monkeypatch, extension, expected_extractor):
         extractor_name, _, _ = self._run_extract_for_extension(monkeypatch, extension, etl_type="SelfHosted")
 
         assert extractor_name == expected_extractor
@@ -208,7 +202,7 @@ class TestExtractProcessorFileRouting:
 
 
 class TestExtractProcessorDatasourceRouting:
-    def test_extract_routes_notion_datasource(self, monkeypatch: pytest.MonkeyPatch):
+    def test_extract_routes_notion_datasource(self, monkeypatch):
         factory = _patch_all_extractors(monkeypatch)
 
         notion_info = SimpleNamespace(
@@ -234,9 +228,7 @@ class TestExtractProcessorDatasourceRouting:
             ("jinareader", "JinaReaderWebExtractor"),
         ],
     )
-    def test_extract_routes_website_datasource_providers(
-        self, monkeypatch: pytest.MonkeyPatch, provider: str, expected: str
-    ):
+    def test_extract_routes_website_datasource_providers(self, monkeypatch, provider: str, expected: str):
         factory = _patch_all_extractors(monkeypatch)
 
         website_info = SimpleNamespace(

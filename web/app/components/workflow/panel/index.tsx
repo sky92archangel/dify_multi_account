@@ -1,7 +1,7 @@
 import type { FC } from 'react'
 import type { VersionHistoryPanelProps } from '@/app/components/workflow/panel/version-history-panel'
 import { cn } from '@langgenius/dify-ui/cn'
-import { memo, useEffect, useRef } from 'react'
+import { memo, useCallback, useEffect, useRef } from 'react'
 import { useStore as useReactflow } from 'reactflow'
 import { useShallow } from 'zustand/react/shallow'
 import dynamic from '@/next/dynamic'
@@ -34,50 +34,35 @@ const getEntryWidth = (entry: ResizeObserverEntry, element: HTMLElement): number
   return element.getBoundingClientRect().width
 }
 
-const useResizeObserver = (callback: (width: number) => void) => {
+const useResizeObserver = (
+  callback: (width: number) => void,
+  dependencies: React.DependencyList = [],
+) => {
   const elementRef = useRef<HTMLDivElement>(null)
-  const widthRef = useRef<number | undefined>(undefined)
-  const animationFrameRef = useRef<number | undefined>(undefined)
+
+  const stableCallback = useCallback(callback, [callback])
 
   useEffect(() => {
     const element = elementRef.current
     if (!element)
       return
 
-    widthRef.current = undefined
-
-    const updateWidth = (width: number) => {
-      if (widthRef.current === width)
-        return
-
-      widthRef.current = width
-      if (animationFrameRef.current)
-        cancelAnimationFrame(animationFrameRef.current)
-
-      animationFrameRef.current = requestAnimationFrame(() => {
-        animationFrameRef.current = undefined
-        callback(width)
-      })
-    }
-
     const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries)
-        updateWidth(getEntryWidth(entry, element))
+      for (const entry of entries) {
+        const width = getEntryWidth(entry, element)
+        stableCallback(width)
+      }
     })
 
     resizeObserver.observe(element)
 
     const initialWidth = element.getBoundingClientRect().width
-    updateWidth(initialWidth)
+    stableCallback(initialWidth)
 
     return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current)
-        animationFrameRef.current = undefined
-      }
       resizeObserver.disconnect()
     }
-  }, [callback])
+  }, [stableCallback, ...dependencies])
   return elementRef
 }
 
@@ -128,9 +113,15 @@ const Panel: FC<PanelProps> = ({
   const setRightPanelWidth = useStore(s => s.setRightPanelWidth)
   const setOtherPanelWidth = useStore(s => s.setOtherPanelWidth)
 
-  const rightPanelRef = useResizeObserver(setRightPanelWidth)
+  const rightPanelRef = useResizeObserver(
+    setRightPanelWidth,
+    [setRightPanelWidth, selectedNode, showEnvPanel, showWorkflowVersionHistoryPanel],
+  )
 
-  const otherPanelRef = useResizeObserver(setOtherPanelWidth)
+  const otherPanelRef = useResizeObserver(
+    setOtherPanelWidth,
+    [setOtherPanelWidth, showEnvPanel, showWorkflowVersionHistoryPanel],
+  )
 
   return (
     <div

@@ -71,14 +71,14 @@ class KnowledgeRetrievalNode(LLMUsageTrackingMixin, Node[KnowledgeRetrievalNodeD
     def __init__(
         self,
         node_id: str,
-        data: KnowledgeRetrievalNodeData,
+        config: KnowledgeRetrievalNodeData,
         *,
         graph_init_params: "GraphInitParams",
         graph_runtime_state: "GraphRuntimeState",
     ) -> None:
         super().__init__(
             node_id=node_id,
-            data=data,
+            config=config,
             graph_init_params=graph_init_params,
             graph_runtime_state=graph_runtime_state,
         )

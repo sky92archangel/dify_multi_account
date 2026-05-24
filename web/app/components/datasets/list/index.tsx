@@ -8,13 +8,15 @@ import { useBoolean, useDebounceFn } from 'ahooks'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import Input from '@/app/components/base/input'
+import TagManagementModal from '@/app/components/base/tag-management'
+import TagFilter from '@/app/components/base/tag-management/filter'
+// Hooks
+import { useStore as useTagStore } from '@/app/components/base/tag-management/store'
 import CheckboxWithLabel from '@/app/components/datasets/create/website/base/checkbox-with-label'
 import { useAppContext, useSelector as useAppContextSelector } from '@/context/app-context'
 import { useExternalApiPanel } from '@/context/external-api-panel-context'
-import { TagFilter } from '@/features/tag-management/components/tag-filter'
-import { TagManagementModal } from '@/features/tag-management/components/tag-management-modal'
 import useDocumentTitle from '@/hooks/use-document-title'
-import { useDatasetApiBaseUrl, useInvalidDatasetList } from '@/service/knowledge/use-dataset'
+import { useDatasetApiBaseUrl } from '@/service/knowledge/use-dataset'
 import { systemFeaturesQueryOptions } from '@/service/system-features'
 // Components
 import ExternalAPIPanel from '../external-api/external-api-panel'
@@ -26,10 +28,9 @@ const List = () => {
   const { t } = useTranslation()
   const { data: systemFeatures } = useSuspenseQuery(systemFeaturesQueryOptions())
   const { isCurrentWorkspaceOwner } = useAppContext()
-  const [showTagManagementModal, setShowTagManagementModal] = useState(false)
+  const showTagManagementModal = useTagStore(s => s.showTagManagementModal)
   const { showExternalApiPanel, setShowExternalApiPanel } = useExternalApiPanel()
   const [includeAll, { toggle: toggleIncludeAll }] = useBoolean(false)
-  const invalidDatasetList = useInvalidDatasetList()
   useDocumentTitle(t('knowledge', { ns: 'dataset' }))
 
   const [keywords, setKeywords] = useState('')
@@ -55,7 +56,7 @@ const List = () => {
   const { data: apiBaseInfo } = useDatasetApiBaseUrl()
 
   return (
-    <div className="relative flex grow flex-col overflow-y-auto bg-background-body">
+    <div className="scroll-container relative flex grow flex-col overflow-y-auto bg-background-body">
       <div className="sticky top-0 z-10 flex items-center justify-end gap-x-1 bg-background-body px-12 pt-4 pb-2">
         <div className="flex items-center justify-center gap-2">
           {isCurrentWorkspaceOwner && (
@@ -68,7 +69,7 @@ const List = () => {
               tooltip={t('allKnowledgeDescription', { ns: 'dataset' }) as string}
             />
           )}
-          <TagFilter type="knowledge" value={tagFilterValue} onChange={handleTagsChange} onOpenTagManagement={() => setShowTagManagementModal(true)} />
+          <TagFilter type="knowledge" value={tagFilterValue} onChange={handleTagsChange} />
           <Input
             showLeftIcon
             showClearIcon
@@ -87,19 +88,16 @@ const List = () => {
             className="gap-0.5 shadow-xs"
             onClick={() => setShowExternalApiPanel(true)}
           >
-            <span className="i-custom-vender-solid-development-api-connection-mod size-4 text-components-button-secondary-text" />
+            <span className="i-custom-vender-solid-development-api-connection-mod h-4 w-4 text-components-button-secondary-text" />
             <span className="flex items-center justify-center gap-1 px-0.5 system-sm-medium text-components-button-secondary-text">{t('externalAPIPanelTitle', { ns: 'dataset' })}</span>
           </Button>
         </div>
       </div>
-      <Datasets tags={tagIDs} keywords={searchKeywords} includeAll={includeAll} onOpenTagManagement={() => setShowTagManagementModal(true)} />
+      <Datasets tags={tagIDs} keywords={searchKeywords} includeAll={includeAll} />
       {!systemFeatures.branding.enabled && <DatasetFooter />}
-      <TagManagementModal
-        type="knowledge"
-        show={showTagManagementModal}
-        onClose={() => setShowTagManagementModal(false)}
-        onTagsChange={invalidDatasetList}
-      />
+      {showTagManagementModal && (
+        <TagManagementModal type="knowledge" show={showTagManagementModal} />
+      )}
       {showExternalApiPanel && <ExternalAPIPanel onClose={() => setShowExternalApiPanel(false)} />}
     </div>
   )

@@ -1,4 +1,5 @@
 import logging
+import time
 from collections.abc import Mapping
 from typing import Any
 
@@ -11,11 +12,14 @@ from core.db.session_factory import session_factory
 from core.plugin.entities.plugin_daemon import CredentialType
 from core.trigger.utils.locks import build_trigger_refresh_lock_key
 from extensions.ext_redis import redis_client
-from libs.helper import current_timestamp
 from models.trigger import TriggerSubscription
 from services.trigger.trigger_provider_service import TriggerProviderService
 
 logger = logging.getLogger(__name__)
+
+
+def _now_ts() -> int:
+    return int(time.time())
 
 
 def _load_subscription(session: Session, tenant_id: str, subscription_id: str) -> TriggerSubscription | None:
@@ -92,7 +96,7 @@ def trigger_subscription_refresh(tenant_id: str, subscription_id: str) -> None:
 
     logger.info("Begin subscription refresh: tenant=%s id=%s", tenant_id, subscription_id)
     try:
-        now: int = current_timestamp()
+        now: int = _now_ts()
         with session_factory.create_session() as session:
             subscription: TriggerSubscription | None = _load_subscription(session, tenant_id, subscription_id)
 

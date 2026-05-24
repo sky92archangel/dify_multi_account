@@ -4,7 +4,7 @@ import {
   ApiAggregate,
   WindowCursor,
 } from '@/app/components/base/icons/src/vender/workflow'
-import { Infotip } from '@/app/components/base/infotip'
+import Tooltip from '@/app/components/base/tooltip'
 import AppIcon from '../base/app-icon'
 
 type IAppBasicProps = {
@@ -46,13 +46,13 @@ const ICON_MAP = {
   app: <AppIcon className="border border-[rgba(0,0,0,0.05)]!" />,
   api: (
     <div className="rounded-lg border-[0.5px] border-divider-subtle bg-util-colors-blue-brand-blue-brand-500 p-1 shadow-md">
-      <ApiAggregate className="size-4 text-text-primary-on-surface" />
+      <ApiAggregate className="h-4 w-4 text-text-primary-on-surface" />
     </div>
   ),
   dataset: <AppIcon innerIcon={DatasetSvg} className="border-[0.5px]! border-indigo-100! bg-indigo-25!" />,
   webapp: (
     <div className="rounded-lg border-[0.5px] border-divider-subtle bg-util-colors-blue-brand-blue-brand-500 p-1 shadow-md">
-      <WindowCursor className="size-4 text-text-primary-on-surface" />
+      <WindowCursor className="h-4 w-4 text-text-primary-on-surface" />
     </div>
   ),
   notion: <AppIcon innerIcon={NotionSvg} className="border-[0.5px]! border-indigo-100! bg-white!" />,
@@ -82,9 +82,16 @@ export default function AppBasic({ icon, icon_background, name, isExternal, type
             </div>
             {hoverTip
               && (
-                <Infotip aria-label={hoverTip} className="ml-1" popupClassName="w-[240px]">
-                  {hoverTip}
-                </Infotip>
+                <Tooltip
+                  popupContent={(
+                    <div className="w-[240px]">
+                      {hoverTip}
+                    </div>
+                  )}
+                  popupClassName="ml-1"
+                  triggerClassName="w-4 h-4 ml-1"
+                  position="top"
+                />
               )}
           </div>
           {!hideType && isExtraInLine && (

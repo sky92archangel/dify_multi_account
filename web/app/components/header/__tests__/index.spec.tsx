@@ -45,7 +45,7 @@ vi.mock('@/app/components/header/tools-nav', () => ({
 }))
 
 vi.mock('@/app/components/header/plan-badge', () => ({
-  PlanBadge: ({ onClick, plan }: { onClick?: () => void, plan?: string }) => (
+  default: ({ onClick, plan }: { onClick?: () => void, plan?: string }) => (
     <button data-testid="plan-badge" onClick={onClick} data-plan={plan} />
   ),
 }))

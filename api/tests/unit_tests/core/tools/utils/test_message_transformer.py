@@ -42,7 +42,7 @@ class _FakeToolFileManager:
 
 
 @pytest.fixture(autouse=True)
-def _patch_tool_file_manager(monkeypatch: pytest.MonkeyPatch):
+def _patch_tool_file_manager(monkeypatch):
     # Patch the manager used inside the transformer module
     monkeypatch.setattr(mt, "ToolFileManager", _FakeToolFileManager)
     # also ensure predictable URL generation (no need to patch; uses id and extension only)

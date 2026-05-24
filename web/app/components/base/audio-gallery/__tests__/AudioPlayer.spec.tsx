@@ -50,9 +50,6 @@ function getReactProps<T extends Element>(el: T): Record<string, ReactEventHandl
   return key ? (el as unknown as Record<string, Record<string, ReactEventHandler>>)[key]! : {}
 }
 
-const getPlayButton = () => screen.getByRole('button', { name: 'common.operation.play' })
-const getPauseButton = () => screen.getByRole('button', { name: 'common.operation.pause' })
-
 // ─── Setup / teardown ─────────────────────────────────────────────────────────
 
 beforeEach(() => {
@@ -80,7 +77,7 @@ describe('AudioPlayer — rendering', () => {
   it('should render the play button and audio element when given a src', () => {
     render(<AudioPlayer src="https://example.com/a.mp3" />)
 
-    expect(getPlayButton())!.toBeInTheDocument()
+    expect(screen.getByTestId('play-pause-btn'))!.toBeInTheDocument()
     expect(document.querySelector('audio'))!.toBeInTheDocument()
     expect(document.querySelector('audio')?.getAttribute('src')).toBe('https://example.com/a.mp3')
   })
@@ -96,7 +93,7 @@ describe('AudioPlayer — rendering', () => {
 
   it('should render without crashing when no props are supplied', () => {
     render(<AudioPlayer />)
-    expect(getPlayButton())!.toBeInTheDocument()
+    expect(screen.getByTestId('play-pause-btn'))!.toBeInTheDocument()
   })
 })
 
@@ -105,7 +102,7 @@ describe('AudioPlayer — rendering', () => {
 describe('AudioPlayer — play/pause', () => {
   it('should call audio.play() on first button click', async () => {
     render(<AudioPlayer src="https://example.com/a.mp3" />)
-    const btn = getPlayButton()
+    const btn = screen.getByTestId('play-pause-btn')
 
     await act(async () => {
       fireEvent.click(btn)
@@ -116,13 +113,13 @@ describe('AudioPlayer — play/pause', () => {
 
   it('should call audio.pause() on second button click', async () => {
     render(<AudioPlayer src="https://example.com/a.mp3" />)
-    const btn = getPlayButton()
+    const btn = screen.getByTestId('play-pause-btn')
 
     await act(async () => {
       fireEvent.click(btn)
     })
     await act(async () => {
-      fireEvent.click(getPauseButton())
+      fireEvent.click(btn)
     })
 
     expect(HTMLMediaElement.prototype.pause).toHaveBeenCalledTimes(1)
@@ -130,7 +127,7 @@ describe('AudioPlayer — play/pause', () => {
 
   it('should show the pause icon while playing and play icon while paused', async () => {
     render(<AudioPlayer src="https://example.com/a.mp3" />)
-    const btn = getPlayButton()
+    const btn = screen.getByTestId('play-pause-btn')
 
     expect(btn.querySelector('.i-ri-play-large-fill'))!.toBeInTheDocument()
     expect(btn.querySelector('.i-ri-pause-circle-fill')).not.toBeInTheDocument()
@@ -139,25 +136,23 @@ describe('AudioPlayer — play/pause', () => {
       fireEvent.click(btn)
     })
 
-    const pauseBtn = getPauseButton()
-    expect(pauseBtn.querySelector('.i-ri-pause-circle-fill'))!.toBeInTheDocument()
-    expect(pauseBtn.querySelector('.i-ri-play-large-fill')).not.toBeInTheDocument()
+    expect(btn.querySelector('.i-ri-pause-circle-fill'))!.toBeInTheDocument()
+    expect(btn.querySelector('.i-ri-play-large-fill')).not.toBeInTheDocument()
   })
 
   it('should reset to stopped state when the audio ends', async () => {
     render(<AudioPlayer src="https://example.com/a.mp3" />)
-    const btn = getPlayButton()
+    const btn = screen.getByTestId('play-pause-btn')
 
     await act(async () => {
       fireEvent.click(btn)
     })
-    expect(getPauseButton().querySelector('.i-ri-pause-circle-fill'))!.toBeInTheDocument()
+    expect(btn.querySelector('.i-ri-pause-circle-fill'))!.toBeInTheDocument()
 
     const audio = document.querySelector('audio') as HTMLAudioElement
     await act(async () => {
       audio.dispatchEvent(new Event('ended'))
     })
-    expect(getPlayButton().querySelector('.i-ri-play-large-fill'))!.toBeInTheDocument()
 
     expect(btn.querySelector('.i-ri-play-large-fill'))!.toBeInTheDocument()
   })
@@ -170,7 +165,7 @@ describe('AudioPlayer — play/pause', () => {
       audio.dispatchEvent(new Event('error'))
     })
 
-    expect(getPlayButton())!.toBeDisabled()
+    expect(screen.getByTestId('play-pause-btn'))!.toBeDisabled()
   })
 })
 
@@ -221,7 +216,7 @@ describe('AudioPlayer — audio events', () => {
       audio.dispatchEvent(new Event('error'))
     })
 
-    expect(getPlayButton())!.toBeDisabled()
+    expect(screen.getByTestId('play-pause-btn'))!.toBeDisabled()
   })
 })
 
@@ -281,7 +276,7 @@ describe('AudioPlayer — waveform generation', () => {
     render(<AudioPlayer srcs={['blob:something']} />)
     await advanceWaveformTimer()
 
-    expect(getPlayButton())!.toBeDisabled()
+    expect(screen.getByTestId('play-pause-btn'))!.toBeDisabled()
   })
 
   it('should not trigger waveform generation when no src or srcs provided', async () => {
@@ -467,7 +462,7 @@ describe('AudioPlayer — missing coverage', () => {
     vi.spyOn(HTMLMediaElement.prototype, 'play').mockRejectedValue(new Error('play failed'))
 
     render(<AudioPlayer src="https://example.com/audio.mp3" />)
-    const btn = getPlayButton()
+    const btn = screen.getByTestId('play-pause-btn')
 
     await act(async () => {
       fireEvent.click(btn)
@@ -535,7 +530,7 @@ describe('AudioPlayer — missing coverage', () => {
     render(<AudioPlayer src="blob:https://example.com" />)
     await advanceWaveformTimer() // sets isAudioAvailable to false (invalid protocol)
 
-    const btn = getPlayButton()
+    const btn = screen.getByTestId('play-pause-btn')
     await act(async () => {
       fireEvent.click(btn)
     })
@@ -554,7 +549,7 @@ describe('AudioPlayer — missing coverage', () => {
       audio.dispatchEvent(new Event('error'))
     })
 
-    const btn = getPlayButton()
+    const btn = screen.getByTestId('play-pause-btn')
     const props = getReactProps(btn)
 
     await act(async () => {
@@ -611,7 +606,7 @@ describe('AudioPlayer — additional branch coverage', () => {
       audio.dispatchEvent(new Event('error'))
     })
 
-    expect(getPlayButton())!.toBeDisabled()
+    expect(screen.queryByTestId('play-pause-btn'))!.toBeDisabled()
   })
 
   it('should update current time on timeupdate event', async () => {
@@ -632,7 +627,7 @@ describe('AudioPlayer — additional branch coverage', () => {
       audio.dispatchEvent(new Event('error'))
     })
 
-    const btn = getPlayButton()
+    const btn = screen.getByTestId('play-pause-btn')
     await act(async () => {
       fireEvent.click(btn)
     })

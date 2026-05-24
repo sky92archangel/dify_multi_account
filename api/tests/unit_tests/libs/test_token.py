@@ -1,8 +1,5 @@
-from typing import cast
 from unittest.mock import MagicMock
 
-import pytest
-from flask import Request
 from werkzeug.wrappers import Response
 
 from constants import COOKIE_NAME_ACCESS_TOKEN, COOKIE_NAME_WEBAPP_ACCESS_TOKEN
@@ -18,8 +15,8 @@ class MockRequest:
 
 
 def test_extract_access_token():
-    def _mock_request(headers: dict[str, str], cookies: dict[str, str], args: dict[str, str]) -> Request:
-        return cast(Request, MockRequest(headers, cookies, args))
+    def _mock_request(headers: dict[str, str], cookies: dict[str, str], args: dict[str, str]):
+        return MockRequest(headers, cookies, args)
 
     test_cases = [
         (_mock_request({"Authorization": "Bearer 123"}, {}, {}), "123", "123"),
@@ -29,11 +26,11 @@ def test_extract_access_token():
         (_mock_request({}, {COOKIE_NAME_WEBAPP_ACCESS_TOKEN: "123"}, {}), None, "123"),
     ]
     for request, expected_console, expected_webapp in test_cases:
-        assert extract_access_token(request) == expected_console
-        assert extract_webapp_access_token(request) == expected_webapp
+        assert extract_access_token(request) == expected_console  # pyright: ignore[reportArgumentType]
+        assert extract_webapp_access_token(request) == expected_webapp  # pyright: ignore[reportArgumentType]
 
 
-def test_real_cookie_name_uses_host_prefix_without_domain(monkeypatch: pytest.MonkeyPatch):
+def test_real_cookie_name_uses_host_prefix_without_domain(monkeypatch):
     monkeypatch.setattr(token.dify_config, "CONSOLE_WEB_URL", "https://console.example.com", raising=False)
     monkeypatch.setattr(token.dify_config, "CONSOLE_API_URL", "https://api.example.com", raising=False)
     monkeypatch.setattr(token.dify_config, "COOKIE_DOMAIN", "", raising=False)
@@ -41,7 +38,7 @@ def test_real_cookie_name_uses_host_prefix_without_domain(monkeypatch: pytest.Mo
     assert token._real_cookie_name("csrf_token") == "__Host-csrf_token"
 
 
-def test_real_cookie_name_without_host_prefix_when_domain_present(monkeypatch: pytest.MonkeyPatch):
+def test_real_cookie_name_without_host_prefix_when_domain_present(monkeypatch):
     monkeypatch.setattr(token.dify_config, "CONSOLE_WEB_URL", "https://console.example.com", raising=False)
     monkeypatch.setattr(token.dify_config, "CONSOLE_API_URL", "https://api.example.com", raising=False)
     monkeypatch.setattr(token.dify_config, "COOKIE_DOMAIN", ".example.com", raising=False)
@@ -49,7 +46,7 @@ def test_real_cookie_name_without_host_prefix_when_domain_present(monkeypatch: p
     assert token._real_cookie_name("csrf_token") == "csrf_token"
 
 
-def test_set_csrf_cookie_includes_domain_when_configured(monkeypatch: pytest.MonkeyPatch):
+def test_set_csrf_cookie_includes_domain_when_configured(monkeypatch):
     monkeypatch.setattr(token.dify_config, "CONSOLE_WEB_URL", "https://console.example.com", raising=False)
     monkeypatch.setattr(token.dify_config, "CONSOLE_API_URL", "https://api.example.com", raising=False)
     monkeypatch.setattr(token.dify_config, "COOKIE_DOMAIN", ".example.com", raising=False)

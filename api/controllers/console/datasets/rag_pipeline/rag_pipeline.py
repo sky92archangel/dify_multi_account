@@ -6,8 +6,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import sessionmaker
 
-from controllers.common.fields import SimpleDataResponse
-from controllers.common.schema import register_response_schema_models, register_schema_models
+from controllers.common.schema import register_schema_models
 from controllers.console import console_ns
 from controllers.console.wraps import (
     account_initialization_required,
@@ -60,7 +59,6 @@ class Payload(BaseModel):
 
 
 register_schema_models(console_ns, Payload)
-register_response_schema_models(console_ns, SimpleDataResponse)
 
 
 @console_ns.route("/rag/pipeline/customized/templates/<string:template_id>")
@@ -87,7 +85,6 @@ class CustomizedPipelineTemplateApi(Resource):
     @login_required
     @account_initialization_required
     @enterprise_license_required
-    @console_ns.response(200, "Success", console_ns.models[SimpleDataResponse.__name__])
     def post(self, template_id: str):
         with sessionmaker(db.engine, expire_on_commit=False).begin() as session:
             template = session.scalar(

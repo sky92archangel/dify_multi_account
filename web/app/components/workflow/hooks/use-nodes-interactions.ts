@@ -440,12 +440,16 @@ export const useNodesInteractions = () => {
       if (initShowLastRunTab)
         workflowStore.setState({ initShowLastRunTab: true })
       const { nodes, setNodes, edges, setEdges } = collaborativeWorkflow.getState()
+      const selectedNode = nodes.find(node => node.data.selected)
+
+      if (!cancelSelection && selectedNode?.id === nodeId)
+        return
 
       const newNodes = produce(nodes, (draft) => {
         draft.forEach((node) => {
-          const selected = node.id === nodeId && !cancelSelection
-          node.selected = selected
-          node.data.selected = selected
+          if (node.id === nodeId)
+            node.data.selected = !cancelSelection
+          else node.data.selected = false
         })
       })
       setNodes(newNodes, false)
@@ -1685,7 +1689,6 @@ export const useNodesInteractions = () => {
         node.type === CUSTOM_NOTE_NODE
         || node.type === CUSTOM_ITERATION_START_NODE
       ) {
-        e.stopPropagation()
         return
       }
 
@@ -1693,14 +1696,19 @@ export const useNodesInteractions = () => {
         node.type === CUSTOM_NOTE_NODE
         || node.type === CUSTOM_LOOP_START_NODE
       ) {
-        e.stopPropagation()
         return
       }
 
       e.preventDefault()
+      const container = document.querySelector('#workflow-container')
+      const { x, y } = container!.getBoundingClientRect()
       workflowStore.setState({
-        contextMenuTarget: {
-          type: 'node',
+        panelMenu: undefined,
+        selectionMenu: undefined,
+        edgeMenu: undefined,
+        nodeMenu: {
+          top: e.clientY - y,
+          left: e.clientX - x,
           nodeId: node.id,
         },
       })
@@ -2472,7 +2480,7 @@ export const useNodesInteractions = () => {
     setNodes(nodes, shouldBroadcast, 'nodes:history-back')
     if (shouldBroadcast)
       collaborationManager.emitHistoryAction('undo')
-    workflowStore.setState({ contextMenuTarget: undefined })
+    workflowStore.setState({ edgeMenu: undefined })
   }, [
     collaborativeWorkflow,
     workflowStore,
@@ -2497,7 +2505,7 @@ export const useNodesInteractions = () => {
     setNodes(nodes, shouldBroadcast, 'nodes:history-forward')
     if (shouldBroadcast)
       collaborationManager.emitHistoryAction('redo')
-    workflowStore.setState({ contextMenuTarget: undefined })
+    workflowStore.setState({ edgeMenu: undefined })
   }, [
     collaborativeWorkflow,
     redo,

@@ -143,7 +143,6 @@ const ResultPanel: FC<ResultPanelProps> = ({
         {process_data && (
           <CodeEditor
             readOnly
-            showFileList
             title={<div>{t('common.processData', { ns: 'workflow' }).toLocaleUpperCase()}</div>}
             language={CodeLanguage.json}
             value={process_data}
@@ -154,7 +153,6 @@ const ResultPanel: FC<ResultPanelProps> = ({
         {(outputs || status === 'running') && (
           <CodeEditor
             readOnly
-            showFileList
             title={<div>{t('common.output', { ns: 'workflow' }).toLocaleUpperCase()}</div>}
             language={CodeLanguage.json}
             value={outputs}

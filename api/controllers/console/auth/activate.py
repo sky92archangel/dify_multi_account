@@ -1,3 +1,5 @@
+from typing import Any
+
 from flask import request
 from flask_restx import Resource
 from pydantic import BaseModel, Field, field_validator
@@ -38,29 +40,16 @@ class ActivatePayload(BaseModel):
         return timezone(value)
 
 
+class ActivationCheckResponse(BaseModel):
+    is_valid: bool = Field(description="Whether token is valid")
+    data: dict[str, Any] | None = Field(default=None, description="Activation data if valid")
+
+
 class ActivationResponse(BaseModel):
     result: str = Field(description="Operation result")
 
 
-class ActivationCheckData(BaseModel):
-    workspace_name: str | None
-    workspace_id: str | None
-    email: str | None
-
-
-class ActivationCheckResponse(BaseModel):
-    is_valid: bool = Field(description="Whether token is valid")
-    data: ActivationCheckData | None = Field(default=None, description="Activation data if valid")
-
-
-register_schema_models(
-    console_ns,
-    ActivateCheckQuery,
-    ActivatePayload,
-    ActivationCheckData,
-    ActivationCheckResponse,
-    ActivationResponse,
-)
+register_schema_models(console_ns, ActivateCheckQuery, ActivatePayload, ActivationCheckResponse, ActivationResponse)
 
 
 @console_ns.route("/activate/check")
@@ -74,7 +63,7 @@ class ActivateCheckApi(Resource):
         console_ns.models[ActivationCheckResponse.__name__],
     )
     def get(self):
-        args = ActivateCheckQuery.model_validate(request.args.to_dict(flat=True))
+        args = ActivateCheckQuery.model_validate(request.args.to_dict(flat=True))  # type: ignore
 
         workspaceId = args.workspace_id
         token = args.token

@@ -24,11 +24,7 @@ const ShowAllSettings = ({
     const hiddenFieldNames = useHiddenFieldNames(type)
 
     return (
-      <button
-        type="button"
-        className="flex w-full cursor-pointer items-center gap-x-4 border-none bg-transparent p-0 text-left"
-        onClick={handleShowAllSettings}
-      >
+      <div className="flex cursor-pointer items-center gap-x-4" onClick={handleShowAllSettings}>
         <div className="flex grow flex-col">
           <span className="flex min-h-6 items-center system-sm-medium text-text-secondary">
             {t('variableConfig.showAllSettings', { ns: 'appDebug' })}
@@ -37,8 +33,8 @@ const ShowAllSettings = ({
             {hiddenFieldNames}
           </span>
         </div>
-        <RiArrowRightSLine className="size-4 shrink-0 text-text-secondary" aria-hidden="true" />
-      </button>
+        <RiArrowRightSLine className="h-4 w-4 shrink-0 text-text-secondary" />
+      </div>
     )
   },
 })

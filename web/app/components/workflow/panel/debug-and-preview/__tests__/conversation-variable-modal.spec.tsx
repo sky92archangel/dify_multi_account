@@ -118,7 +118,8 @@ describe('ConversationVariableModal', () => {
     await user.click(screen.getByText('summary'))
     expect(screen.getByText('latest text')).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: /operation\.close/ }))
+    const closeTrigger = document.querySelector('.absolute.right-4.top-4.cursor-pointer') as HTMLElement
+    await user.click(closeTrigger)
 
     expect(onHide).toHaveBeenCalledTimes(1)
   })

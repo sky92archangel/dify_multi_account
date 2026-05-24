@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { vi } from 'vitest'
@@ -16,10 +16,6 @@ const RoleSelectorWrapper = ({ initialRole = 'normal' }: WrapperProps) => {
   const [role, setRole] = useState<'normal' | 'editor' | 'admin' | 'dataset_operator'>(initialRole)
   return <RoleSelector value={role} onChange={setRole} />
 }
-
-const getTrigger = () => screen.getByRole('button', { name: /members\.invitedAsRole/i })
-const getRoleDialog = () => screen.getByRole('dialog')
-const getRoleOption = (role: string) => within(getRoleDialog()).getByRole('button', { name: new RegExp(`common\\.members\\.${role}`, 'i') })
 
 describe('RoleSelector', () => {
   beforeEach(() => {
@@ -40,16 +36,16 @@ describe('RoleSelector', () => {
     const user = userEvent.setup()
     render(<RoleSelectorWrapper />)
 
-    const trigger = getTrigger()
+    const trigger = screen.getByTestId('role-selector-trigger')
 
     // Open
     await user.click(trigger)
-    expect(getRoleOption('normal')).toBeInTheDocument()
+    expect(screen.getByTestId('role-option-normal')).toBeInTheDocument()
 
     // Close
     await user.click(trigger)
     await waitFor(() => {
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      expect(screen.queryByTestId('role-option-normal')).not.toBeInTheDocument()
     })
   })
 
@@ -57,27 +53,28 @@ describe('RoleSelector', () => {
     const user = userEvent.setup()
     render(<RoleSelectorWrapper initialRole="editor" />)
 
-    await user.click(getTrigger())
+    await user.click(screen.getByTestId('role-selector-trigger'))
 
-    expect(getRoleOption('editor')).toHaveAttribute('aria-pressed', 'true')
+    const editorOption = screen.getByTestId('role-option-editor')
+    expect(editorOption.querySelector('[data-testid="role-option-check"]')).toBeInTheDocument()
   })
 
   it.each([
-    ['normal'],
-    ['editor'],
-    ['admin'],
-    ['datasetOperator'],
-  ])('should update selected role after user chooses %s', async (roleKey) => {
+    ['normal', 'role-option-normal', 'common.members.normal'],
+    ['editor', 'role-option-editor', 'common.members.editor'],
+    ['admin', 'role-option-admin', 'common.members.admin'],
+    ['dataset_operator', 'role-option-dataset_operator', 'common.members.datasetOperator'],
+  ])('should update selected role after user chooses %s', async (_roleKey, testId) => {
     const user = userEvent.setup()
 
     render(<RoleSelectorWrapper initialRole="normal" />)
 
-    await user.click(getTrigger())
-    await user.click(getRoleOption(roleKey))
+    await user.click(screen.getByTestId('role-selector-trigger'))
+    await user.click(screen.getByTestId(testId))
 
     // Verify dropdown closed
     await waitFor(() => {
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      expect(screen.queryByTestId(testId)).not.toBeInTheDocument()
     })
 
     // Verify trigger text updated (using translation key pattern from global mock)
@@ -93,9 +90,9 @@ describe('RoleSelector', () => {
 
     render(<RoleSelectorWrapper />)
 
-    await user.click(getTrigger())
+    await user.click(screen.getByTestId('role-selector-trigger'))
 
-    expect(within(getRoleDialog()).queryByRole('button', { name: /common\.members\.datasetOperator/i })).not.toBeInTheDocument()
-    expect(getRoleOption('normal')).toBeInTheDocument()
+    expect(screen.queryByTestId('role-option-dataset_operator')).not.toBeInTheDocument()
+    expect(screen.getByTestId('role-option-normal')).toBeInTheDocument()
   })
 })

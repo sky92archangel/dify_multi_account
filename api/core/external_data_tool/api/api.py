@@ -1,5 +1,5 @@
 from collections.abc import Mapping
-from typing import Any, TypedDict, override
+from typing import Any, TypedDict
 
 from sqlalchemy import select
 
@@ -29,7 +29,6 @@ class ApiExternalDataTool(ExternalDataTool):
     """the unique name of external data tool"""
 
     @classmethod
-    @override
     def validate_config(cls, tenant_id: str, config: dict[str, Any]):
         """
         Validate the incoming form config data.
@@ -51,7 +50,6 @@ class ApiExternalDataTool(ExternalDataTool):
         if not api_based_extension:
             raise ValueError("api_based_extension_id is invalid")
 
-    @override
     def query(self, inputs: Mapping[str, Any], query: str | None = None) -> str:
         """
         Query the external data tool.

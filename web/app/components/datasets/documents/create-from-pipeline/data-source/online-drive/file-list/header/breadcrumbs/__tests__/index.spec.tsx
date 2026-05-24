@@ -363,7 +363,9 @@ describe('Breadcrumbs', () => {
 
         render(<Breadcrumbs {...props} />)
 
-        expect(screen.getByRole('button', { name: 'common.operation.more' }))!.toBeInTheDocument()
+        // Assert - Dropdown trigger (more button) should be present
+        // Assert - Dropdown trigger (more button) should be present
+        expect(screen.getByRole('button', { name: '' }))!.toBeInTheDocument()
       })
 
       it('should not show dropdown when breadcrumbs do not exceed displayBreadcrumbNum', () => {

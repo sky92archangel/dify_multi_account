@@ -175,7 +175,7 @@ describe('usePipelineConfig', () => {
       expect(mockSetPublishedAt).toHaveBeenCalledWith('2024-01-01T00:00:00Z')
     })
 
-    it('should reset published at when workflow response is empty', () => {
+    it('should handle undefined workflow response', () => {
       let capturedCallback: ((data: unknown) => void) | undefined
       mockUseWorkflowConfig.mockImplementation((url: string, callback: (data: unknown) => void) => {
         if (url.includes('/publish')) {
@@ -187,7 +187,7 @@ describe('usePipelineConfig', () => {
 
       capturedCallback?.(undefined)
 
-      expect(mockSetPublishedAt).toHaveBeenCalledWith(0)
+      expect(mockSetPublishedAt).toHaveBeenCalledWith(undefined)
     })
   })
 

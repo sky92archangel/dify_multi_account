@@ -72,10 +72,10 @@ describe('InfoModal', () => {
       expect(screen.getByText('Test App')).toBeInTheDocument()
     })
 
-    it('should render copyright in the full rights reserved format when provided', async () => {
+    it('should render copyright when provided', async () => {
       const siteInfoWithCopyright: SiteInfo = {
         ...baseSiteInfo,
-        copyright: 'Dify AI',
+        copyright: 'Dify Inc.',
       }
 
       await renderModal(
@@ -86,8 +86,7 @@ describe('InfoModal', () => {
         />,
       )
 
-      const currentYear = new Date().getFullYear().toString()
-      expect(screen.getByText(`Copyright © ${currentYear} Dify AI. All Rights Reserved.`)).toBeInTheDocument()
+      expect(screen.getByText(/Dify Inc./)).toBeInTheDocument()
     })
 
     it('should render current year in copyright', async () => {

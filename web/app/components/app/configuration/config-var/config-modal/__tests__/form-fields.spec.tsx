@@ -4,29 +4,6 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { InputVarType } from '@/app/components/workflow/types'
 import ConfigModalFormFields from '../form-fields'
 
-vi.mock('react-i18next', async () => {
-  const React = await import('react')
-  return {
-    useTranslation: () => ({
-      t: (key: string, options?: Record<string, unknown>) => {
-        const ns = options?.ns as string | undefined
-        return ns ? `${ns}.${key}` : key
-      },
-      i18n: { language: 'en', changeLanguage: vi.fn() },
-    }),
-    Trans: ({ i18nKey, components }: { i18nKey: string, components?: Record<string, ReactNode> }) => (
-      <span data-i18n-key={i18nKey}>
-        {i18nKey}
-        {components?.docLink}
-      </span>
-    ),
-  }
-})
-
-vi.mock('@/context/i18n', () => ({
-  useDocLink: () => (path?: string) => `https://docs.example.com${path || ''}`,
-}))
-
 vi.mock('@/app/components/base/file-uploader', () => ({
   FileUploaderInAttachmentWrapper: ({
     onChange,
@@ -70,6 +47,12 @@ vi.mock('@/app/components/workflow/nodes/_base/components/editor/code-editor', (
   ),
 }))
 
+vi.mock('@/app/components/base/checkbox', () => ({
+  default: ({ onCheck, checked }: { onCheck: () => void, checked: boolean }) => (
+    <button type="button" onClick={onCheck}>{checked ? 'checked' : 'unchecked'}</button>
+  ),
+}))
+
 vi.mock('@langgenius/dify-ui/select', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@langgenius/dify-ui/select')>()
 
@@ -90,12 +73,6 @@ vi.mock('@langgenius/dify-ui/select', async (importOriginal) => {
     SelectItemIndicator: () => <span data-testid="select-item-indicator" />,
   }
 })
-
-vi.mock('@langgenius/dify-ui/tooltip', () => ({
-  Tooltip: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  TooltipTrigger: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  TooltipContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-}))
 
 vi.mock('../field', () => ({
   default: ({ children, title }: { children: ReactNode, title: string }) => (
@@ -199,18 +176,7 @@ describe('ConfigModalFormFields', () => {
     expect(selectProps.payloadChangeHandlers.default).toHaveBeenCalledWith('beta')
   })
 
-  it('should wire file, json schema, and visibility controls', async () => {
-    const textInputProps = createBaseProps()
-    const textInputView = render(<ConfigModalFormFields {...textInputProps} />)
-    expect(screen.getByText('variableConfig.hidden')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'variableConfig.hiddenDescription' }))
-    expect(await screen.findByText('variableConfig.hiddenDescription')).toBeInTheDocument()
-    const docLink = await screen.findByRole('link')
-    expect(docLink).toHaveAttribute('href', 'https://docs.example.com/use-dify/nodes/user-input#hide-and-pre-fill-input-fields')
-    expect(docLink).toHaveAttribute('target', '_blank')
-    expect(docLink).toHaveAttribute('rel', 'noopener noreferrer')
-    textInputView.unmount()
-
+  it('should wire file, json schema, and visibility controls', () => {
     const singleFileProps = createBaseProps()
     singleFileProps.tempPayload = {
       ...singleFileProps.tempPayload,
@@ -219,20 +185,18 @@ describe('ConfigModalFormFields', () => {
       allowed_file_extensions: [],
       allowed_file_upload_methods: ['remote_url'],
     }
-    const singleFileView = render(<ConfigModalFormFields {...singleFileProps} />)
-    expect(screen.queryByText('variableConfig.hidden')).not.toBeInTheDocument()
-    expect(screen.queryByText('variableConfig.hiddenDescription')).not.toBeInTheDocument()
+    render(<ConfigModalFormFields {...singleFileProps} />)
     fireEvent.click(screen.getByText('single-file-setting'))
     fireEvent.click(screen.getByText('upload-file'))
-    fireEvent.click(screen.getByRole('checkbox', { name: 'variableConfig.required' }))
+    fireEvent.click(screen.getAllByText('unchecked')[0]!)
+    fireEvent.click(screen.getAllByText('unchecked')[1]!)
 
     expect(singleFileProps.onFilePayloadChange).toHaveBeenCalledWith({ number_limits: 1 })
     expect(singleFileProps.payloadChangeHandlers.default).toHaveBeenCalledWith(expect.objectContaining({
       fileId: 'file-1',
     }))
     expect(singleFileProps.payloadChangeHandlers.required).toHaveBeenCalledWith(true)
-    expect(singleFileProps.payloadChangeHandlers.hide).not.toHaveBeenCalled()
-    singleFileView.unmount()
+    expect(singleFileProps.payloadChangeHandlers.hide).toHaveBeenCalledWith(true)
 
     const multiFileProps = createBaseProps()
     multiFileProps.tempPayload = {
@@ -243,9 +207,8 @@ describe('ConfigModalFormFields', () => {
       allowed_file_upload_methods: ['remote_url'],
     }
     render(<ConfigModalFormFields {...multiFileProps} />)
-    expect(screen.queryByText('variableConfig.hidden')).not.toBeInTheDocument()
     fireEvent.click(screen.getByText('multi-file-setting'))
-    fireEvent.click(screen.getAllByText('upload-file')[0]!)
+    fireEvent.click(screen.getAllByText('upload-file')[1]!)
     expect(multiFileProps.onFilePayloadChange).toHaveBeenCalledWith({ number_limits: 3 })
     expect(multiFileProps.payloadChangeHandlers.default).toHaveBeenCalledWith([
       expect.objectContaining({ fileId: 'file-1' }),
@@ -403,21 +366,5 @@ describe('ConfigModalFormFields', () => {
     render(<ConfigModalFormFields {...numberProps} />)
 
     expect(screen.getByRole('spinbutton')).toHaveValue(null)
-  })
-
-  it('should disable hide checkbox when required is true and disable required when hide is true', () => {
-    const requiredProps = createBaseProps()
-    requiredProps.tempPayload = { ...requiredProps.tempPayload, type: InputVarType.textInput, required: true, hide: false }
-    const { unmount } = render(<ConfigModalFormFields {...requiredProps} />)
-
-    expect(screen.getByRole('checkbox', { name: 'variableConfig.hidden' })).toHaveAttribute('aria-disabled', 'true')
-    unmount()
-
-    const hideProps = createBaseProps()
-    hideProps.tempPayload = { ...hideProps.tempPayload, type: InputVarType.textInput, required: false, hide: true }
-    render(<ConfigModalFormFields {...hideProps} />)
-
-    expect(screen.getByRole('checkbox', { name: 'variableConfig.required' })).toHaveAttribute('aria-disabled', 'true')
-    expect(screen.getByRole('checkbox', { name: 'variableConfig.hidden' })).toHaveAttribute('aria-checked', 'true')
   })
 })

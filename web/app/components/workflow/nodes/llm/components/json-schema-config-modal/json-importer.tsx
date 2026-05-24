@@ -99,14 +99,9 @@ const JsonImporter: FC<JsonImporterProps> = ({
         <div className="flex w-[400px] flex-col rounded-2xl border-[0.5px] border-components-panel-border bg-components-panel-bg shadow-2xl shadow-shadow-shadow-9">
           {/* Title */}
           <div className="relative px-3 pt-3.5 pb-1">
-            <button
-              type="button"
-              aria-label={t('operation.close', { ns: 'common' })}
-              className="absolute right-2.5 bottom-0 flex size-8 items-center justify-center border-none bg-transparent p-0"
-              onClick={onClose}
-            >
-              <RiCloseLine className="size-4 text-text-tertiary" aria-hidden="true" />
-            </button>
+            <div className="absolute right-2.5 bottom-0 flex h-8 w-8 items-center justify-center" onClick={onClose}>
+              <RiCloseLine className="h-4 w-4 text-text-tertiary" />
+            </div>
             <div className="flex pr-8 pl-1 system-xl-semibold text-text-primary">
               {t('nodes.llm.jsonSchema.import', { ns: 'workflow' })}
             </div>

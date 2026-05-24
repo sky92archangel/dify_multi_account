@@ -9,9 +9,6 @@ export default defineConfig({
   resolve: {
     tsconfigPaths: true,
   },
-  optimizeDeps: {
-    include: ['@base-ui/react/form'],
-  },
   test: {
     globals: true,
     setupFiles: ['./vitest.setup.ts'],

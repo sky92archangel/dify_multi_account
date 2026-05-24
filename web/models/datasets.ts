@@ -1,11 +1,10 @@
 import type { DataSourceNotionPage, DataSourceProvider } from './common'
 import type { DatasourceType } from './pipeline'
+import type { Tag } from '@/app/components/base/tag-management/constant'
 import type { IndexingType } from '@/app/components/datasets/create/step-two'
 import type { MetadataItemWithValue } from '@/app/components/datasets/metadata/types'
 import type { MetadataFilteringVariableType } from '@/app/components/workflow/nodes/knowledge-retrieval/types'
-import type { Tag } from '@/contract/console/tags'
 import type { AppIconType, AppModeEnum, RetrievalConfig, TransferMethod } from '@/types/app'
-import type { SegmentImportStatus } from '@/types/dataset'
 import type { I18nKeysByPrefix } from '@/types/i18n'
 import { ExternalKnowledgeBase, General, ParentChild, Qa } from '@/app/components/base/icons/src/public/knowledge/dataset-card'
 
@@ -784,7 +783,7 @@ export type UpdateDocumentBatchParams = {
 
 export type BatchImportResponse = {
   job_id: string
-  job_status: SegmentImportStatus
+  job_status: string
 }
 
 export const DOC_FORM_ICON_WITH_BG: Record<ChunkingMode | 'external', React.ComponentType<{ className: string }>> = {

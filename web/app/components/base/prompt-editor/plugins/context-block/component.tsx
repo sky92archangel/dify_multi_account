@@ -25,7 +25,7 @@ const ContextBlockComponent: FC<ContextBlockComponentProps> = ({
 }) => {
   const { t } = useTranslation()
   const [ref, isSelected] = useSelectOrDelete(nodeKey, DELETE_CONTEXT_BLOCK_COMMAND)
-  const [triggerRef, open, setOpen] = useTrigger<HTMLButtonElement>()
+  const [triggerRef, open, setOpen] = useTrigger()
   const { eventEmitter } = useEventEmitterContextContext()
   const [localDatasets, setLocalDatasets] = useState<Dataset[]>(datasets)
 
@@ -54,19 +54,18 @@ const ContextBlockComponent: FC<ContextBlockComponentProps> = ({
           onOpenChange={setOpen}
         >
           <PopoverTrigger
+            nativeButton={false}
             render={(
-              <button
-                type="button"
-                aria-label={t('promptEditor.context.item.title', { ns: 'common' })}
+              <div
                 className={`
-            flex h-[18px] w-[18px] cursor-pointer items-center justify-center rounded border-none p-0 text-[11px] font-semibold
+            flex h-[18px] w-[18px] cursor-pointer items-center justify-center rounded text-[11px] font-semibold
             ${open ? 'bg-[#6938EF] text-white' : 'bg-white/50 group-hover:bg-white group-hover:shadow-xs'}
           `}
                 ref={triggerRef}
                 onClick={e => e.preventDefault()}
               >
                 {localDatasets.length}
-              </button>
+              </div>
             )}
           />
           <PopoverContent
@@ -92,16 +91,12 @@ const ContextBlockComponent: FC<ContextBlockComponentProps> = ({
                     ))
                   }
                 </div>
-                <button
-                  type="button"
-                  className="flex h-8 cursor-pointer items-center border-none bg-transparent p-0 text-left text-[#155EEF] focus-visible:ring-1 focus-visible:ring-components-input-border-active focus-visible:outline-hidden"
-                  onClick={onAddContext}
-                >
-                  <div className="mr-2 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-[0.5px] border-gray-100">
-                    <span className="i-ri-add-line h-[14px] w-[14px]" aria-hidden="true" />
+                <div className="flex h-8 cursor-pointer items-center text-[#155EEF]" onClick={onAddContext}>
+                  <div className="mr-2 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-[0.5px] border-gray-100" data-testid="add-button">
+                    <span className="i-ri-add-line h-[14px] w-[14px]" />
                   </div>
                   <div className="text-[13px] font-medium" title="">{t('promptEditor.context.modal.add', { ns: 'common' })}</div>
-                </button>
+                </div>
               </div>
               <div className="rounded-b-xl border-t-[0.5px] border-gray-50 bg-gray-50 px-4 py-3 text-xs text-gray-500">
                 {t('promptEditor.context.modal.footer', { ns: 'common' })}

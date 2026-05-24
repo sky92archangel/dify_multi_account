@@ -1,12 +1,11 @@
 import type { FileEntity } from '@/app/components/datasets/common/image-uploader/types'
 import type { DocumentContextValue } from '@/app/components/datasets/documents/detail/context'
 import type { ChunkingMode, ParentMode, SegmentDetailModel, SegmentsResponse } from '@/models/datasets'
-import type { SegmentImportStatus } from '@/types/dataset'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, renderHook } from '@testing-library/react'
 import * as React from 'react'
 import { ChunkingMode as ChunkingModeEnum } from '@/models/datasets'
-import { segmentImportStatus } from '@/types/dataset'
+import { ProcessStatus } from '../../../segment-add'
 import { useSegmentListData } from '../use-segment-list-data'
 
 // Type for mutation callbacks
@@ -177,7 +176,7 @@ const defaultOptions = {
   searchValue: '',
   selectedStatus: 'all' as boolean | 'all',
   selectedSegmentIds: [] as string[],
-  importStatus: undefined as SegmentImportStatus | undefined,
+  importStatus: undefined as ProcessStatus | string | undefined,
   currentPage: 1,
   limit: 10,
   onCloseSegmentDetail: vi.fn(),
@@ -690,7 +689,7 @@ describe('useSegmentListData', () => {
 
       renderHook(() => useSegmentListData({
         ...defaultOptions,
-        importStatus: segmentImportStatus.completed,
+        importStatus: ProcessStatus.COMPLETED,
         clearSelection,
       }), {
         wrapper: createWrapper(),

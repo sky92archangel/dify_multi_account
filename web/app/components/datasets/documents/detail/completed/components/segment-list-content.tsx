@@ -78,6 +78,8 @@ type GeneralModeContentProps = {
   embeddingAvailable: boolean
   isLoadingSegmentList: boolean
   segments: SegmentDetailModel[]
+  selectedSegmentIds: string[]
+  onSelected: (segId: string) => void
   onChangeSwitch: (enable: boolean, segId?: string) => Promise<void>
   onDelete: (segId?: string) => Promise<void>
   onClickCard: (detail: SegmentDetailModel, isEditMode?: boolean) => void
@@ -93,6 +95,8 @@ export const GeneralModeContent: FC<GeneralModeContentProps> = ({
   embeddingAvailable,
   isLoadingSegmentList,
   segments,
+  selectedSegmentIds,
+  onSelected,
   onChangeSwitch,
   onDelete,
   onClickCard,
@@ -108,6 +112,8 @@ export const GeneralModeContent: FC<GeneralModeContentProps> = ({
       embeddingAvailable={embeddingAvailable}
       isLoading={isLoadingSegmentList}
       items={segments}
+      selectedSegmentIds={selectedSegmentIds}
+      onSelected={onSelected}
       onChangeSwitch={onChangeSwitch}
       onDelete={onDelete}
       onClick={onClickCard}

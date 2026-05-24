@@ -238,9 +238,11 @@ export const useDatasourceActions = ({
   }, [dataSourceStore, onClickPreview])
 
   // Select all handler
-  const handleSelectAll = useCallback((checked: boolean) => {
+  const handleSelectAll = useCallback(() => {
     const {
+      onlineDocuments,
       onlineDriveFileList,
+      selectedFileIds,
       setOnlineDocuments,
       setSelectedFileIds,
       setSelectedPagesId,
@@ -248,7 +250,7 @@ export const useDatasourceActions = ({
 
     if (datasourceType === DatasourceType.onlineDocument) {
       const allIds = currentWorkspacePages?.map(page => page.page_id) || []
-      if (checked) {
+      if (onlineDocuments.length < allIds.length) {
         const selectedPages = Array.from(allIds).map(pageId => PagesMapAndSelectedPagesId[pageId]!)
         setOnlineDocuments(selectedPages)
         setSelectedPagesId(new Set(allIds))
@@ -261,7 +263,7 @@ export const useDatasourceActions = ({
 
     if (datasourceType === DatasourceType.onlineDrive) {
       const allKeys = onlineDriveFileList.filter(item => item.type !== 'bucket').map(file => file.id)
-      if (checked)
+      if (selectedFileIds.length < allKeys.length)
         setSelectedFileIds(allKeys)
       else
         setSelectedFileIds([])

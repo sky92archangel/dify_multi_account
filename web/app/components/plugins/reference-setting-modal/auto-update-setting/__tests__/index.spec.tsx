@@ -63,19 +63,19 @@ vi.mock('@/service/use-plugins', () => ({
 }))
 
 // Mock popover component for ToolPicker and StrategyPicker
-let mockPopoverOpen = false
-let forcePopoverContentVisible = false // Allow tests to force content visibility
-let mockPopoverOnOpenChange: ((open: boolean) => void) | undefined
+let mockPortalOpen = false
+let forcePortalContentVisible = false // Allow tests to force content visibility
+let mockPortalOnOpenChange: ((open: boolean) => void) | undefined
 vi.mock('@langgenius/dify-ui/popover', () => ({
   Popover: ({ children, open = false, onOpenChange }: {
     children: React.ReactNode
     open?: boolean
     onOpenChange?: (open: boolean) => void
   }) => {
-    mockPopoverOpen = open
-    mockPopoverOnOpenChange = onOpenChange
+    mockPortalOpen = open
+    mockPortalOnOpenChange = onOpenChange
     return (
-      <div data-testid="popover" data-open={open}>{children}</div>
+      <div data-testid="portal-elem" data-open={open}>{children}</div>
     )
   },
   PopoverTrigger: ({ children, render, onClick, className }: {
@@ -85,11 +85,11 @@ vi.mock('@langgenius/dify-ui/popover', () => ({
     className?: string
   }) => (
     <div
-      data-testid="popover-trigger"
+      data-testid="portal-trigger"
       onClick={(e) => {
         onClick?.(e)
         if (!onClick)
-          mockPopoverOnOpenChange?.(!mockPopoverOpen)
+          mockPortalOnOpenChange?.(!mockPortalOpen)
       }}
       className={className}
     >
@@ -101,9 +101,39 @@ vi.mock('@langgenius/dify-ui/popover', () => ({
     className?: string
     popupClassName?: string
   }) => {
-    if (!mockPopoverOpen && !forcePopoverContentVisible)
+    if (!mockPortalOpen && !forcePortalContentVisible)
       return null
-    return <div data-testid="popover-content" className={[className, popupClassName].filter(Boolean).join(' ')}>{children}</div>
+    return <div data-testid="portal-content" className={[className, popupClassName].filter(Boolean).join(' ')}>{children}</div>
+  },
+}))
+
+vi.mock('@/app/components/base/portal-to-follow-elem', () => ({
+  PortalToFollowElem: ({ children, open = false, onOpenChange }: {
+    children: React.ReactNode
+    open?: boolean
+    onOpenChange?: (open: boolean) => void
+  }) => {
+    mockPortalOpen = open
+    mockPortalOnOpenChange = onOpenChange
+    return <div data-testid="portal-elem" data-open={open}>{children}</div>
+  },
+  PortalToFollowElemTrigger: ({ children, onClick, className }: {
+    children?: React.ReactNode
+    onClick?: (e: React.MouseEvent) => void
+    className?: string
+  }) => (
+    <div data-testid="portal-trigger" onClick={onClick} className={className}>
+      {children}
+    </div>
+  ),
+  PortalToFollowElemContent: ({ children, className, popupClassName }: {
+    children: React.ReactNode
+    className?: string
+    popupClassName?: string
+  }) => {
+    if (!mockPortalOpen && !forcePortalContentVisible)
+      return null
+    return <div data-testid="portal-content" className={[className, popupClassName].filter(Boolean).join(' ')}>{children}</div>
   },
 }))
 
@@ -176,6 +206,23 @@ vi.mock('@/app/components/plugins/marketplace/search-box', () => ({
         placeholder={placeholder}
       />
     </div>
+  ),
+}))
+
+// Mock Checkbox component
+vi.mock('@/app/components/base/checkbox', () => ({
+  default: ({ checked, onCheck, className }: {
+    checked?: boolean
+    onCheck: () => void
+    className?: string
+  }) => (
+    <input
+      type="checkbox"
+      checked={checked}
+      onChange={onCheck}
+      className={className}
+      data-testid="checkbox"
+    />
   ),
 }))
 
@@ -315,9 +362,9 @@ const renderWithQueryClient = (ui: React.ReactElement) => {
 describe('auto-update-setting', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockPopoverOpen = false
-    mockPopoverOnOpenChange = undefined
-    forcePopoverContentVisible = false
+    mockPortalOpen = false
+    mockPortalOnOpenChange = undefined
+    forcePortalContentVisible = false
     mockPluginsData.plugins = []
   })
 
@@ -722,7 +769,7 @@ describe('auto-update-setting', () => {
         render(<ToolItem {...defaultProps} isChecked={false} />)
 
         // Assert
-        expect(screen.getByRole('checkbox')).not.toBeChecked()
+        expect(screen.getByTestId('checkbox')).not.toBeChecked()
       })
 
       it('should render checkbox checked when isChecked is true', () => {
@@ -730,7 +777,7 @@ describe('auto-update-setting', () => {
         render(<ToolItem {...defaultProps} isChecked={true} />)
 
         // Assert
-        expect(screen.getByRole('checkbox')).toBeChecked()
+        expect(screen.getByTestId('checkbox')).toBeChecked()
       })
     })
 
@@ -741,7 +788,7 @@ describe('auto-update-setting', () => {
 
         // Act
         render(<ToolItem {...defaultProps} onCheckChange={onCheckChange} />)
-        fireEvent.click(screen.getByRole('checkbox'))
+        fireEvent.click(screen.getByTestId('checkbox'))
 
         // Assert
         expect(onCheckChange).toHaveBeenCalledTimes(1)
@@ -881,12 +928,12 @@ describe('auto-update-setting', () => {
         render(<ToolPicker {...defaultProps} isShow={false} />)
 
         // Assert
-        expect(screen.queryByTestId('popover-content')).not.toBeInTheDocument()
+        expect(screen.queryByTestId('portal-content')).not.toBeInTheDocument()
       })
 
       it('should render search box and tabs when isShow is true', () => {
         // Arrange
-        mockPopoverOpen = true
+        mockPortalOpen = true
 
         // Act
         render(<ToolPicker {...defaultProps} isShow={true} />)
@@ -897,7 +944,7 @@ describe('auto-update-setting', () => {
 
       it('should show NoDataPlaceholder when no plugins and no search query', () => {
         // Arrange
-        mockPopoverOpen = true
+        mockPortalOpen = true
         mockPluginsData.plugins = []
 
         // Act
@@ -939,7 +986,7 @@ describe('auto-update-setting', () => {
 
       it('should filter out non-marketplace plugins', () => {
         // Arrange
-        mockPopoverOpen = true
+        mockPortalOpen = true
 
         // Act
         renderWithQueryClient(<ToolPicker {...defaultProps} isShow={true} />)
@@ -950,7 +997,7 @@ describe('auto-update-setting', () => {
 
       it('should filter by search query', () => {
         // Arrange
-        mockPopoverOpen = true
+        mockPortalOpen = true
 
         // Act
         renderWithQueryClient(<ToolPicker {...defaultProps} isShow={true} />)
@@ -971,7 +1018,7 @@ describe('auto-update-setting', () => {
 
         // Act
         render(<ToolPicker {...defaultProps} onShowChange={onShowChange} />)
-        fireEvent.click(screen.getByTestId('popover-trigger'))
+        fireEvent.click(screen.getByTestId('portal-trigger'))
 
         // Assert
         expect(onShowChange).toHaveBeenCalledWith(true)
@@ -979,7 +1026,7 @@ describe('auto-update-setting', () => {
 
       it('should call onChange when plugin is selected', () => {
         // Arrange
-        mockPopoverOpen = true
+        mockPortalOpen = true
         mockPluginsData.plugins = [
           createMockPluginDetail({
             plugin_id: 'test-plugin',
@@ -991,7 +1038,7 @@ describe('auto-update-setting', () => {
 
         // Act
         renderWithQueryClient(<ToolPicker {...defaultProps} isShow={true} onChange={onChange} />)
-        fireEvent.click(screen.getByRole('checkbox'))
+        fireEvent.click(screen.getByTestId('checkbox'))
 
         // Assert
         expect(onChange).toHaveBeenCalledWith(['test-plugin'])
@@ -999,7 +1046,7 @@ describe('auto-update-setting', () => {
 
       it('should unselect plugin when already selected', () => {
         // Arrange
-        mockPopoverOpen = true
+        mockPortalOpen = true
         mockPluginsData.plugins = [
           createMockPluginDetail({
             plugin_id: 'test-plugin',
@@ -1012,7 +1059,7 @@ describe('auto-update-setting', () => {
         renderWithQueryClient(
           <ToolPicker {...defaultProps} isShow={true} value={['test-plugin']} onChange={onChange} />,
         )
-        fireEvent.click(screen.getByRole('checkbox'))
+        fireEvent.click(screen.getByTestId('checkbox'))
 
         // Assert
         expect(onChange).toHaveBeenCalledWith([])
@@ -1023,7 +1070,7 @@ describe('auto-update-setting', () => {
       it('handleCheckChange should be memoized with correct dependencies', () => {
         // Arrange
         const onChange = vi.fn()
-        mockPopoverOpen = true
+        mockPortalOpen = true
         mockPluginsData.plugins = [
           createMockPluginDetail({
             plugin_id: 'plugin-1',
@@ -1037,7 +1084,7 @@ describe('auto-update-setting', () => {
         )
 
         // Click to select
-        fireEvent.click(screen.getByRole('checkbox'))
+        fireEvent.click(screen.getByTestId('checkbox'))
         expect(onChange).toHaveBeenCalledWith(['plugin-1'])
 
         // Rerender with new value
@@ -1049,7 +1096,7 @@ describe('auto-update-setting', () => {
         )
 
         // Click to unselect
-        fireEvent.click(screen.getByRole('checkbox'))
+        fireEvent.click(screen.getByTestId('checkbox'))
         expect(onChange).toHaveBeenCalledWith([])
       })
     })
@@ -1087,7 +1134,7 @@ describe('auto-update-setting', () => {
 
         // Assert
         expect(screen.getByText('plugin.autoUpdate.partialUPdate:{"num":2}')).toBeInTheDocument()
-        expect(screen.getByRole('button', { name: 'plugin.autoUpdate.operation.clearAll' })).toBeInTheDocument()
+        expect(screen.getByText('plugin.autoUpdate.operation.clearAll')).toBeInTheDocument()
       })
 
       it('should render select button', () => {
@@ -1126,7 +1173,7 @@ describe('auto-update-setting', () => {
             onChange={onChange}
           />,
         )
-        fireEvent.click(screen.getByRole('button', { name: 'plugin.autoUpdate.operation.clearAll' }))
+        fireEvent.click(screen.getByText('plugin.autoUpdate.operation.clearAll'))
 
         // Assert
         expect(onChange).toHaveBeenCalledWith([])
@@ -1333,10 +1380,10 @@ describe('auto-update-setting', () => {
         render(<AutoUpdateSetting payload={payload} onChange={onChange} />)
 
         // Click time picker trigger
-        fireEvent.click(screen.getByRole('button', { name: /GMT-5/ }))
+        fireEvent.click(screen.getByTestId('time-picker').querySelector('[data-testid="time-input"]')!.parentElement!)
 
         // Set time
-        fireEvent.click(screen.getByRole('button', { name: 'Set 10:30' }))
+        fireEvent.click(screen.getByTestId('time-picker-set'))
 
         // Assert
         expect(onChange).toHaveBeenCalled()
@@ -1351,10 +1398,10 @@ describe('auto-update-setting', () => {
         render(<AutoUpdateSetting payload={payload} onChange={onChange} />)
 
         // Click time picker trigger
-        fireEvent.click(screen.getByRole('button', { name: /GMT-5/ }))
+        fireEvent.click(screen.getByTestId('time-picker').querySelector('[data-testid="time-input"]')!.parentElement!)
 
         // Clear time
-        fireEvent.click(screen.getByRole('button', { name: 'Clear' }))
+        fireEvent.click(screen.getByTestId('time-picker-clear'))
 
         // Assert
         expect(onChange).toHaveBeenCalled()
@@ -1373,7 +1420,7 @@ describe('auto-update-setting', () => {
         render(<AutoUpdateSetting payload={payload} onChange={onChange} />)
 
         // Click clear all
-        fireEvent.click(screen.getByRole('button', { name: 'plugin.autoUpdate.operation.clearAll' }))
+        fireEvent.click(screen.getByText('plugin.autoUpdate.operation.clearAll'))
 
         // Assert
         expect(onChange).toHaveBeenCalledWith(expect.objectContaining({
@@ -1394,7 +1441,7 @@ describe('auto-update-setting', () => {
         render(<AutoUpdateSetting payload={payload} onChange={onChange} />)
 
         // Click clear all
-        fireEvent.click(screen.getByRole('button', { name: 'plugin.autoUpdate.operation.clearAll' }))
+        fireEvent.click(screen.getByText('plugin.autoUpdate.operation.clearAll'))
 
         // Assert
         expect(onChange).toHaveBeenCalledWith(expect.objectContaining({
@@ -1409,6 +1456,7 @@ describe('auto-update-setting', () => {
         // Act
         render(<AutoUpdateSetting {...defaultProps} payload={payload} />)
 
+        // Assert - timezone Trans component is rendered
         expect(screen.getByText('autoUpdate.changeTimezone')).toBeInTheDocument()
       })
     })
@@ -1441,7 +1489,7 @@ describe('auto-update-setting', () => {
         render(<AutoUpdateSetting payload={payload} onChange={onChange} />)
 
         // Trigger a change (clear plugins)
-        fireEvent.click(screen.getByRole('button', { name: 'plugin.autoUpdate.operation.clearAll' }))
+        fireEvent.click(screen.getByText('plugin.autoUpdate.operation.clearAll'))
 
         // Assert - other values should be preserved
         expect(onChange).toHaveBeenCalledWith(expect.objectContaining({

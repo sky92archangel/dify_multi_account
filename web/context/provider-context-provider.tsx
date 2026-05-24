@@ -38,7 +38,6 @@ export const ProviderContextProvider = ({
 
   const [plan, setPlan] = useState(defaultPlan)
   const [isFetchedPlan, setIsFetchedPlan] = useState(false)
-  const [isFetchedPlanInfo, setIsFetchedPlanInfo] = useState(false)
   const [enableBilling, setEnableBilling] = useState(true)
   const [enableReplaceWebAppLogo, setEnableReplaceWebAppLogo] = useState(false)
   const [modelLoadBalancingEnabled, setModelLoadBalancingEnabled] = useState(false)
@@ -104,9 +103,6 @@ export const ProviderContextProvider = ({
       setIsEducationWorkspace(false)
       setEnableReplaceWebAppLogo(false)
     }
-    finally {
-      setIsFetchedPlanInfo(true)
-    }
   }
   useEffect(() => {
     fetchPlan()
@@ -154,7 +150,6 @@ export const ProviderContextProvider = ({
       supportRetrievalMethods: supportRetrievalMethods?.retrieval_method || [],
       plan,
       isFetchedPlan,
-      isFetchedPlanInfo,
       enableBilling,
       onPlanInfoChanged: fetchPlan,
       enableReplaceWebAppLogo,

@@ -136,10 +136,6 @@ export default class AudioPlayer {
     }
     else {
       this.isLoadData = true
-      this.audioContext.resume().then((_) => {
-        this.audio.play()
-        this.callback?.('play')
-      })
       this.loadAudio()
     }
   }

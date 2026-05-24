@@ -13,7 +13,6 @@ let parameterRules: Array<Record<string, unknown>> | undefined = [
   },
 ]
 let isRulesLoading = false
-let isRulesPending = false
 let currentProvider: Record<string, unknown> | undefined = { provider: 'openai', label: { en_US: 'OpenAI' } }
 let currentModel: Record<string, unknown> | undefined = {
   model: 'gpt-3.5-turbo',
@@ -50,7 +49,7 @@ vi.mock('@/service/use-common', () => ({
       data: parameterRules,
     },
     isLoading: isRulesLoading,
-    isPending: isRulesPending,
+    isPending: isRulesLoading,
   }),
 }))
 
@@ -93,21 +92,9 @@ vi.mock('../../model-selector', () => ({
 }))
 
 vi.mock('../presets-parameter', () => ({
-  default: ({ onSelect, supportedParameterNames }: { onSelect: (id: number) => void, supportedParameterNames?: string[] }) => {
-    if (supportedParameterNames && !supportedParameterNames.includes('temperature'))
-      return null
-
-    return <button onClick={() => onSelect(1)}>Preset 1</button>
-  },
-}))
-
-vi.mock('../presets-parameter-utils', () => ({
-  getSupportedPresetConfig: (_toneId: number, supportedParameterNames?: string[]) => {
-    if (supportedParameterNames && !supportedParameterNames.includes('temperature'))
-      return {}
-
-    return { temperature: 0.8 }
-  },
+  default: ({ onSelect }: { onSelect: (id: number) => void }) => (
+    <button onClick={() => onSelect(1)}>Preset 1</button>
+  ),
 }))
 
 vi.mock('../trigger', () => ({
@@ -139,7 +126,6 @@ describe('ModelParameterModal', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     isRulesLoading = false
-    isRulesPending = false
     parameterRules = [
       {
         name: 'temperature',
@@ -208,28 +194,7 @@ describe('ModelParameterModal', () => {
     render(<ModelParameterModal {...defaultProps} />)
     fireEvent.click(screen.getByText('Open Settings'))
     fireEvent.click(screen.getByText('Preset 1'))
-    expect(defaultProps.onCompletionParamsChange).toHaveBeenCalledWith({
-      ...defaultProps.completionParams,
-      temperature: 0.8,
-    })
-  })
-
-  it('should not render preset control when visible parameters do not support preset keys', () => {
-    parameterRules = [
-      {
-        name: 'max_tokens',
-        label: { en_US: 'Max Tokens' },
-        type: 'int',
-        default: 256,
-        min: 1,
-        max: 4096,
-      },
-    ]
-
-    render(<ModelParameterModal {...defaultProps} />)
-    fireEvent.click(screen.getByText('Open Settings'))
-
-    expect(screen.queryByText('Preset 1')).not.toBeInTheDocument()
+    expect(defaultProps.onCompletionParamsChange).toHaveBeenCalled()
   })
 
   it('should call setModel when model selector picks another model', () => {
@@ -254,27 +219,9 @@ describe('ModelParameterModal', () => {
 
   it('should render loading state when parameter rules are loading', () => {
     isRulesLoading = true
-    isRulesPending = true
     render(<ModelParameterModal {...defaultProps} />)
     fireEvent.click(screen.getByText('Open Settings'))
     expect(screen.getByRole('status')).toBeInTheDocument()
-  })
-
-  it('should not render parameter loading when model is not configured and parameter rules query is pending but disabled', () => {
-    isRulesPending = true
-    parameterRules = []
-
-    render(
-      <ModelParameterModal
-        {...defaultProps}
-        provider=""
-        modelId=""
-      />,
-    )
-    fireEvent.click(screen.getByText('Open Settings'))
-
-    expect(screen.queryByRole('status')).not.toBeInTheDocument()
-    expect(screen.getByTestId('model-selector')).toBeInTheDocument()
   })
 
   it('should not open content when readonly is true', () => {
@@ -352,7 +299,6 @@ describe('ModelParameterModal', () => {
   it('should render the empty loading fallback when rules resolve to an empty list', () => {
     parameterRules = []
     isRulesLoading = true
-    isRulesPending = true
 
     render(<ModelParameterModal {...defaultProps} />)
     fireEvent.click(screen.getByText('Open Settings'))

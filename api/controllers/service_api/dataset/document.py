@@ -26,8 +26,7 @@ from controllers.common.errors import (
     TooManyFilesError,
     UnsupportedFileTypeError,
 )
-from controllers.common.fields import UrlResponse
-from controllers.common.schema import register_enum_models, register_response_schema_models, register_schema_models
+from controllers.common.schema import register_enum_models, register_schema_models
 from controllers.service_api import service_api_ns
 from controllers.service_api.app.error import ProviderNotInitializeError
 from controllers.service_api.dataset.error import (
@@ -78,6 +77,9 @@ class DocumentTextCreatePayload(BaseModel):
         return value
 
 
+DEFAULT_REF_TEMPLATE_SWAGGER_2_0 = "#/definitions/{model}"
+
+
 class DocumentTextUpdate(BaseModel):
     name: str | None = None
     text: str | None = None
@@ -121,7 +123,6 @@ register_schema_models(
     PreProcessingRule,
     Segmentation,
 )
-register_response_schema_models(service_api_ns, UrlResponse)
 
 
 def _create_document_by_text(tenant_id: str, dataset_id: UUID) -> tuple[Mapping[str, object], int]:
@@ -138,7 +139,7 @@ def _create_document_by_text(tenant_id: str, dataset_id: UUID) -> tuple[Mapping[
     if not dataset:
         raise ValueError("Dataset does not exist.")
 
-    if not dataset.indexing_technique and not args.get("indexing_technique"):
+    if not dataset.indexing_technique and not args["indexing_technique"]:
         raise ValueError("indexing_technique is required.")
 
     embedding_model_provider = payload.embedding_model_provider
@@ -434,7 +435,7 @@ class DocumentAddByFileApi(DatasetApiResource):
             raise ValueError("current_user is required")
         upload_file = FileService(db.engine).upload_file(
             filename=file.filename,
-            content=file.stream.read(),
+            content=file.read(),
             mimetype=file.mimetype,
             user=current_user,
             source="datasets",
@@ -508,7 +509,7 @@ def _update_document_by_file(tenant_id: str, dataset_id: UUID, document_id: UUID
         try:
             upload_file = FileService(db.engine).upload_file(
                 filename=file.filename,
-                content=file.stream.read(),
+                content=file.read(),
                 mimetype=file.mimetype,
                 user=current_user,
                 source="datasets",
@@ -750,11 +751,6 @@ class DocumentDownloadApi(DatasetApiResource):
             403: "Forbidden - insufficient permissions",
             404: "Document or upload file not found",
         }
-    )
-    @service_api_ns.response(
-        200,
-        "Download URL generated successfully",
-        service_api_ns.models[UrlResponse.__name__],
     )
     @cloud_edition_billing_rate_limit_check("knowledge", "dataset")
     def get(self, tenant_id, dataset_id, document_id):

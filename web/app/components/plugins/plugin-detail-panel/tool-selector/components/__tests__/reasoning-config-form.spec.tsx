@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import type { AppSelectorValue } from '@/app/components/plugins/plugin-detail-panel/app-selector'
 import type { ToolFormSchema } from '@/app/components/tools/utils/to-form-schema'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -54,16 +53,20 @@ vi.mock('@langgenius/dify-ui/switch', () => ({
   ),
 }))
 
+vi.mock('@/app/components/base/tooltip', () => ({
+  default: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
+}))
+
 vi.mock('@/app/components/header/account-setting/model-provider-page/hooks', () => ({
   useLanguage: () => 'en_US',
 }))
 
 vi.mock('@/app/components/plugins/plugin-detail-panel/app-selector', () => ({
-  AppSelector: ({ onSelect, scope }: { onSelect: (value: AppSelectorValue) => void, scope?: string }) => (
+  default: ({ onSelect, scope }: { onSelect: (value: Record<string, unknown>) => void, scope?: string }) => (
     <button
       data-testid="app-selector"
       data-scope={scope}
-      onClick={() => onSelect({ app_id: 'app-1', inputs: { topic: 'hello' }, files: [] })}
+      onClick={() => onSelect({ app_id: 'app-1', inputs: { topic: 'hello' } })}
     >
       Select App
     </button>
@@ -229,7 +232,7 @@ describe('ReasoningConfigForm', () => {
   it('should open schema modal for object fields and support app selection', () => {
     const onChange = vi.fn()
 
-    render(
+    const { container } = render(
       <ReasoningConfigForm
         value={{
           app: {
@@ -261,7 +264,7 @@ describe('ReasoningConfigForm', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'workflow.nodes.agent.clickToViewParameterSchema' }))
+    fireEvent.click(container.querySelector('div.ml-0\\.5.cursor-pointer')!)
     expect(screen.getByTestId('schema-modal')).toHaveTextContent('Config')
     fireEvent.click(screen.getByTestId('close-schema'))
 
@@ -272,7 +275,7 @@ describe('ReasoningConfigForm', () => {
         auto: 0,
         value: {
           type: undefined,
-          value: { app_id: 'app-1', inputs: { topic: 'hello' }, files: [] },
+          value: { app_id: 'app-1', inputs: { topic: 'hello' } },
         },
       },
     }))

@@ -9,6 +9,8 @@ import { VarInInspectType } from '@/types/workflow'
 import useCurrentVars from '../hooks/use-inspect-vars-crud'
 import { useNodesInteractions } from '../hooks/use-nodes-interactions'
 import { useStore } from '../store'
+// import ActionButton from '@/app/components/base/action-button'
+// import Tooltip from '@/app/components/base/tooltip'
 import Group from './group'
 
 type Props = {

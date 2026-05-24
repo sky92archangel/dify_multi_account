@@ -159,7 +159,7 @@ class TestDisableSegmentFromIndexTask:
         dataset: Dataset,
         tenant: Tenant,
         account: Account,
-        status: SegmentStatus = SegmentStatus.COMPLETED,
+        status: str = "completed",
         enabled: bool = True,
     ) -> DocumentSegment:
         """

@@ -75,7 +75,7 @@ describe('LoopResultPanel', () => {
     const contentPanels = container.querySelectorAll('.transition-all.duration-200')
     expect(contentPanels[0]).toHaveClass('max-h-0')
 
-    fireEvent.click(screen.getByRole('button', { name: 'workflow.singleRun.loop 1' }))
+    fireEvent.click(screen.getByText('workflow.singleRun.loop 1'))
     expect(contentPanels[0]).not.toHaveClass('max-h-0')
     expect(screen.getAllByTestId('tracing-panel')[0]).toHaveTextContent('1')
     expect(mockTracingPanel).toHaveBeenCalledWith({
@@ -83,8 +83,11 @@ describe('LoopResultPanel', () => {
       className: 'bg-background-section-burn',
     })
 
-    fireEvent.click(screen.getByRole('button', { name: 'workflow.singleRun.back' }))
-    fireEvent.click(screen.getByRole('button', { name: 'common.operation.close' }))
+    fireEvent.click(screen.getByText('workflow.singleRun.back'))
+    const closeTrigger = container.querySelector('.ml-2.shrink-0.cursor-pointer.p-1')
+    if (!closeTrigger)
+      throw new Error('Expected close trigger to be rendered')
+    fireEvent.click(closeTrigger)
 
     expect(onBack).toHaveBeenCalledTimes(1)
     expect(onHide).toHaveBeenCalledTimes(1)

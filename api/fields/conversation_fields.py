@@ -7,7 +7,6 @@ from pydantic import Field, field_validator, model_validator
 
 from fields.base import ResponseModel
 from graphon.file import File
-from libs.helper import to_timestamp
 
 type JSONValue = Any
 
@@ -48,7 +47,9 @@ class SimpleConversation(ResponseModel):
     @field_validator("created_at", "updated_at", mode="before")
     @classmethod
     def _normalize_timestamp(cls, value: datetime | int | None) -> int | None:
-        return to_timestamp(value)
+        if isinstance(value, datetime):
+            return to_timestamp(value)
+        return value
 
 
 class ConversationInfiniteScrollPagination(ResponseModel):
@@ -89,7 +90,9 @@ class ConversationAnnotation(ResponseModel):
     @field_validator("created_at", mode="before")
     @classmethod
     def _normalize_created_at(cls, value: datetime | int | None) -> int | None:
-        return to_timestamp(value)
+        if isinstance(value, datetime):
+            return to_timestamp(value)
+        return value
 
 
 class ConversationAnnotationHitHistory(ResponseModel):
@@ -100,7 +103,9 @@ class ConversationAnnotationHitHistory(ResponseModel):
     @field_validator("created_at", mode="before")
     @classmethod
     def _normalize_created_at(cls, value: datetime | int | None) -> int | None:
-        return to_timestamp(value)
+        if isinstance(value, datetime):
+            return to_timestamp(value)
+        return value
 
 
 class AgentThought(ResponseModel):
@@ -120,7 +125,9 @@ class AgentThought(ResponseModel):
     @field_validator("created_at", mode="before")
     @classmethod
     def _normalize_created_at(cls, value: datetime | int | None) -> int | None:
-        return to_timestamp(value)
+        if isinstance(value, datetime):
+            return to_timestamp(value)
+        return value
 
     @model_validator(mode="after")
     def _fallback_chain_id(self):
@@ -162,7 +169,9 @@ class MessageDetail(ResponseModel):
     @field_validator("created_at", mode="before")
     @classmethod
     def _normalize_created_at(cls, value: datetime | int | None) -> int | None:
-        return to_timestamp(value)
+        if isinstance(value, datetime):
+            return to_timestamp(value)
+        return value
 
 
 class FeedbackStat(ResponseModel):
@@ -228,7 +237,9 @@ class Conversation(ResponseModel):
     @field_validator("read_at", "created_at", "updated_at", mode="before")
     @classmethod
     def _normalize_timestamp(cls, value: datetime | int | None) -> int | None:
-        return to_timestamp(value)
+        if isinstance(value, datetime):
+            return to_timestamp(value)
+        return value
 
 
 class ConversationPagination(ResponseModel):
@@ -252,7 +263,9 @@ class ConversationMessageDetail(ResponseModel):
     @field_validator("created_at", mode="before")
     @classmethod
     def _normalize_created_at(cls, value: datetime | int | None) -> int | None:
-        return to_timestamp(value)
+        if isinstance(value, datetime):
+            return to_timestamp(value)
+        return value
 
 
 class ConversationWithSummary(ResponseModel):
@@ -278,7 +291,9 @@ class ConversationWithSummary(ResponseModel):
     @field_validator("read_at", "created_at", "updated_at", mode="before")
     @classmethod
     def _normalize_timestamp(cls, value: datetime | int | None) -> int | None:
-        return to_timestamp(value)
+        if isinstance(value, datetime):
+            return to_timestamp(value)
+        return value
 
 
 class ConversationWithSummaryPagination(ResponseModel):
@@ -307,7 +322,15 @@ class ConversationDetail(ResponseModel):
     @field_validator("created_at", "updated_at", mode="before")
     @classmethod
     def _normalize_timestamp(cls, value: datetime | int | None) -> int | None:
-        return to_timestamp(value)
+        if isinstance(value, datetime):
+            return to_timestamp(value)
+        return value
+
+
+def to_timestamp(value: datetime | None) -> int | None:
+    if value is None:
+        return None
+    return int(value.timestamp())
 
 
 def format_files_contained(value: JSONValue) -> JSONValue:

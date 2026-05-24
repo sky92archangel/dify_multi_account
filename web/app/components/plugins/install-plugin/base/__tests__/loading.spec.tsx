@@ -15,10 +15,10 @@ describe('Loading', () => {
     Loading = mod.default
   })
 
-  it('should render non-interactive checkbox skeleton', () => {
+  it('should render disabled unchecked checkbox', () => {
     render(<Loading />)
 
-    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
+    expect(screen.getByTestId('checkbox-undefined')).toBeInTheDocument()
   })
 
   it('should render placeholder', () => {

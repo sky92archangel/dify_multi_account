@@ -1,12 +1,14 @@
 'use client'
 import { cn } from '@langgenius/dify-ui/cn'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@langgenius/dify-ui/popover'
+import { useHover } from 'ahooks'
+import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Economic, HighQuality } from '@/app/components/base/icons/src/vender/knowledge'
+import {
+  PortalToFollowElem,
+  PortalToFollowElemContent,
+  PortalToFollowElemTrigger,
+} from '@/app/components/base/portal-to-follow-elem'
 import { IndexingType } from '../../create/step-two'
 import { EffectColor } from '../chunk-structure/types'
 import OptionCard from '../option-card'
@@ -30,6 +32,8 @@ const IndexMethod = ({
   onKeywordNumberChange,
 }: IndexMethodProps) => {
   const { t } = useTranslation()
+  const economyDomRef = useRef<HTMLDivElement>(null)
+  const isHoveringEconomy = useHover(economyDomRef)
   const isEconomyDisabled = currentValue === IndexingType.QUALIFIED
 
   return (
@@ -50,13 +54,14 @@ const IndexMethod = ({
         className="gap-x-2"
       />
       {/* Economy */}
-      <Popover>
-        <PopoverTrigger
-          nativeButton={false}
-          openOnHover={isEconomyDisabled}
-          render={<div />}
-        >
+      <PortalToFollowElem
+        open={isHoveringEconomy}
+        offset={4}
+        placement="right"
+      >
+        <PortalToFollowElemTrigger>
           <OptionCard
+            ref={economyDomRef}
             id={IndexingType.ECONOMICAL}
             isActive={value === IndexingType.ECONOMICAL}
             onClick={onChange}
@@ -75,17 +80,13 @@ const IndexMethod = ({
               onKeywordNumberChange={onKeywordNumberChange}
             />
           </OptionCard>
-        </PopoverTrigger>
-        {isEconomyDisabled && (
-          <PopoverContent
-            placement="right"
-            sideOffset={4}
-            popupClassName="rounded-lg border-0 bg-components-tooltip-bg p-3 text-xs font-medium text-text-secondary shadow-lg"
-          >
+        </PortalToFollowElemTrigger>
+        <PortalToFollowElemContent style={{ zIndex: 60 }}>
+          <div className="rounded-lg border-components-panel-border bg-components-tooltip-bg p-3 text-xs font-medium text-text-secondary shadow-lg">
             {t('form.indexMethodChangeToEconomyDisabledTip', { ns: 'datasetSettings' })}
-          </PopoverContent>
-        )}
-      </Popover>
+          </div>
+        </PortalToFollowElemContent>
+      </PortalToFollowElem>
     </div>
   )
 }

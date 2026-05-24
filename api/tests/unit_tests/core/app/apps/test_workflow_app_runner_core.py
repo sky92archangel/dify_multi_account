@@ -54,7 +54,7 @@ class TestWorkflowBasedAppRunner:
         runner = WorkflowBasedAppRunner(queue_manager=SimpleNamespace(), app_id="app")
 
         runtime_state = GraphRuntimeState(
-            variable_pool=VariablePool.from_bootstrap(system_variables=default_system_variables()),
+            variable_pool=VariablePool(system_variables=default_system_variables()),
             start_at=0.0,
         )
 
@@ -90,10 +90,10 @@ class TestWorkflowBasedAppRunner:
         with pytest.raises(ValueError, match="Neither single_iteration_run nor single_loop_run"):
             runner._prepare_single_node_execution(workflow, None, None, user_id="00000000-0000-0000-0000-000000000001")
 
-    def test_get_graph_and_variable_pool_for_single_node_run(self, monkeypatch: pytest.MonkeyPatch):
+    def test_get_graph_and_variable_pool_for_single_node_run(self, monkeypatch):
         runner = WorkflowBasedAppRunner(queue_manager=SimpleNamespace(), app_id="app")
         graph_runtime_state = GraphRuntimeState(
-            variable_pool=VariablePool.from_bootstrap(system_variables=default_system_variables()),
+            variable_pool=VariablePool(system_variables=default_system_variables()),
             start_at=0.0,
         )
 
@@ -142,9 +142,7 @@ class TestWorkflowBasedAppRunner:
         assert graph is not None
         assert variable_pool is graph_runtime_state.variable_pool
 
-    def test_get_graph_and_variable_pool_preloads_constructor_variables_before_graph_init(
-        self, monkeypatch: pytest.MonkeyPatch
-    ):
+    def test_get_graph_and_variable_pool_preloads_constructor_variables_before_graph_init(self, monkeypatch):
         variable_loader = SimpleNamespace(
             load_variables=lambda selectors: (
                 [
@@ -164,7 +162,7 @@ class TestWorkflowBasedAppRunner:
             app_id="app",
         )
         graph_runtime_state = GraphRuntimeState(
-            variable_pool=VariablePool.from_bootstrap(system_variables=default_system_variables()),
+            variable_pool=VariablePool(system_variables=default_system_variables()),
             start_at=0.0,
         )
 
@@ -234,7 +232,7 @@ class TestWorkflowBasedAppRunner:
         assert graph is not None
         assert variable_pool.get(["sys", "conversation_id"]).value == "conv-1"
 
-    def test_handle_graph_run_events_and_pause_notifications(self, monkeypatch: pytest.MonkeyPatch):
+    def test_handle_graph_run_events_and_pause_notifications(self, monkeypatch):
         published: list[object] = []
 
         class _QueueManager:
@@ -243,7 +241,7 @@ class TestWorkflowBasedAppRunner:
 
         runner = WorkflowBasedAppRunner(queue_manager=_QueueManager(), app_id="app")
         graph_runtime_state = GraphRuntimeState(
-            variable_pool=VariablePool.from_bootstrap(system_variables=default_system_variables()),
+            variable_pool=VariablePool(system_variables=default_system_variables()),
             start_at=0.0,
         )
         graph_runtime_state.register_paused_node("node-1")
@@ -286,7 +284,7 @@ class TestWorkflowBasedAppRunner:
 
         runner = WorkflowBasedAppRunner(queue_manager=_QueueManager(), app_id="app")
         graph_runtime_state = GraphRuntimeState(
-            variable_pool=VariablePool.from_bootstrap(system_variables=default_system_variables()),
+            variable_pool=VariablePool(system_variables=default_system_variables()),
             start_at=0.0,
         )
         workflow_entry = SimpleNamespace(graph_engine=SimpleNamespace(graph_runtime_state=graph_runtime_state))
@@ -425,7 +423,7 @@ class TestWorkflowBasedAppRunner:
 
         runner = WorkflowBasedAppRunner(queue_manager=_QueueManager(), app_id="app")
         graph_runtime_state = GraphRuntimeState(
-            variable_pool=VariablePool.from_bootstrap(system_variables=default_system_variables()),
+            variable_pool=VariablePool(system_variables=default_system_variables()),
             start_at=0.0,
         )
         workflow_entry = SimpleNamespace(graph_engine=SimpleNamespace(graph_runtime_state=graph_runtime_state))

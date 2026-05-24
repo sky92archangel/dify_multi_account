@@ -3,7 +3,6 @@ from typing import Any, Literal
 from pydantic import BaseModel, field_validator
 
 from core.rag.entities import Rule
-from core.rag.entities.metadata_entities import MetadataFilteringCondition
 from core.rag.index_processor.constant.index_type import IndexStructureType
 from core.rag.retrieval.retrieval_methods import RetrievalMethod
 
@@ -84,7 +83,6 @@ class RetrievalModel(BaseModel):
     score_threshold_enabled: bool
     score_threshold: float | None = None
     weights: WeightModel | None = None
-    metadata_filtering_conditions: MetadataFilteringCondition | None = None
 
 
 class MetaDataConfig(BaseModel):

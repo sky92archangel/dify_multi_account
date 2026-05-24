@@ -14,9 +14,7 @@ describe('ParamItem Slider onChange', () => {
     vi.clearAllMocks()
   })
 
-  const getSlider = () => screen.getByLabelText('Test Param', {
-    selector: 'input[type="range"]',
-  })
+  const getSlider = () => screen.getByLabelText('Test Param')
 
   it('should divide slider value by 100 when max < 5', async () => {
     const user = userEvent.setup()

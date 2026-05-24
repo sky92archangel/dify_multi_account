@@ -1,4 +1,4 @@
-import type { WorkflowCommentList } from '@/contract/console/workflow-comment'
+import type { WorkflowCommentList } from '@/service/workflow-comment'
 import { cn } from '@langgenius/dify-ui/cn'
 import { Switch } from '@langgenius/dify-ui/switch'
 import { RiCheckboxCircleFill, RiCheckboxCircleLine, RiCheckLine, RiCloseLine, RiFilter3Line } from '@remixicon/react'
@@ -6,11 +6,14 @@ import { memo, useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import Divider from '@/app/components/base/divider'
 import { UserAvatarList } from '@/app/components/base/user-avatar-list'
+import { collaborationManager } from '@/app/components/workflow/collaboration/core/collaboration-manager'
 import { useWorkflowComment } from '@/app/components/workflow/hooks/use-workflow-comment'
 import { useStore } from '@/app/components/workflow/store'
 import { ControlMode } from '@/app/components/workflow/types'
 import { useAppContext } from '@/context/app-context'
 import { useFormatTimeFromNow } from '@/hooks/use-format-time-from-now'
+import { useParams } from '@/next/navigation'
+import { resolveWorkflowComment } from '@/service/workflow-comment'
 
 const CommentsPanel = () => {
   const { t } = useTranslation()
@@ -19,7 +22,9 @@ const CommentsPanel = () => {
   const setControlMode = useStore(s => s.setControlMode)
   const showResolvedComments = useStore(s => s.showResolvedComments)
   const setShowResolvedComments = useStore(s => s.setShowResolvedComments)
-  const { comments, loading, handleCommentIconClick, handleCommentResolve } = useWorkflowComment()
+  const { comments, loading, loadComments, handleCommentIconClick } = useWorkflowComment()
+  const params = useParams()
+  const appId = params.appId as string
   const { formatTimeFromNow } = useFormatTimeFromNow()
 
   const [showOnlyMine, setShowOnlyMine] = useState(false)
@@ -43,14 +48,20 @@ const CommentsPanel = () => {
   const handleResolve = useCallback(async (comment: WorkflowCommentList) => {
     if (comment.resolved)
       return
+    if (!appId)
+      return
     try {
-      await handleCommentResolve(comment.id)
+      await resolveWorkflowComment(appId, comment.id)
+
+      collaborationManager.emitCommentsUpdate(appId)
+
+      await loadComments()
       setActiveCommentId(comment.id)
     }
     catch (e) {
       console.error('Resolve comment failed', e)
     }
-  }, [handleCommentResolve, setActiveCommentId])
+  }, [appId, loadComments, setActiveCommentId])
 
   const hasActiveFilter = showOnlyMine || !showResolvedComments
 
@@ -61,14 +72,14 @@ const CommentsPanel = () => {
         <div className="relative flex items-center gap-2">
           <button
             className={cn(
-              'group flex size-6 items-center justify-center rounded-md hover:bg-state-accent-active',
+              'group flex h-6 w-6 items-center justify-center rounded-md hover:bg-state-accent-active',
               hasActiveFilter && 'bg-state-accent-active',
             )}
             aria-label={t('comments.aria.filterComments', { ns: 'workflow' })}
             onClick={() => setShowFilter(v => !v)}
           >
             <RiFilter3Line className={cn(
-              'size-4 text-text-secondary group-hover:text-text-accent',
+              'h-4 w-4 text-text-secondary group-hover:text-text-accent',
               hasActiveFilter && 'text-text-accent',
             )}
             />
@@ -76,28 +87,28 @@ const CommentsPanel = () => {
           {showFilter && (
             <div className="absolute top-9 right-10 z-50 min-w-[184px] rounded-xl border-[0.5px] border-components-panel-border bg-components-panel-bg-blur p-1 shadow-lg backdrop-blur-[10px]">
               <button
-                className={cn('flex w-full items-center justify-between rounded-md p-2 text-left text-sm hover:bg-state-base-hover', !showOnlyMine && 'bg-components-panel-on-panel-item-bg')}
+                className={cn('flex w-full items-center justify-between rounded-md px-2 py-2 text-left text-sm hover:bg-state-base-hover', !showOnlyMine && 'bg-components-panel-on-panel-item-bg')}
                 onClick={() => {
                   setShowOnlyMine(false)
                   setShowFilter(false)
                 }}
               >
                 <span className="text-text-secondary">{t('comments.filter.all', { ns: 'workflow' })}</span>
-                {!showOnlyMine && <RiCheckLine className="size-4 text-primary-600" />}
+                {!showOnlyMine && <RiCheckLine className="h-4 w-4 text-primary-600" />}
               </button>
               <button
-                className={cn('mt-1 flex w-full items-center justify-between rounded-md p-2 text-left text-sm hover:bg-state-base-hover', showOnlyMine && 'bg-components-panel-on-panel-item-bg')}
+                className={cn('mt-1 flex w-full items-center justify-between rounded-md px-2 py-2 text-left text-sm hover:bg-state-base-hover', showOnlyMine && 'bg-components-panel-on-panel-item-bg')}
                 onClick={() => {
                   setShowOnlyMine(true)
                   setShowFilter(false)
                 }}
               >
                 <span className="text-text-secondary">{t('comments.filter.onlyYourThreads', { ns: 'workflow' })}</span>
-                {showOnlyMine && <RiCheckLine className="size-4 text-primary-600" />}
+                {showOnlyMine && <RiCheckLine className="h-4 w-4 text-primary-600" />}
               </button>
               <Divider type="horizontal" className="my-1" />
               <div
-                className="flex w-full items-center justify-between rounded-md p-2"
+                className="flex w-full items-center justify-between rounded-md px-2 py-2"
                 onClick={(e) => {
                   e.stopPropagation()
                 }}
@@ -115,13 +126,13 @@ const CommentsPanel = () => {
           )}
           <Divider type="vertical" className="h-3.5" />
           <div
-            className="flex size-6 cursor-pointer items-center justify-center"
+            className="flex h-6 w-6 cursor-pointer items-center justify-center"
             onClick={() => {
               setControlMode(ControlMode.Pointer)
               setActiveCommentId(null)
             }}
           >
-            <RiCloseLine className="size-4 text-text-tertiary" />
+            <RiCloseLine className="h-4 w-4 text-text-tertiary" />
           </div>
         </div>
       </div>
@@ -144,11 +155,11 @@ const CommentsPanel = () => {
                   <div className="ml-2 flex items-center">
                     {c.resolved
                       ? (
-                          <RiCheckboxCircleFill className="size-4 text-text-secondary" />
+                          <RiCheckboxCircleFill className="h-4 w-4 text-text-secondary" />
                         )
                       : (
                           <RiCheckboxCircleLine
-                            className="size-4 cursor-pointer text-text-tertiary hover:text-text-secondary"
+                            className="h-4 w-4 cursor-pointer text-text-tertiary hover:text-text-secondary"
                             onClick={(e) => {
                               e.preventDefault()
                               e.stopPropagation()
@@ -161,14 +172,14 @@ const CommentsPanel = () => {
                 {/* Header row: creator + time */}
                 <div className="flex items-start">
                   <div className="flex min-w-0 items-center gap-2">
-                    <div className="truncate system-sm-medium text-text-primary">{c.created_by_account?.name ?? ''}</div>
+                    <div className="truncate system-sm-medium text-text-primary">{c.created_by_account.name}</div>
                     <div className="shrink-0 system-2xs-regular text-text-tertiary">
                       {formatTimeFromNow(c.updated_at * 1000)}
                     </div>
                   </div>
                 </div>
                 {/* Content */}
-                <div className="mt-1 line-clamp-3 system-sm-regular wrap-break-word text-text-secondary">{c.content}</div>
+                <div className="mt-1 line-clamp-3 system-sm-regular break-words text-text-secondary">{c.content}</div>
                 {/* Footer */}
                 {c.reply_count > 0 && (
                   <div className="mt-2 flex items-center justify-between">

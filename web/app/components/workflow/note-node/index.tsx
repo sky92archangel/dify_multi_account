@@ -12,7 +12,8 @@ import {
   useNodesInteractions,
 } from '../hooks'
 import NodeResizer from '../nodes/_base/components/node-resizer'
-import { useStore } from '../store/workflow'
+import { useStore } from '../store'
+import { useWorkflowHistoryStore } from '../workflow-history-store'
 import { THEME_MAP } from './constants'
 import { useNote } from './hooks'
 import {
@@ -35,7 +36,6 @@ const NoteNode = ({
 }: NodeProps<NoteNodeType>) => {
   const { t } = useTranslation()
   const controlPromptEditorRerenderKey = useStore(s => s.controlPromptEditorRerenderKey)
-  const setHistoryShortcutsEnabled = useStore(s => s.setHistoryShortcutsEnabled)
   const ref = useRef<HTMLDivElement | null>(null)
   const theme = data.theme
   const {
@@ -53,6 +53,8 @@ const NoteNode = ({
   useClickAway(() => {
     handleNodeDataUpdateWithSyncDraft({ id, data: { selected: false } })
   }, ref)
+
+  const { setShortcutsEnabled } = useWorkflowHistoryStore()
 
   return (
     <div
@@ -115,7 +117,7 @@ const NoteNode = ({
                 containerElement={ref.current}
                 placeholder={t('nodes.note.editor.placeholder', { ns: 'workflow' }) || ''}
                 onChange={handleEditorChange}
-                setHistoryShortcutsEnabled={setHistoryShortcutsEnabled}
+                setShortcutsEnabled={setShortcutsEnabled}
               />
             </div>
           </div>

@@ -14,21 +14,11 @@ vi.mock('@langgenius/dify-ui/dropdown-menu', async () => {
   }
 
   return {
-    DropdownMenu: ({ children, open, onOpenChange }: { children: React.ReactNode, open?: boolean, onOpenChange?: (open: boolean) => void }) => {
-      const [internalOpen, setInternalOpen] = React.useState(open ?? false)
-      const isOpen = open ?? internalOpen
-      const setOpen = (nextOpen: boolean) => {
-        if (open === undefined)
-          setInternalOpen(nextOpen)
-        onOpenChange?.(nextOpen)
-      }
-
-      return (
-        <DropdownMenuContext value={{ isOpen, setOpen }}>
-          <div data-testid="dropdown-menu" data-open={isOpen}>{children}</div>
-        </DropdownMenuContext>
-      )
-    },
+    DropdownMenu: ({ children, open, onOpenChange }: { children: React.ReactNode, open: boolean, onOpenChange?: (open: boolean) => void }) => (
+      <DropdownMenuContext value={{ isOpen: open, setOpen: onOpenChange ?? vi.fn() }}>
+        <div data-testid="dropdown-menu" data-open={open}>{children}</div>
+      </DropdownMenuContext>
+    ),
     DropdownMenuTrigger: ({
       children,
       render,
@@ -110,13 +100,13 @@ describe('OperationDropdown', () => {
 
     it('should render medium size by default', () => {
       render(<OperationDropdown {...defaultProps} />)
-      const icon = document.querySelector('.size-4')
+      const icon = document.querySelector('.h-4.w-4')
       expect(icon).toBeInTheDocument()
     })
 
     it('should render large size when inCard is true', () => {
       render(<OperationDropdown {...defaultProps} inCard={true} />)
-      const icon = document.querySelector('.size-5')
+      const icon = document.querySelector('.h-5.w-5')
       expect(icon).toBeInTheDocument()
     })
   })

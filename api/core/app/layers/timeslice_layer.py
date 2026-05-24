@@ -1,6 +1,6 @@
 import logging
 import uuid
-from typing import ClassVar, override
+from typing import ClassVar
 
 from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore
 
@@ -63,7 +63,6 @@ class TimeSliceLayer(GraphEngineLayer):
         except Exception:
             logger.exception("scheduler error during check if the workflow need to be suspended")
 
-    @override
     def on_graph_start(self):
         """
         Start timer to check if the workflow need to be suspended.
@@ -79,11 +78,9 @@ class TimeSliceLayer(GraphEngineLayer):
                 id=self.schedule_id,
             )
 
-    @override
     def on_event(self, event: GraphEngineEvent):
         pass
 
-    @override
     def on_graph_end(self, error: Exception | None) -> None:
         self.stopped = True
         # remove the scheduler

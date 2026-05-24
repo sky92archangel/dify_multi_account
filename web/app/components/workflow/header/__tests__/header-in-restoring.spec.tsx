@@ -7,9 +7,9 @@ import HeaderInRestoring from '../header-in-restoring'
 
 const mockRestoreWorkflow = vi.fn()
 const mockInvalidAllLastRun = vi.fn()
-const mockResetWorkflowVersionHistory = vi.fn()
 const mockHandleLoadBackupDraft = vi.fn()
 const mockHandleRefreshWorkflowDraft = vi.fn()
+const mockRequestRestore = vi.fn()
 
 vi.mock('@/hooks/use-theme', () => ({
   default: () => ({
@@ -31,7 +31,6 @@ vi.mock('@/hooks/use-format-time-from-now', () => ({
 
 vi.mock('@/service/use-workflow', () => ({
   useInvalidAllLastRun: () => mockInvalidAllLastRun,
-  useResetWorkflowVersionHistory: () => mockResetWorkflowVersionHistory,
   useRestoreWorkflow: () => ({
     mutateAsync: mockRestoreWorkflow,
   }),
@@ -43,6 +42,9 @@ vi.mock('../../hooks', () => ({
   }),
   useWorkflowRefreshDraft: () => ({
     handleRefreshWorkflowDraft: mockHandleRefreshWorkflowDraft,
+  }),
+  useLeaderRestore: () => ({
+    requestRestore: mockRequestRestore,
   }),
 }))
 
@@ -90,7 +92,7 @@ describe('HeaderInRestoring', () => {
     expect(screen.getByRole('button', { name: 'workflow.common.restore' })).toBeDisabled()
   })
 
-  it('should enable restore when version and flow id are both ready', () => {
+  it('should enable restore when version and flow config are both ready', () => {
     renderWorkflowComponent(<HeaderInRestoring />, {
       initialStoreState: {
         currentVersion: createVersion(),
@@ -98,7 +100,7 @@ describe('HeaderInRestoring', () => {
       hooksStoreProps: {
         configsMap: {
           flowId: 'app-1',
-          flowType: undefined as never,
+          flowType: FlowType.appFlow,
           fileSettings: {} as never,
         },
       },

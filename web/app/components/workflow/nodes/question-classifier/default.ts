@@ -1,4 +1,3 @@
-import type { TFunction } from 'i18next'
 import type { NodeDefault } from '../../types'
 import type { QuestionClassifierNodeType } from './types'
 import { BlockClassificationEnum } from '@/app/components/workflow/block-selector/types'
@@ -29,12 +28,10 @@ const nodeDefault: NodeDefault<QuestionClassifierNodeType> = {
       {
         id: '1',
         name: '',
-        label: 'CLASS 1',
       },
       {
         id: '2',
         name: '',
-        label: 'CLASS 2',
       },
     ],
     _targetBranches: [
@@ -51,7 +48,7 @@ const nodeDefault: NodeDefault<QuestionClassifierNodeType> = {
       enabled: false,
     },
   },
-  checkValid(payload: QuestionClassifierNodeType, t: TFunction<'workflow'>) {
+  checkValid(payload: QuestionClassifierNodeType, t: any) {
     let errorMessages = ''
     if (!errorMessages && (!payload.query_variable_selector || payload.query_variable_selector.length === 0))
       errorMessages = t(`${i18nPrefix}errorMsg.fieldRequired`, { ns: 'workflow', field: t(`${i18nPrefix}nodes.questionClassifiers.inputVars`, { ns: 'workflow' }) })

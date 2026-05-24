@@ -32,7 +32,7 @@ describe('CredentialSelector', () => {
     const user = userEvent.setup()
     render(<CredentialSelector value="1" items={mockItems} onSelect={vi.fn()} />)
 
-    const btn = screen.getByRole('combobox', { name: /Notion Workspace 1/ })
+    const btn = screen.getByTestId('notion-credential-selector-btn')
     await user.click(btn)
 
     expect(screen.getByTestId('notion-credential-item-1')).toBeInTheDocument()
@@ -44,7 +44,7 @@ describe('CredentialSelector', () => {
     const user = userEvent.setup()
     render(<CredentialSelector value="1" items={mockItems} onSelect={handleSelect} />)
 
-    const btn = screen.getByRole('combobox', { name: /Notion Workspace 1/ })
+    const btn = screen.getByTestId('notion-credential-selector-btn')
     await user.click(btn)
 
     const item2 = screen.getByTestId('notion-credential-item-2')

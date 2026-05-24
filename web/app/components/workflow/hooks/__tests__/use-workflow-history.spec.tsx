@@ -125,14 +125,8 @@ describe('useWorkflowHistory', () => {
       result.current.onRedo(onRedo)
     })
 
-    const temporalState = result.current.store.temporal.getState()
-    const undoSpy = vi.fn()
-    const redoSpy = vi.fn()
-    vi.spyOn(result.current.store.temporal, 'getState').mockReturnValue({
-      ...temporalState,
-      undo: undoSpy,
-      redo: redoSpy,
-    })
+    const undoSpy = vi.spyOn(result.current.store.temporal.getState(), 'undo')
+    const redoSpy = vi.spyOn(result.current.store.temporal.getState(), 'redo')
 
     act(() => {
       result.current.undo()

@@ -69,7 +69,7 @@ describe('VariableInspect Group', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: /API_KEY/ }))
+    fireEvent.click(screen.getByText('API_KEY'))
 
     expect(screen.getByText('workflow.debug.variableInspect.envNode'))!.toBeInTheDocument()
     expect(handleSelect).toHaveBeenCalledWith({
@@ -100,7 +100,7 @@ describe('VariableInspect Group', () => {
     expect(screen.getByText('visible_var'))!.toBeInTheDocument()
     expect(screen.queryByText('hidden_var')).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Code' }))
+    fireEvent.click(screen.getByText('Code'))
 
     expect(screen.queryByText('visible_var')).not.toBeInTheDocument()
   })
@@ -120,8 +120,10 @@ describe('VariableInspect Group', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'workflow.debug.variableInspect.view' }))
-    fireEvent.click(screen.getByRole('button', { name: 'workflow.debug.variableInspect.clearNode' }))
+    const actionButtons = screen.getAllByRole('button')
+
+    fireEvent.click(actionButtons[0]!)
+    fireEvent.click(actionButtons[1]!)
 
     expect(handleView).toHaveBeenCalledTimes(1)
     expect(handleClear).toHaveBeenCalledTimes(1)

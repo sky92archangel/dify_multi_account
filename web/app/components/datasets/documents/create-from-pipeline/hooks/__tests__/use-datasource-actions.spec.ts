@@ -146,13 +146,13 @@ describe('useDatasourceActions', () => {
 
     // First call: select all
     act(() => {
-      result.current.handleSelectAll(true)
+      result.current.handleSelectAll()
     })
     expect(store.getState().onlineDocuments).toHaveLength(2)
 
     // Second call: deselect all
     act(() => {
-      result.current.handleSelectAll(false)
+      result.current.handleSelectAll()
     })
     expect(store.getState().onlineDocuments).toEqual([])
   })
@@ -170,7 +170,7 @@ describe('useDatasourceActions', () => {
     const { result } = renderHook(() => useDatasourceActions(params))
 
     act(() => {
-      result.current.handleSelectAll(true)
+      result.current.handleSelectAll()
     })
     // Should select f1, f2 but not b1 (bucket)
     expect(store.getState().selectedFileIds).toEqual(['f1', 'f2'])

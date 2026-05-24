@@ -1,10 +1,8 @@
 import type { Edge, Node } from '../types'
-import { ContextMenu } from '@langgenius/dify-ui/context-menu'
 import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import { useEffect } from 'react'
 import { useNodes } from 'reactflow'
-import { SelectionContextmenu } from '../selection-contextmenu'
-import { useWorkflowStore } from '../store'
+import SelectionContextmenu from '../selection-contextmenu'
 import { useWorkflowHistoryStore } from '../workflow-history-store'
 import { createEdge, createNode } from './fixtures'
 import { renderWorkflowFlowComponent } from './workflow-test-env'
@@ -49,18 +47,6 @@ const hooksStoreProps = {
   doSyncWorkflowDraft: vi.fn().mockResolvedValue(undefined),
 }
 
-const SelectionMenuHarness = () => {
-  const workflowStore = useWorkflowStore()
-
-  return (
-    <ContextMenu open>
-      <SelectionContextmenu
-        onClose={() => workflowStore.getState().setContextMenuTarget(undefined)}
-      />
-    </ContextMenu>
-  )
-}
-
 const renderSelectionMenu = (options?: {
   nodes?: Node[]
   edges?: Edge[]
@@ -75,7 +61,7 @@ const renderSelectionMenu = (options?: {
   return renderWorkflowFlowComponent(
     <div id="workflow-container" style={{ width: 800, height: 600 }}>
       <RuntimeProbe />
-      <SelectionMenuHarness />
+      <SelectionContextmenu />
     </div>,
     {
       nodes,
@@ -100,13 +86,13 @@ describe('SelectionContextmenu', () => {
     mockHandleNodesDelete.mockReset()
   })
 
-  it('should not render when selection context menu target is absent', () => {
+  it('should not render when selectionMenu is absent', () => {
     renderSelectionMenu()
 
     expect(screen.queryByText('operator.vertical')).not.toBeInTheDocument()
   })
 
-  it('should render menu items when selection context menu target is present', async () => {
+  it('should render menu items when selectionMenu is present', async () => {
     const nodes = [
       createNode({ id: 'n1', selected: true, width: 80, height: 40 }),
       createNode({ id: 'n2', selected: true, position: { x: 140, y: 0 }, width: 80, height: 40 }),
@@ -114,7 +100,7 @@ describe('SelectionContextmenu', () => {
     const { store } = renderSelectionMenu({ nodes })
 
     act(() => {
-      store.setState({ contextMenuTarget: { type: 'selection' } })
+      store.setState({ selectionMenu: { clientX: 780, clientY: 590 } })
     })
 
     await waitFor(() => {
@@ -130,33 +116,33 @@ describe('SelectionContextmenu', () => {
     const { store } = renderSelectionMenu({ nodes })
 
     act(() => {
-      store.setState({ contextMenuTarget: { type: 'selection' } })
+      store.setState({ selectionMenu: { clientX: 120, clientY: 120 } })
     })
 
     await waitFor(() => {
-      expect(screen.getByRole('menuitem', { name: /common.copy/ })).toBeInTheDocument()
+      expect(screen.getByTestId('selection-contextmenu-item-copy')).toBeInTheDocument()
     })
 
-    fireEvent.click(screen.getByRole('menuitem', { name: /common.copy/ }))
+    fireEvent.click(screen.getByTestId('selection-contextmenu-item-copy'))
     expect(mockHandleNodesCopy).toHaveBeenCalledTimes(1)
-    expect(store.getState().contextMenuTarget).toBeUndefined()
+    expect(store.getState().selectionMenu).toBeUndefined()
 
     act(() => {
-      store.setState({ contextMenuTarget: { type: 'selection' } })
+      store.setState({ selectionMenu: { clientX: 120, clientY: 120 } })
     })
-    fireEvent.click(screen.getByRole('menuitem', { name: /common.duplicate/ }))
+    fireEvent.click(screen.getByTestId('selection-contextmenu-item-duplicate'))
     expect(mockHandleNodesDuplicate).toHaveBeenCalledTimes(1)
-    expect(store.getState().contextMenuTarget).toBeUndefined()
+    expect(store.getState().selectionMenu).toBeUndefined()
 
     act(() => {
-      store.setState({ contextMenuTarget: { type: 'selection' } })
+      store.setState({ selectionMenu: { clientX: 120, clientY: 120 } })
     })
-    fireEvent.click(screen.getByRole('menuitem', { name: /operation.delete/ }))
+    fireEvent.click(screen.getByTestId('selection-contextmenu-item-delete'))
     expect(mockHandleNodesDelete).toHaveBeenCalledTimes(1)
-    expect(store.getState().contextMenuTarget).toBeUndefined()
+    expect(store.getState().selectionMenu).toBeUndefined()
   })
 
-  it('should stay hidden when only one node is selected', async () => {
+  it('should close itself when only one node is selected', async () => {
     const nodes = [
       createNode({ id: 'n1', selected: true, width: 80, height: 40 }),
     ]
@@ -164,11 +150,11 @@ describe('SelectionContextmenu', () => {
     const { store } = renderSelectionMenu({ nodes })
 
     act(() => {
-      store.setState({ contextMenuTarget: { type: 'selection' } })
+      store.setState({ selectionMenu: { clientX: 120, clientY: 120 } })
     })
 
     await waitFor(() => {
-      expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+      expect(store.getState().selectionMenu).toBeUndefined()
     })
   })
 
@@ -189,14 +175,14 @@ describe('SelectionContextmenu', () => {
     })
 
     act(() => {
-      store.setState({ contextMenuTarget: { type: 'selection' } })
+      store.setState({ selectionMenu: { clientX: 100, clientY: 100 } })
     })
 
     fireEvent.click(screen.getByTestId('selection-contextmenu-item-left'))
 
     expect(latestNodes.find(node => node.id === 'n1')?.position.x).toBe(20)
     expect(latestNodes.find(node => node.id === 'n2')?.position.x).toBe(20)
-    expect(store.getState().contextMenuTarget).toBeUndefined()
+    expect(store.getState().selectionMenu).toBeUndefined()
     expect(store.getState().helpLineHorizontal).toBeUndefined()
     expect(store.getState().helpLineVertical).toBeUndefined()
 
@@ -222,7 +208,7 @@ describe('SelectionContextmenu', () => {
     })
 
     act(() => {
-      store.setState({ contextMenuTarget: { type: 'selection' } })
+      store.setState({ selectionMenu: { clientX: 160, clientY: 120 } })
     })
 
     fireEvent.click(screen.getByTestId('selection-contextmenu-item-distributeHorizontal'))
@@ -261,7 +247,7 @@ describe('SelectionContextmenu', () => {
     })
 
     act(() => {
-      store.setState({ contextMenuTarget: { type: 'selection' } })
+      store.setState({ selectionMenu: { clientX: 180, clientY: 120 } })
     })
 
     fireEvent.click(screen.getByTestId('selection-contextmenu-item-left'))
@@ -280,12 +266,12 @@ describe('SelectionContextmenu', () => {
     const { store } = renderSelectionMenu({ nodes })
 
     act(() => {
-      store.setState({ contextMenuTarget: { type: 'selection' } })
+      store.setState({ selectionMenu: { clientX: 100, clientY: 100 } })
     })
 
     fireEvent.click(screen.getByTestId('selection-contextmenu-item-left'))
 
-    expect(store.getState().contextMenuTarget).toBeUndefined()
+    expect(store.getState().selectionMenu).toBeUndefined()
   })
 
   it('should cancel without aligning when nodes are read only', () => {
@@ -298,12 +284,12 @@ describe('SelectionContextmenu', () => {
     const { store } = renderSelectionMenu({ nodes })
 
     act(() => {
-      store.setState({ contextMenuTarget: { type: 'selection' } })
+      store.setState({ selectionMenu: { clientX: 100, clientY: 100 } })
     })
 
     fireEvent.click(screen.getByTestId('selection-contextmenu-item-left'))
 
-    expect(store.getState().contextMenuTarget).toBeUndefined()
+    expect(store.getState().selectionMenu).toBeUndefined()
     expect(latestNodes.find(node => node.id === 'n1')?.position.x).toBe(0)
     expect(latestNodes.find(node => node.id === 'n2')?.position.x).toBe(80)
   })
@@ -323,12 +309,12 @@ describe('SelectionContextmenu', () => {
     const { store } = renderSelectionMenu({ nodes })
 
     act(() => {
-      store.setState({ contextMenuTarget: { type: 'selection' } })
+      store.setState({ selectionMenu: { clientX: 100, clientY: 100 } })
     })
 
     fireEvent.click(screen.getByTestId('selection-contextmenu-item-left'))
 
-    expect(store.getState().contextMenuTarget).toBeUndefined()
+    expect(store.getState().selectionMenu).toBeUndefined()
     expect(latestNodes.find(node => node.id === 'container')?.position.x).toBe(0)
     expect(latestNodes.find(node => node.id === 'child')?.position.x).toBe(80)
   })

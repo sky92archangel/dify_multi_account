@@ -1,12 +1,10 @@
 import type { Dispatch, SetStateAction } from 'react'
 
-export const ValidatedStatus = {
-  Success: 'success',
-  Error: 'error',
-  Exceed: 'exceed',
-} as const
-
-export type ValidatedStatus = typeof ValidatedStatus[keyof typeof ValidatedStatus]
+export enum ValidatedStatus {
+  Success = 'success',
+  Error = 'error',
+  Exceed = 'exceed',
+}
 
 export type ValidatedStatusState = {
   status?: ValidatedStatus

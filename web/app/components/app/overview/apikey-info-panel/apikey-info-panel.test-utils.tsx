@@ -31,7 +31,6 @@ const defaultProviderContext = {
   isAPIKeySet: false,
   plan: defaultPlan,
   isFetchedPlan: false,
-  isFetchedPlanInfo: false,
   enableBilling: false,
   onPlanInfoChanged: noop,
   enableReplaceWebAppLogo: false,
@@ -59,6 +58,7 @@ const defaultProviderContext = {
 
 const defaultModalContext: ModalContextState = {
   setShowAccountSettingModal: noop,
+  setShowApiBasedExtensionModal: noop,
   setShowModerationSettingModal: noop,
   setShowExternalDataToolModal: noop,
   setShowPricingModal: noop,

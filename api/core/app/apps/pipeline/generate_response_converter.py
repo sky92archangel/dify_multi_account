@@ -45,24 +45,20 @@ class WorkflowAppGenerateResponseConverter(AppGenerateResponseConverter[Workflow
             chunk = cast(WorkflowAppStreamResponse, chunk)
             sub_stream_response = chunk.stream_response
 
-            match sub_stream_response:
-                case PingStreamResponse():
-                    yield "ping"
-                    continue
-                case ErrorStreamResponse():
-                    response_chunk = {
-                        "event": sub_stream_response.event.value,
-                        "workflow_run_id": chunk.workflow_run_id,
-                    }
-                    data = cls._error_to_stream_response(sub_stream_response.err)
-                    response_chunk.update(cast(dict, data))
-                case _:
-                    response_chunk = {
-                        "event": sub_stream_response.event.value,
-                        "workflow_run_id": chunk.workflow_run_id,
-                    }
-                    response_chunk.update(sub_stream_response.model_dump())
+            if isinstance(sub_stream_response, PingStreamResponse):
+                yield "ping"
+                continue
 
+            response_chunk = {
+                "event": sub_stream_response.event.value,
+                "workflow_run_id": chunk.workflow_run_id,
+            }
+
+            if isinstance(sub_stream_response, ErrorStreamResponse):
+                data = cls._error_to_stream_response(sub_stream_response.err)
+                response_chunk.update(cast(dict, data))
+            else:
+                response_chunk.update(sub_stream_response.model_dump())
             yield response_chunk
 
     @classmethod
@@ -78,28 +74,20 @@ class WorkflowAppGenerateResponseConverter(AppGenerateResponseConverter[Workflow
             chunk = cast(WorkflowAppStreamResponse, chunk)
             sub_stream_response = chunk.stream_response
 
-            match sub_stream_response:
-                case PingStreamResponse():
-                    yield "ping"
-                    continue
-                case ErrorStreamResponse():
-                    response_chunk = {
-                        "event": sub_stream_response.event.value,
-                        "workflow_run_id": chunk.workflow_run_id,
-                    }
-                    data = cls._error_to_stream_response(sub_stream_response.err)
-                    response_chunk.update(cast(dict, data))
-                case NodeStartStreamResponse() | NodeFinishStreamResponse():
-                    response_chunk = {
-                        "event": sub_stream_response.event.value,
-                        "workflow_run_id": chunk.workflow_run_id,
-                    }
-                    response_chunk.update(cast(dict, sub_stream_response.to_ignore_detail_dict()))
-                case _:
-                    response_chunk = {
-                        "event": sub_stream_response.event.value,
-                        "workflow_run_id": chunk.workflow_run_id,
-                    }
-                    response_chunk.update(sub_stream_response.model_dump())
+            if isinstance(sub_stream_response, PingStreamResponse):
+                yield "ping"
+                continue
 
+            response_chunk = {
+                "event": sub_stream_response.event.value,
+                "workflow_run_id": chunk.workflow_run_id,
+            }
+
+            if isinstance(sub_stream_response, ErrorStreamResponse):
+                data = cls._error_to_stream_response(sub_stream_response.err)
+                response_chunk.update(cast(dict, data))
+            elif isinstance(sub_stream_response, NodeStartStreamResponse | NodeFinishStreamResponse):
+                response_chunk.update(cast(dict, sub_stream_response.to_ignore_detail_dict()))
+            else:
+                response_chunk.update(sub_stream_response.model_dump())
             yield response_chunk

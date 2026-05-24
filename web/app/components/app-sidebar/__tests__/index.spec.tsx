@@ -60,9 +60,6 @@ vi.mock('../app-info', () => ({
   default: ({ expand }: { expand: boolean }) => (
     <div data-testid="app-info" data-expand={expand} />
   ),
-  AppInfoView: ({ expand }: { expand: boolean }) => (
-    <div data-testid="app-info" data-expand={expand} />
-  ),
 }))
 
 vi.mock('../app-sidebar-dropdown', () => ({

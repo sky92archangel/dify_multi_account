@@ -55,12 +55,11 @@ describe('create-app-tracking', () => {
   })
 
   describe('buildCreateAppEventPayload', () => {
-    it('should build payloads with source, normalized app mode, and timestamp', () => {
+    it('should build original payloads with normalized app mode and timestamp', () => {
       expect(buildCreateAppEventPayload({
-        source: 'studio_blank',
         appMode: AppModeEnum.ADVANCED_CHAT,
       }, null, new Date(2026, 3, 13, 14, 5, 9))).toEqual({
-        source: 'studio_blank',
+        source: 'original',
         app_mode: 'chatflow',
         time: '04-13-14:05:09',
       })
@@ -68,10 +67,9 @@ describe('create-app-tracking', () => {
 
     it('should map agent mode into the canonical app mode bucket', () => {
       expect(buildCreateAppEventPayload({
-        source: 'studio_blank',
         appMode: AppModeEnum.AGENT_CHAT,
       }, null, new Date(2026, 3, 13, 9, 8, 7))).toEqual({
-        source: 'studio_blank',
+        source: 'original',
         app_mode: 'agent',
         time: '04-13-09:08:07',
       })
@@ -79,19 +77,17 @@ describe('create-app-tracking', () => {
 
     it('should fold legacy non-agent modes into chatflow', () => {
       expect(buildCreateAppEventPayload({
-        source: 'studio_blank',
         appMode: AppModeEnum.CHAT,
       }, null, new Date(2026, 3, 13, 8, 0, 1))).toEqual({
-        source: 'studio_blank',
+        source: 'original',
         app_mode: 'chatflow',
         time: '04-13-08:00:01',
       })
 
       expect(buildCreateAppEventPayload({
-        source: 'studio_blank',
         appMode: AppModeEnum.COMPLETION,
       }, null, new Date(2026, 3, 13, 8, 0, 2))).toEqual({
-        source: 'studio_blank',
+        source: 'original',
         app_mode: 'chatflow',
         time: '04-13-08:00:02',
       })
@@ -99,55 +95,28 @@ describe('create-app-tracking', () => {
 
     it('should map workflow mode into the workflow bucket', () => {
       expect(buildCreateAppEventPayload({
-        source: 'studio_blank',
         appMode: AppModeEnum.WORKFLOW,
       }, null, new Date(2026, 3, 13, 7, 6, 5))).toEqual({
-        source: 'studio_blank',
+        source: 'original',
         app_mode: 'workflow',
         time: '04-13-07:06:05',
-      })
-    })
-
-    it('should include template_id for template sources', () => {
-      expect(buildCreateAppEventPayload({
-        source: 'studio_template_list',
-        appMode: AppModeEnum.CHAT,
-        templateId: 'template-1',
-      }, null, new Date(2026, 3, 13, 8, 0, 1))).toEqual({
-        source: 'studio_template_list',
-        app_mode: 'chatflow',
-        time: '04-13-08:00:01',
-        template_id: 'template-1',
       })
     })
 
     it('should prefer external attribution when present', () => {
       expect(buildCreateAppEventPayload(
         {
-          source: 'studio_template_list',
           appMode: AppModeEnum.WORKFLOW,
-          templateId: 'template-1',
         },
         {
           utmSource: 'linkedin',
           utmCampaign: 'agent-launch',
         },
-        new Date(2026, 3, 13, 7, 6, 5),
       )).toEqual({
         source: 'external',
-        app_mode: 'workflow',
-        time: '04-13-07:06:05',
-        template_id: 'template-1',
         utm_source: 'linkedin',
         utm_campaign: 'agent-launch',
       })
-    })
-
-    it('should not build external payloads without attribution', () => {
-      expect(buildCreateAppEventPayload({
-        source: 'external',
-        appMode: AppModeEnum.WORKFLOW,
-      }, null, new Date(2026, 3, 13, 7, 6, 5))).toBeNull()
     })
   })
 
@@ -157,24 +126,20 @@ describe('create-app-tracking', () => {
         searchParams: new URLSearchParams('utm_source=newsletter&slug=how-to-build-rag-agent'),
       })
 
-      trackCreateApp({ source: 'studio_template_list', appMode: AppModeEnum.WORKFLOW, templateId: 'template-1' })
+      trackCreateApp({ appMode: AppModeEnum.WORKFLOW })
 
       expect(amplitude.trackEvent).toHaveBeenNthCalledWith(1, 'create_app', {
         source: 'external',
-        app_mode: 'workflow',
-        time: expect.stringMatching(/^\d{2}-\d{2}-\d{2}:\d{2}:\d{2}$/),
-        template_id: 'template-1',
         utm_source: 'blog',
         utm_campaign: 'how-to-build-rag-agent',
       })
 
-      trackCreateApp({ source: 'studio_template_list', appMode: AppModeEnum.WORKFLOW, templateId: 'template-1' })
+      trackCreateApp({ appMode: AppModeEnum.WORKFLOW })
 
       expect(amplitude.trackEvent).toHaveBeenNthCalledWith(2, 'create_app', {
-        source: 'studio_template_list',
+        source: 'original',
         app_mode: 'workflow',
         time: expect.stringMatching(/^\d{2}-\d{2}-\d{2}:\d{2}:\d{2}$/),
-        template_id: 'template-1',
       })
     })
 
@@ -187,19 +152,16 @@ describe('create-app-tracking', () => {
 
       window.history.replaceState({}, '', '/explore')
 
-      trackCreateApp({ source: 'explore_template_preview', appMode: AppModeEnum.CHAT, templateId: 'template-2' })
+      trackCreateApp({ appMode: AppModeEnum.CHAT })
 
       expect(amplitude.trackEvent).toHaveBeenCalledWith('create_app', {
         source: 'external',
-        app_mode: 'chatflow',
-        time: expect.stringMatching(/^\d{2}-\d{2}-\d{2}:\d{2}:\d{2}$/),
-        template_id: 'template-2',
         utm_source: 'linkedin',
         utm_campaign: 'agent-launch',
       })
     })
 
-    it('should fall back to the provided source when window is unavailable', () => {
+    it('should fall back to the original payload when window is unavailable', () => {
       const originalWindow = globalThis.window
 
       try {
@@ -208,10 +170,10 @@ describe('create-app-tracking', () => {
           value: undefined,
         })
 
-        trackCreateApp({ source: 'studio_blank', appMode: AppModeEnum.AGENT_CHAT })
+        trackCreateApp({ appMode: AppModeEnum.AGENT_CHAT })
 
         expect(amplitude.trackEvent).toHaveBeenCalledWith('create_app', {
-          source: 'studio_blank',
+          source: 'original',
           app_mode: 'agent',
           time: expect.stringMatching(/^\d{2}-\d{2}-\d{2}:\d{2}:\d{2}$/),
         })
@@ -222,30 +184,6 @@ describe('create-app-tracking', () => {
           value: originalWindow,
         })
       }
-    })
-
-    it('should read, normalize, and consume snake_case sessionStorage attribution', () => {
-      window.sessionStorage.setItem('create_app_external_attribution', JSON.stringify({
-        utm_source: 'twitter',
-        utm_campaign: 'launch-week',
-      }))
-
-      trackCreateApp({ source: 'studio_blank', appMode: AppModeEnum.CHAT })
-
-      expect(amplitude.trackEvent).toHaveBeenCalledWith('create_app', {
-        source: 'external',
-        app_mode: 'chatflow',
-        time: expect.stringMatching(/^\d{2}-\d{2}-\d{2}:\d{2}:\d{2}$/),
-        utm_source: 'twitter/x',
-        utm_campaign: 'launch-week',
-      })
-      expect(window.sessionStorage.getItem('create_app_external_attribution')).toBeNull()
-    })
-
-    it('should not track external source without remembered attribution', () => {
-      trackCreateApp({ source: 'external', appMode: AppModeEnum.WORKFLOW, templateId: 'template-1' })
-
-      expect(amplitude.trackEvent).not.toHaveBeenCalled()
     })
   })
 })

@@ -2,8 +2,8 @@
 import type { FC } from 'react'
 import { cn } from '@langgenius/dify-ui/cn'
 import * as React from 'react'
-import { Infotip } from '@/app/components/base/infotip'
-import Input from './text-input'
+import Tooltip from '@/app/components/base/tooltip'
+import Input from './input'
 
 type Props = {
   className?: string
@@ -37,9 +37,12 @@ const Field: FC<Props> = ({
         </div>
         {isRequired && <span className="ml-0.5 text-xs font-semibold text-text-destructive">*</span>}
         {tooltip && (
-          <Infotip aria-label={tooltip} className="ml-0.5" popupClassName="w-[200px]">
-            {tooltip}
-          </Infotip>
+          <Tooltip
+            popupContent={
+              <div className="w-[200px]">{tooltip}</div>
+            }
+            triggerClassName="ml-0.5 w-4 h-4"
+          />
         )}
       </div>
       <Input

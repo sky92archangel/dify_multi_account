@@ -1,44 +1,40 @@
 import { fireEvent, render, screen } from '@testing-library/react'
-import { TopKAndScoreThreshold } from '../top-k-and-score-threshold'
+import TopKAndScoreThreshold from '../top-k-and-score-threshold'
 
 describe('TopKAndScoreThreshold', () => {
-  const topKLabel = /datasetConfig\.top_k/
-  const scoreThresholdLabel = /datasetConfig\.score_threshold/
   const defaultProps = {
-    topK: {
-      value: 3,
-      onChange: vi.fn(),
-    },
-    scoreThreshold: {
-      value: 0.4,
-      onChange: vi.fn(),
-      enabled: true,
-      onEnabledChange: vi.fn(),
-    },
+    topK: 3,
+    onTopKChange: vi.fn(),
+    scoreThreshold: 0.4,
+    onScoreThresholdChange: vi.fn(),
+    isScoreThresholdEnabled: true,
+    onScoreThresholdEnabledChange: vi.fn(),
   }
 
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  it('should notify top-k input values without additional rounding', () => {
+  it('should round top-k input values before notifying the parent', () => {
     render(<TopKAndScoreThreshold {...defaultProps} />)
 
-    fireEvent.change(screen.getByRole('textbox', { name: topKLabel }), { target: { value: '3.7' } })
+    const [topKInput] = screen.getAllByRole('textbox')
+    fireEvent.change(topKInput!, { target: { value: '3.7' } })
 
-    expect(defaultProps.topK.onChange).toHaveBeenCalledWith(3.7)
+    expect(defaultProps.onTopKChange).toHaveBeenCalledWith(4)
   })
 
-  it('should notify score-threshold input values without additional rounding', () => {
+  it('should round score-threshold input values to two decimals', () => {
     render(<TopKAndScoreThreshold {...defaultProps} />)
 
-    fireEvent.change(screen.getByRole('textbox', { name: scoreThresholdLabel }), { target: { value: '0.456' } })
+    const [, scoreThresholdInput] = screen.getAllByRole('textbox')
+    fireEvent.change(scoreThresholdInput!, { target: { value: '0.456' } })
 
-    expect(defaultProps.scoreThreshold.onChange).toHaveBeenCalledWith(0.456)
+    expect(defaultProps.onScoreThresholdChange).toHaveBeenCalledWith(0.46)
   })
 
   it('should hide the score-threshold column when requested', () => {
-    render(<TopKAndScoreThreshold {...defaultProps} scoreThreshold={{ hidden: true }} />)
+    render(<TopKAndScoreThreshold {...defaultProps} hiddenScoreThreshold />)
 
     expect(screen.getAllByRole('textbox')).toHaveLength(1)
     expect(screen.queryByRole('switch')).not.toBeInTheDocument()
@@ -48,18 +44,15 @@ describe('TopKAndScoreThreshold', () => {
     render(
       <TopKAndScoreThreshold
         {...defaultProps}
-        scoreThreshold={{
-          ...defaultProps.scoreThreshold,
-          value: undefined,
-          enabled: true,
-        }}
+        scoreThreshold={undefined}
+        isScoreThresholdEnabled
       />,
     )
 
     const [topKInput, scoreThresholdInput] = screen.getAllByRole('textbox')
     fireEvent.change(topKInput!, { target: { value: '' } })
 
-    expect(defaultProps.topK.onChange).toHaveBeenCalledWith(0)
+    expect(defaultProps.onTopKChange).toHaveBeenCalledWith(0)
     expect(scoreThresholdInput)!.toHaveValue('')
   })
 
@@ -67,13 +60,10 @@ describe('TopKAndScoreThreshold', () => {
     render(
       <TopKAndScoreThreshold
         {...defaultProps}
-        scoreThreshold={{
-          ...defaultProps.scoreThreshold,
-          enabled: undefined,
-        }}
+        isScoreThresholdEnabled={undefined}
       />,
     )
 
-    expect(screen.getByRole('switch', { name: scoreThresholdLabel }))!.toHaveAttribute('aria-checked', 'false')
+    expect(screen.getByRole('switch'))!.toHaveAttribute('aria-checked', 'false')
   })
 })

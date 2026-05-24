@@ -33,10 +33,10 @@ export const usePipelineConfig = () => {
     handleUpdateNodesDefaultConfigs,
   )
 
-  const handleUpdatePublishedAt = useCallback((publishedWorkflow: FetchWorkflowDraftResponse | null) => {
+  const handleUpdatePublishedAt = useCallback((publishedWorkflow: FetchWorkflowDraftResponse) => {
     const { setPublishedAt } = workflowStore.getState()
 
-    setPublishedAt(publishedWorkflow?.created_at ?? 0)
+    setPublishedAt(publishedWorkflow?.created_at)
   }, [workflowStore])
   useWorkflowConfig(
     pipelineId ? `/rag/pipelines/${pipelineId}/workflows/publish` : '',

@@ -71,7 +71,7 @@ def enable_request_logging(monkeypatch: pytest.MonkeyPatch):
 class TestRequestLoggingExtension:
     def test_receiver_should_not_be_invoked_if_configuration_is_disabled(
         self,
-        monkeypatch: pytest.MonkeyPatch,
+        monkeypatch,
         mock_request_receiver,
         mock_response_receiver,
     ):
@@ -266,9 +266,7 @@ class TestResponseUnmodified:
 
 
 class TestRequestFinishedInfoAccessLine:
-    def test_info_access_log_includes_method_path_status_duration_trace_id(
-        self, monkeypatch: pytest.MonkeyPatch, caplog
-    ):
+    def test_info_access_log_includes_method_path_status_duration_trace_id(self, monkeypatch, caplog):
         """Ensure INFO access line contains expected fields with computed duration and trace id."""
         app = _get_test_app()
         # Push a real request context so flask.request and g are available
@@ -301,7 +299,7 @@ class TestRequestFinishedInfoAccessLine:
             assert "123.456" in msg  # rounded to 3 decimals
             assert "trace-xyz" in msg
 
-    def test_info_access_log_uses_dash_without_start_timestamp(self, monkeypatch: pytest.MonkeyPatch, caplog):
+    def test_info_access_log_uses_dash_without_start_timestamp(self, monkeypatch, caplog):
         app = _get_test_app()
         with app.test_request_context("/bar", method="POST"):
             # No g.__request_started_ts set -> duration should be '-'

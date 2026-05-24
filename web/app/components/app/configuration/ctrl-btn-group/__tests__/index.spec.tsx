@@ -17,8 +17,8 @@ describe('ContrlBtnGroup', () => {
       render(<ContrlBtnGroup onSave={onSave} onReset={onReset} />)
 
       // Assert
-      expect(screen.getByRole('button', { name: 'appDebug.operation.applyConfig' })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: 'appDebug.operation.resetConfig' })).toBeInTheDocument()
+      expect(screen.getByTestId('apply-btn')).toBeInTheDocument()
+      expect(screen.getByTestId('reset-btn')).toBeInTheDocument()
     })
   })
 
@@ -31,8 +31,8 @@ describe('ContrlBtnGroup', () => {
       render(<ContrlBtnGroup onSave={onSave} onReset={onReset} />)
 
       // Act
-      fireEvent.click(screen.getByRole('button', { name: 'appDebug.operation.applyConfig' }))
-      fireEvent.click(screen.getByRole('button', { name: 'appDebug.operation.resetConfig' }))
+      fireEvent.click(screen.getByTestId('apply-btn'))
+      fireEvent.click(screen.getByTestId('reset-btn'))
 
       // Assert
       expect(onSave).toHaveBeenCalledTimes(1)

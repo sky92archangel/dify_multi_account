@@ -1,3 +1,4 @@
+import type { FC } from 'react'
 import type { FileEntity } from '@/app/components/datasets/common/image-uploader/types'
 import type { SegmentDetailModel } from '@/models/datasets'
 import { cn } from '@langgenius/dify-ui/cn'
@@ -6,6 +7,7 @@ import {
   RiCollapseDiagonalLine,
   RiExpandDiagonalLine,
 } from '@remixicon/react'
+import * as React from 'react'
 import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { v4 as uuid4 } from 'uuid'
@@ -40,15 +42,20 @@ type ISegmentDetailProps = {
   onCancel: () => void
   isEditMode?: boolean
   docForm: ChunkingMode
+  onModalStateChange?: (isOpen: boolean) => void
 }
 
-export function SegmentDetail({
+/**
+ * Show all the contents of the segment
+ */
+const SegmentDetail: FC<ISegmentDetailProps> = ({
   segInfo,
   onUpdate,
   onCancel,
   isEditMode,
   docForm,
-}: ISegmentDetailProps) {
+  onModalStateChange,
+}) => {
   const { t } = useTranslation()
   const [question, setQuestion] = useState(isEditMode ? segInfo?.content || '' : segInfo?.sign_content || '')
   const [answer, setAnswer] = useState(segInfo?.answer || '')
@@ -92,16 +99,19 @@ export function SegmentDetail({
 
   const handleRegeneration = useCallback(() => {
     setShowRegenerationModal(true)
-  }, [])
+    onModalStateChange?.(true)
+  }, [onModalStateChange])
 
   const onCancelRegeneration = useCallback(() => {
     setShowRegenerationModal(false)
-  }, [])
+    onModalStateChange?.(false)
+  }, [onModalStateChange])
 
   const onCloseAfterRegeneration = useCallback(() => {
     setShowRegenerationModal(false)
-    onCancel()
-  }, [onCancel])
+    onModalStateChange?.(false)
+    onCancel() // Close the edit drawer
+  }, [onCancel, onModalStateChange])
 
   const onConfirmRegeneration = useCallback(() => {
     onUpdate(segInfo?.id || '', question, answer, keywords, attachments, summary, true)
@@ -151,26 +161,16 @@ export function SegmentDetail({
               <Divider type="vertical" className="mr-2 ml-4 h-3.5 bg-divider-regular" />
             </>
           )}
-          <button
-            type="button"
-            aria-label={t(fullScreen ? 'operation.zoomOut' : 'operation.zoomIn', { ns: 'common' })}
-            className="mr-1 flex size-8 cursor-pointer items-center justify-center border-none bg-transparent p-1.5"
-            onClick={toggleFullScreen}
-          >
+          <div className="mr-1 flex h-8 w-8 cursor-pointer items-center justify-center p-1.5" onClick={toggleFullScreen}>
             {
               fullScreen
-                ? <RiCollapseDiagonalLine className="size-4 text-text-tertiary" aria-hidden="true" />
-                : <RiExpandDiagonalLine className="size-4 text-text-tertiary" aria-hidden="true" />
+                ? <RiCollapseDiagonalLine className="h-4 w-4 text-text-tertiary" />
+                : <RiExpandDiagonalLine className="h-4 w-4 text-text-tertiary" />
             }
-          </button>
-          <button
-            type="button"
-            aria-label={t('operation.close', { ns: 'common' })}
-            className="flex size-8 cursor-pointer items-center justify-center border-none bg-transparent p-1.5"
-            onClick={onCancel}
-          >
-            <RiCloseLine className="size-4 text-text-tertiary" aria-hidden="true" />
-          </button>
+          </div>
+          <div className="flex h-8 w-8 cursor-pointer items-center justify-center p-1.5" onClick={onCancel}>
+            <RiCloseLine className="h-4 w-4 text-text-tertiary" />
+          </div>
         </div>
       </div>
       <div className={cn(
@@ -241,3 +241,5 @@ export function SegmentDetail({
     </div>
   )
 }
+
+export default React.memo(SegmentDetail)

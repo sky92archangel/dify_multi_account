@@ -5,10 +5,3 @@ type Item = {
   name: string
 }
 export const timezones: Item[] = tz
-
-export const getBrowserTimezone = () => {
-  if (typeof Intl === 'undefined')
-    return undefined
-
-  return Intl.DateTimeFormat().resolvedOptions().timeZone || undefined
-}

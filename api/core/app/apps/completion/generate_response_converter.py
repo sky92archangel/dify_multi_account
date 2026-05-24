@@ -1,5 +1,5 @@
 from collections.abc import Generator
-from typing import Any, cast, override
+from typing import Any, cast
 
 from pydantic import JsonValue
 
@@ -16,7 +16,6 @@ from core.app.entities.task_entities import (
 
 class CompletionAppGenerateResponseConverter(AppGenerateResponseConverter[CompletionAppBlockingResponse]):
     @classmethod
-    @override
     def convert_blocking_full_response(cls, blocking_response: CompletionAppBlockingResponse):
         """
         Convert blocking full response.
@@ -37,7 +36,6 @@ class CompletionAppGenerateResponseConverter(AppGenerateResponseConverter[Comple
         return response
 
     @classmethod
-    @override
     def convert_blocking_simple_response(cls, blocking_response: CompletionAppBlockingResponse):
         """
         Convert blocking simple response.
@@ -55,7 +53,6 @@ class CompletionAppGenerateResponseConverter(AppGenerateResponseConverter[Comple
         return response
 
     @classmethod
-    @override
     def convert_stream_full_response(
         cls, stream_response: Generator[AppStreamResponse, None, None]
     ) -> Generator[dict[str, Any] | str, None, None]:
@@ -86,7 +83,6 @@ class CompletionAppGenerateResponseConverter(AppGenerateResponseConverter[Comple
             yield response_chunk
 
     @classmethod
-    @override
     def convert_stream_simple_response(
         cls, stream_response: Generator[AppStreamResponse, None, None]
     ) -> Generator[dict[str, Any] | str, None, None]:

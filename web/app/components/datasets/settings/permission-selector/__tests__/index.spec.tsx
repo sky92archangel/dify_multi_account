@@ -287,7 +287,7 @@ describe('PermissionSelector', () => {
       fireEvent.change(searchInput, { target: { value: 'test' } })
       expect(searchInput)!.toHaveValue('test')
 
-      const clearButton = screen.getByRole('button', { name: 'common.operation.clear' })
+      const clearButton = screen.getByTestId('input-clear')
       fireEvent.click(clearButton)
 
       // After clicking clear, input should be empty

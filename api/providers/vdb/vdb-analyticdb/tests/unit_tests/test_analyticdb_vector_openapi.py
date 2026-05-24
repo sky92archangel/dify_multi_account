@@ -24,7 +24,7 @@ def _request_class(name: str):
     return _Request
 
 
-def _install_openapi_stubs(monkeypatch: pytest.MonkeyPatch):
+def _install_openapi_stubs(monkeypatch):
     gpdb_package = types.ModuleType("alibabacloud_gpdb20160503")
     gpdb_package.__path__ = []
     gpdb_models = types.ModuleType("alibabacloud_gpdb20160503.models")
@@ -130,7 +130,7 @@ def test_openapi_config_to_client_params():
     assert params["read_timeout"] == 60000
 
 
-def test_init_creates_openapi_client_and_runs_initialize(monkeypatch: pytest.MonkeyPatch):
+def test_init_creates_openapi_client_and_runs_initialize(monkeypatch):
     stubs = _install_openapi_stubs(monkeypatch)
     initialize_mock = MagicMock()
     monkeypatch.setattr(openapi_module.AnalyticdbVectorOpenAPI, "_initialize", initialize_mock)
@@ -145,7 +145,7 @@ def test_init_creates_openapi_client_and_runs_initialize(monkeypatch: pytest.Mon
     initialize_mock.assert_called_once_with()
 
 
-def test_initialize_skips_when_cached(monkeypatch: pytest.MonkeyPatch):
+def test_initialize_skips_when_cached(monkeypatch):
     lock = MagicMock()
     lock.__enter__.return_value = None
     lock.__exit__.return_value = None
@@ -164,7 +164,7 @@ def test_initialize_skips_when_cached(monkeypatch: pytest.MonkeyPatch):
     vector._create_namespace_if_not_exists.assert_not_called()
 
 
-def test_initialize_runs_when_cache_is_missing(monkeypatch: pytest.MonkeyPatch):
+def test_initialize_runs_when_cache_is_missing(monkeypatch):
     lock = MagicMock()
     lock.__enter__.return_value = None
     lock.__exit__.return_value = None
@@ -184,7 +184,7 @@ def test_initialize_runs_when_cache_is_missing(monkeypatch: pytest.MonkeyPatch):
     openapi_module.redis_client.set.assert_called_once()
 
 
-def test_initialize_vector_database_calls_openapi_client(monkeypatch: pytest.MonkeyPatch):
+def test_initialize_vector_database_calls_openapi_client(monkeypatch):
     _install_openapi_stubs(monkeypatch)
     vector = AnalyticdbVectorOpenAPI.__new__(AnalyticdbVectorOpenAPI)
     vector.config = _config()
@@ -199,7 +199,7 @@ def test_initialize_vector_database_calls_openapi_client(monkeypatch: pytest.Mon
     assert request.manager_account_password == "password"
 
 
-def test_create_namespace_creates_when_namespace_not_found(monkeypatch: pytest.MonkeyPatch):
+def test_create_namespace_creates_when_namespace_not_found(monkeypatch):
     stubs = _install_openapi_stubs(monkeypatch)
     vector = AnalyticdbVectorOpenAPI.__new__(AnalyticdbVectorOpenAPI)
     vector.config = _config()
@@ -211,7 +211,7 @@ def test_create_namespace_creates_when_namespace_not_found(monkeypatch: pytest.M
     vector._client.create_namespace.assert_called_once()
 
 
-def test_create_namespace_raises_on_unexpected_api_error(monkeypatch: pytest.MonkeyPatch):
+def test_create_namespace_raises_on_unexpected_api_error(monkeypatch):
     stubs = _install_openapi_stubs(monkeypatch)
     vector = AnalyticdbVectorOpenAPI.__new__(AnalyticdbVectorOpenAPI)
     vector.config = _config()
@@ -222,7 +222,7 @@ def test_create_namespace_raises_on_unexpected_api_error(monkeypatch: pytest.Mon
         vector._create_namespace_if_not_exists()
 
 
-def test_create_namespace_noop_when_namespace_exists(monkeypatch: pytest.MonkeyPatch):
+def test_create_namespace_noop_when_namespace_exists(monkeypatch):
     _install_openapi_stubs(monkeypatch)
     vector = AnalyticdbVectorOpenAPI.__new__(AnalyticdbVectorOpenAPI)
     vector.config = _config()
@@ -234,7 +234,7 @@ def test_create_namespace_noop_when_namespace_exists(monkeypatch: pytest.MonkeyP
     vector._client.create_namespace.assert_not_called()
 
 
-def test_create_collection_if_not_exists_creates_when_missing(monkeypatch: pytest.MonkeyPatch):
+def test_create_collection_if_not_exists_creates_when_missing(monkeypatch):
     stubs = _install_openapi_stubs(monkeypatch)
     lock = MagicMock()
     lock.__enter__.return_value = None
@@ -255,7 +255,7 @@ def test_create_collection_if_not_exists_creates_when_missing(monkeypatch: pytes
     openapi_module.redis_client.set.assert_called_once()
 
 
-def test_create_collection_if_not_exists_skips_when_cached(monkeypatch: pytest.MonkeyPatch):
+def test_create_collection_if_not_exists_skips_when_cached(monkeypatch):
     lock = MagicMock()
     lock.__enter__.return_value = None
     lock.__exit__.return_value = None
@@ -274,7 +274,7 @@ def test_create_collection_if_not_exists_skips_when_cached(monkeypatch: pytest.M
     vector._client.create_collection.assert_not_called()
 
 
-def test_create_collection_if_not_exists_raises_on_non_404_errors(monkeypatch: pytest.MonkeyPatch):
+def test_create_collection_if_not_exists_raises_on_non_404_errors(monkeypatch):
     stubs = _install_openapi_stubs(monkeypatch)
     lock = MagicMock()
     lock.__enter__.return_value = None
@@ -293,7 +293,7 @@ def test_create_collection_if_not_exists_raises_on_non_404_errors(monkeypatch: p
         vector.create_collection_if_not_exists(embedding_dimension=512)
 
 
-def test_openapi_add_delete_and_search_methods(monkeypatch: pytest.MonkeyPatch):
+def test_openapi_add_delete_and_search_methods(monkeypatch):
     _install_openapi_stubs(monkeypatch)
     vector = AnalyticdbVectorOpenAPI.__new__(AnalyticdbVectorOpenAPI)
     vector._collection_name = "collection_1"
@@ -348,7 +348,7 @@ def test_openapi_add_delete_and_search_methods(monkeypatch: pytest.MonkeyPatch):
     assert docs_by_text[0].page_content == "high"
 
 
-def test_text_exists_returns_false_when_matches_empty(monkeypatch: pytest.MonkeyPatch):
+def test_text_exists_returns_false_when_matches_empty(monkeypatch):
     _install_openapi_stubs(monkeypatch)
     vector = AnalyticdbVectorOpenAPI.__new__(AnalyticdbVectorOpenAPI)
     vector._collection_name = "collection_1"
@@ -361,7 +361,7 @@ def test_text_exists_returns_false_when_matches_empty(monkeypatch: pytest.Monkey
     assert vector.text_exists("missing-id") is False
 
 
-def test_openapi_delete_success(monkeypatch: pytest.MonkeyPatch):
+def test_openapi_delete_success(monkeypatch):
     _install_openapi_stubs(monkeypatch)
     vector = AnalyticdbVectorOpenAPI.__new__(AnalyticdbVectorOpenAPI)
     vector._collection_name = "collection_1"
@@ -372,7 +372,7 @@ def test_openapi_delete_success(monkeypatch: pytest.MonkeyPatch):
     vector._client.delete_collection.assert_called_once()
 
 
-def test_openapi_delete_propagates_errors(monkeypatch: pytest.MonkeyPatch):
+def test_openapi_delete_propagates_errors(monkeypatch):
     _install_openapi_stubs(monkeypatch)
     vector = AnalyticdbVectorOpenAPI.__new__(AnalyticdbVectorOpenAPI)
     vector._collection_name = "collection_1"

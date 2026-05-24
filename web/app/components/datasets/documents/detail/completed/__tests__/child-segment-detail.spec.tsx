@@ -129,19 +129,23 @@ describe('ChildSegmentDetail', () => {
   describe('User Interactions', () => {
     it('should call onCancel when close button is clicked', () => {
       const mockOnCancel = vi.fn()
-      render(
+      const { container } = render(
         <ChildSegmentDetail {...defaultProps} onCancel={mockOnCancel} />,
       )
 
-      fireEvent.click(screen.getByRole('button', { name: 'common.operation.close' }))
+      const closeButtons = container.querySelectorAll('.cursor-pointer')
+      if (closeButtons.length > 1)
+        fireEvent.click(closeButtons[1]!)
 
       expect(mockOnCancel).toHaveBeenCalled()
     })
 
     it('should call toggleFullScreen when expand button is clicked', () => {
-      render(<ChildSegmentDetail {...defaultProps} />)
+      const { container } = render(<ChildSegmentDetail {...defaultProps} />)
 
-      fireEvent.click(screen.getByRole('button', { name: 'common.operation.zoomIn' }))
+      const expandButtons = container.querySelectorAll('.cursor-pointer')
+      if (expandButtons.length > 0)
+        fireEvent.click(expandButtons[0]!)
 
       expect(mockToggleFullScreen).toHaveBeenCalled()
     })

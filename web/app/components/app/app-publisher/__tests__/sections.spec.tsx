@@ -18,32 +18,8 @@ vi.mock('../publish-with-multiple-model', () => ({
 }))
 
 vi.mock('../suggested-action', () => ({
-  default: ({
-    children,
-    onClick,
-    link,
-    disabled,
-    actionButton,
-  }: {
-    children: ReactNode
-    onClick?: () => void
-    link?: string
-    disabled?: boolean
-    actionButton?: { ariaLabel: string, onClick: () => void }
-  }) => (
-    <div>
-      <button type="button" data-link={link} disabled={disabled} onClick={onClick}>{children}</button>
-      {actionButton && (
-        <button
-          type="button"
-          aria-label={actionButton.ariaLabel}
-          disabled={disabled}
-          onClick={actionButton.onClick}
-        >
-          {actionButton.ariaLabel}
-        </button>
-      )}
-    </div>
+  default: ({ children, onClick, link, disabled }: { children: ReactNode, onClick?: () => void, link?: string, disabled?: boolean }) => (
+    <button type="button" data-link={link} disabled={disabled} onClick={onClick}>{children}</button>
   ),
 }))
 
@@ -194,25 +170,9 @@ describe('app-publisher sections', () => {
     expect(render(<AccessModeDisplay />).container).toBeEmptyDOMElement()
   })
 
-  it('should hide access control content when enabled is false', () => {
-    render(
-      <PublisherAccessSection
-        enabled={false}
-        isAppAccessSet
-        isLoading={false}
-        accessMode={AccessMode.PUBLIC}
-        onClick={vi.fn()}
-      />,
-    )
-
-    expect(screen.queryByText('publishApp.title')).not.toBeInTheDocument()
-    expect(screen.queryByText('accessControlDialog.accessItems.anyone')).not.toBeInTheDocument()
-  })
-
   it('should render workflow actions, batch run links, and workflow tool configuration', () => {
     const handleOpenInExplore = vi.fn()
     const handleEmbed = vi.fn()
-    const handleOpenRunConfig = vi.fn()
 
     const { rerender } = render(
       <PublisherActionsSection
@@ -230,30 +190,22 @@ describe('app-publisher sections', () => {
         disabledFunctionTooltip="disabled"
         handleEmbed={handleEmbed}
         handleOpenInExplore={handleOpenInExplore}
-        handleOpenRunConfig={handleOpenRunConfig}
         handlePublish={vi.fn()}
         hasHumanInputNode={false}
         hasTriggerNode={false}
+        inputs={[]}
         missingStartNode={false}
-        published={false}
+        onRefreshData={vi.fn()}
+        outputs={[]}
+        published={true}
         publishedAt={Date.now()}
-        showBatchRunConfig
-        showRunConfig
         toolPublished
         workflowToolAvailable={false}
-        workflowToolIsLoading={false}
-        workflowToolOutdated={false}
-        workflowToolIsCurrentWorkspaceManager
         workflowToolMessage="workflow-disabled"
-        onConfigureWorkflowTool={vi.fn()}
       />,
     )
 
     expect(screen.getByText('common.batchRunApp')).toHaveAttribute('data-link', 'https://example.com/app?mode=batch')
-    fireEvent.click(screen.getAllByRole('button', { name: 'operation.config' })[0]!)
-    expect(handleOpenRunConfig).toHaveBeenCalledWith('https://example.com/app')
-    fireEvent.click(screen.getAllByRole('button', { name: 'operation.config' })[1]!)
-    expect(handleOpenRunConfig).toHaveBeenCalledWith('https://example.com/app?mode=batch')
     fireEvent.click(screen.getByText('common.openInExplore'))
     expect(handleOpenInExplore).toHaveBeenCalled()
     expect(screen.getByText('workflow-tool-configure')).toBeInTheDocument()
@@ -271,19 +223,17 @@ describe('app-publisher sections', () => {
         disabledFunctionTooltip="disabled"
         handleEmbed={handleEmbed}
         handleOpenInExplore={handleOpenInExplore}
-        handleOpenRunConfig={handleOpenRunConfig}
         handlePublish={vi.fn()}
         hasHumanInputNode={false}
         hasTriggerNode={false}
+        inputs={[]}
         missingStartNode
+        onRefreshData={vi.fn()}
+        outputs={[]}
         published={false}
         publishedAt={Date.now()}
         toolPublished={false}
         workflowToolAvailable
-        workflowToolIsLoading={false}
-        workflowToolOutdated={false}
-        workflowToolIsCurrentWorkspaceManager
-        onConfigureWorkflowTool={vi.fn()}
       />,
     )
 
@@ -298,19 +248,16 @@ describe('app-publisher sections', () => {
         disabledFunctionButton={false}
         handleEmbed={handleEmbed}
         handleOpenInExplore={handleOpenInExplore}
-        handleOpenRunConfig={handleOpenRunConfig}
         handlePublish={vi.fn()}
         hasHumanInputNode={false}
         hasTriggerNode
+        inputs={[]}
         missingStartNode={false}
+        outputs={[]}
         published={false}
         publishedAt={undefined}
         toolPublished={false}
         workflowToolAvailable
-        workflowToolIsLoading={false}
-        workflowToolOutdated={false}
-        workflowToolIsCurrentWorkspaceManager
-        onConfigureWorkflowTool={vi.fn()}
       />,
     )
 

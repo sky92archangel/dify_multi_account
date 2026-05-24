@@ -1,7 +1,7 @@
 import logging
 from collections.abc import Mapping
 from datetime import datetime
-from typing import Literal, override
+from typing import Literal
 
 from dateutil.parser import isoparse
 from flask import request
@@ -11,8 +11,7 @@ from sqlalchemy.orm import sessionmaker
 from werkzeug.exceptions import BadRequest, InternalServerError, NotFound
 
 from controllers.common.controller_schemas import WorkflowRunPayload as WorkflowRunPayloadBase
-from controllers.common.fields import SimpleResultResponse
-from controllers.common.schema import register_response_schema_models, register_schema_models
+from controllers.common.schema import register_schema_models
 from controllers.service_api import service_api_ns
 from controllers.service_api.app.error import (
     CompletionRequestError,
@@ -40,7 +39,6 @@ from graphon.enums import WorkflowExecutionStatus
 from graphon.graph_engine.manager import GraphEngineManager
 from graphon.model_runtime.errors.invoke import InvokeError
 from libs import helper
-from libs.helper import to_timestamp
 from models.model import App, AppMode, EndUser
 from models.workflow import WorkflowRun
 from repositories.factory import DifyAPIRepositoryFactory
@@ -68,7 +66,12 @@ class WorkflowLogQuery(BaseModel):
 
 
 register_schema_models(service_api_ns, WorkflowRunPayload, WorkflowLogQuery)
-register_response_schema_models(service_api_ns, SimpleResultResponse)
+
+
+def _to_timestamp(value: datetime | int | None) -> int | None:
+    if isinstance(value, datetime):
+        return int(value.timestamp())
+    return value
 
 
 def _enum_value(value):
@@ -76,13 +79,11 @@ def _enum_value(value):
 
 
 class WorkflowRunStatusField(fields.Raw):
-    @override
     def output(self, key, obj: WorkflowRun, **kwargs):
         return _enum_value(obj.status)
 
 
 class WorkflowRunOutputsField(fields.Raw):
-    @override
     def output(self, key, obj: WorkflowRun, **kwargs):
         status = _enum_value(obj.status)
         if status == WorkflowExecutionStatus.PAUSED.value:
@@ -108,7 +109,7 @@ class WorkflowRunResponse(ResponseModel):
     @field_validator("created_at", "finished_at", mode="before")
     @classmethod
     def _normalize_timestamp(cls, value: datetime | int | None) -> int | None:
-        return to_timestamp(value)
+        return _to_timestamp(value)
 
 
 class WorkflowRunForLogResponse(ResponseModel):
@@ -132,7 +133,7 @@ class WorkflowRunForLogResponse(ResponseModel):
     @field_validator("created_at", "finished_at", mode="before")
     @classmethod
     def _normalize_timestamp(cls, value: datetime | int | None) -> int | None:
-        return to_timestamp(value)
+        return _to_timestamp(value)
 
 
 class WorkflowAppLogPartialResponse(ResponseModel):
@@ -153,7 +154,7 @@ class WorkflowAppLogPartialResponse(ResponseModel):
     @field_validator("created_at", mode="before")
     @classmethod
     def _normalize_timestamp(cls, value: datetime | int | None) -> int | None:
-        return to_timestamp(value)
+        return _to_timestamp(value)
 
 
 class WorkflowAppLogPaginationResponse(ResponseModel):
@@ -380,7 +381,6 @@ class WorkflowTaskStopApi(Resource):
             404: "Task not found",
         }
     )
-    @service_api_ns.response(200, "Task stopped successfully", service_api_ns.models[SimpleResultResponse.__name__])
     @validate_app_token(fetch_user_arg=FetchUserArg(fetch_from=WhereisUserArg.JSON, required=True))
     def post(self, app_model: App, end_user: EndUser, task_id: str):
         """Stop a running workflow task."""

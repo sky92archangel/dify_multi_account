@@ -115,7 +115,7 @@ describe('VarReferencePicker', () => {
     expect(screen.getByText('Source Node')).toBeInTheDocument()
     expect(screen.getByText('answer')).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: /Clear|operation.clear/ }))
+    fireEvent.click(screen.getByTestId('var-reference-picker-clear'))
     expect(onChange).toHaveBeenCalledWith('', 'constant')
   })
 

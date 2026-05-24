@@ -12,7 +12,6 @@ import {
 } from '@remixicon/react'
 import { noop } from 'es-toolkit/function'
 import { memo } from 'react'
-import { useTranslation } from 'react-i18next'
 import ActionButton from '@/app/components/base/action-button'
 import { FileUploaderInChatInput } from '@/app/components/base/file-uploader'
 
@@ -34,8 +33,6 @@ const Operation: FC<OperationProps> = ({
   onSend,
   theme,
 }) => {
-  const { t } = useTranslation()
-
   return (
     <div
       className={cn(
@@ -52,20 +49,20 @@ const Operation: FC<OperationProps> = ({
             speechToTextConfig?.enabled && (
               <ActionButton
                 size="l"
-                aria-label={t('voiceInput.start', { ns: 'common' })}
                 disabled={readonly}
                 onClick={onShowVoiceInput}
+                data-testid="voice-input-button"
               >
-                <RiMicLine className="size-5" aria-hidden="true" />
+                <RiMicLine className="h-5 w-5" />
               </ActionButton>
             )
           }
         </div>
         <Button
-          aria-label={t('operation.send', { ns: 'common' })}
           className="ml-3 w-8 px-0"
           variant="primary"
           onClick={readonly ? noop : onSend}
+          data-testid="send-button"
           style={
             theme
               ? {
@@ -74,7 +71,7 @@ const Operation: FC<OperationProps> = ({
               : {}
           }
         >
-          <RiSendPlane2Fill className="size-4" aria-hidden="true" />
+          <RiSendPlane2Fill className="h-4 w-4" />
         </Button>
       </div>
     </div>

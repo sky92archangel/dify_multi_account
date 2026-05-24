@@ -1,6 +1,5 @@
 'use client'
 import type { FC } from 'react'
-import { FieldsetLegend, FieldsetRoot } from '@langgenius/dify-ui/fieldset'
 import {
   NumberField,
   NumberFieldControls,
@@ -11,7 +10,7 @@ import {
 } from '@langgenius/dify-ui/number-field'
 import { Slider } from '@langgenius/dify-ui/slider'
 import { Switch } from '@langgenius/dify-ui/switch'
-import { Infotip } from '@/app/components/base/infotip'
+import Tooltip from '@/app/components/base/tooltip'
 
 type Props = {
   className?: string
@@ -31,8 +30,7 @@ type Props = {
 
 const ParamItem: FC<Props> = ({ className, id, name, noTooltip, tip, step = 0.1, min = 0, max, value, enable, onChange, hasSwitch, onSwitchChange }) => {
   return (
-    <FieldsetRoot className={className}>
-      <FieldsetLegend className="sr-only">{name}</FieldsetLegend>
+    <div className={className}>
       <div className="flex items-center justify-between">
         <div className="flex h-6 items-center">
           {hasSwitch && (
@@ -46,10 +44,11 @@ const ParamItem: FC<Props> = ({ className, id, name, noTooltip, tip, step = 0.1,
             />
           )}
           <span className="mr-1 system-sm-semibold text-text-secondary">{name}</span>
-          {!noTooltip && tip && (
-            <Infotip aria-label={tip} popupClassName="w-[200px]">
-              {tip}
-            </Infotip>
+          {!noTooltip && (
+            <Tooltip
+              triggerClassName="w-4 h-4 shrink-0"
+              popupContent={<div className="w-[200px]">{tip}</div>}
+            />
           )}
         </div>
       </div>
@@ -64,7 +63,7 @@ const ParamItem: FC<Props> = ({ className, id, name, noTooltip, tip, step = 0.1,
             onValueChange={nextValue => onChange(id, nextValue ?? min)}
           >
             <NumberFieldGroup>
-              <NumberFieldInput aria-label={name} className="w-18" />
+              <NumberFieldInput className="w-[72px]" />
               <NumberFieldControls>
                 <NumberFieldIncrement />
                 <NumberFieldDecrement />
@@ -84,7 +83,7 @@ const ParamItem: FC<Props> = ({ className, id, name, noTooltip, tip, step = 0.1,
           />
         </div>
       </div>
-    </FieldsetRoot>
+    </div>
   )
 }
 export default ParamItem

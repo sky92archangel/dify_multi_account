@@ -2,7 +2,6 @@ import uuid
 from types import SimpleNamespace
 
 import pytest
-from pytest_mock import MockerFixture
 
 from core.app.app_config.entities import EasyUIBasedAppModelConfigFrom
 from core.app.apps.agent_chat.app_config_manager import (
@@ -12,7 +11,7 @@ from core.entities.agent_entities import PlanningStrategy
 
 
 class TestAgentChatAppConfigManagerGetAppConfig:
-    def test_get_app_config_override_config(self, mocker: MockerFixture):
+    def test_get_app_config_override_config(self, mocker):
         app_model = mocker.MagicMock(id="app1", tenant_id="tenant", mode="agent-chat")
         app_model_config = mocker.MagicMock(id="cfg1")
         app_model_config.to_dict.return_value = {"ignored": True}
@@ -46,7 +45,7 @@ class TestAgentChatAppConfigManagerGetAppConfig:
         assert result.variables == "variables"
         assert result.external_data_variables == "external"
 
-    def test_get_app_config_conversation_specific(self, mocker: MockerFixture):
+    def test_get_app_config_conversation_specific(self, mocker):
         app_model = mocker.MagicMock(id="app1", tenant_id="tenant", mode="agent-chat")
         app_model_config = mocker.MagicMock(id="cfg1")
         app_model_config.to_dict.return_value = {"model": {"provider": "p"}}
@@ -77,7 +76,7 @@ class TestAgentChatAppConfigManagerGetAppConfig:
         assert result.app_model_config_dict == app_model_config.to_dict.return_value
         assert result.app_model_config_from.value == "conversation-specific-config"
 
-    def test_get_app_config_latest_config(self, mocker: MockerFixture):
+    def test_get_app_config_latest_config(self, mocker):
         app_model = mocker.MagicMock(id="app1", tenant_id="tenant", mode="agent-chat")
         app_model_config = mocker.MagicMock(id="cfg1")
         app_model_config.to_dict.return_value = {"model": {"provider": "p"}}
@@ -108,7 +107,7 @@ class TestAgentChatAppConfigManagerGetAppConfig:
 
 
 class TestAgentChatAppConfigManagerConfigValidate:
-    def test_config_validate_filters_related_keys(self, mocker: MockerFixture):
+    def test_config_validate_filters_related_keys(self, mocker):
         config = {
             "model": {},
             "user_input_form": {},
@@ -248,7 +247,7 @@ class TestValidateAgentModeAndSetDefaults:
                 {"agent_mode": {"enabled": True, "tools": [{"dataset": {"enabled": True, "id": "bad"}}]}},
             )
 
-    def test_old_tool_dataset_id_not_exists(self, mocker: MockerFixture):
+    def test_old_tool_dataset_id_not_exists(self, mocker):
         mocker.patch(
             "core.app.apps.agent_chat.app_config_manager.DatasetConfigManager.is_dataset_exists",
             return_value=False,
@@ -276,7 +275,7 @@ class TestValidateAgentModeAndSetDefaults:
                 "tenant", {"agent_mode": {"enabled": True, "tools": [tool]}}
             )
 
-    def test_valid_old_and_new_style_tools(self, mocker: MockerFixture):
+    def test_valid_old_and_new_style_tools(self, mocker):
         mocker.patch(
             "core.app.apps.agent_chat.app_config_manager.DatasetConfigManager.is_dataset_exists",
             return_value=True,

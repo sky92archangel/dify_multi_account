@@ -182,13 +182,11 @@ describe('useChatLayout', () => {
 
       act(() => {
         capturedResizeCallbacks[0]?.([makeResizeEntry(80, 400)], {} as ResizeObserver)
-        flushAnimationFrames()
       })
       expect(screen.getByTestId('chat-container').style.paddingBottom).toBe('80px')
 
       act(() => {
         capturedResizeCallbacks[1]?.([makeResizeEntry(50, 560)], {} as ResizeObserver)
-        flushAnimationFrames()
       })
       expect(screen.getByTestId('chat-footer').style.width).toBe('560px')
 

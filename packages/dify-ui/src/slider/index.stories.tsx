@@ -1,18 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type * as React from 'react'
 import { useState } from 'react'
-import {
-  Slider,
-  SliderControl,
-  SliderIndicator,
-  SliderLabel,
-  SliderRoot,
-  SliderThumb,
-  SliderTrack,
-} from '.'
+import { Slider } from '.'
 
 const meta = {
-  title: 'Base/Form/Slider',
+  title: 'Base/UI/Slider',
   component: Slider,
   parameters: {
     layout: 'centered',
@@ -97,18 +89,4 @@ export const Disabled: Story = {
     step: 1,
     disabled: true,
   },
-}
-
-export const ComposedWithLabel: Story = {
-  render: () => (
-    <SliderRoot defaultValue={50} className="group/slider relative inline-flex w-[320px] flex-col gap-1 data-disabled:opacity-30">
-      <SliderLabel>Temperature</SliderLabel>
-      <SliderControl>
-        <SliderTrack>
-          <SliderIndicator />
-        </SliderTrack>
-        <SliderThumb />
-      </SliderControl>
-    </SliderRoot>
-  ),
 }

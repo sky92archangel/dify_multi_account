@@ -30,23 +30,23 @@ from core.workflow.human_input_adapter import (
     WebAppDeliveryMethod,
     _WebAppDeliveryConfig,
 )
-from core.workflow.node_runtime import DifyFileReferenceFactory, DifyHumanInputNodeRuntime
+from core.workflow.node_runtime import DifyHumanInputNodeRuntime
 from core.workflow.system_variables import build_system_variables
 from graphon.entities import GraphInitParams
 from graphon.node_events import PauseRequestedEvent
 from graphon.node_events.node import StreamCompletedEvent
 from graphon.nodes.human_input.entities import (
+    FormInput,
+    FormInputDefault,
     HumanInputNodeData,
-    ParagraphInputConfig,
-    StringSource,
-    UserActionConfig,
+    UserAction,
 )
 from graphon.nodes.human_input.enums import (
     ButtonStyle,
     FormInputType,
     HumanInputFormStatus,
+    PlaceholderType,
     TimeoutUnit,
-    ValueSourceType,
 )
 from graphon.nodes.human_input.human_input_node import HumanInputNode
 from graphon.runtime import GraphRuntimeState, VariablePool
@@ -149,10 +149,9 @@ def _build_human_input_node(
     )
     return HumanInputNode(
         node_id=node_id,
-        data=typed_node_data,
+        config=typed_node_data,
         graph_init_params=graph_init_params,
         graph_runtime_state=graph_runtime_state,
-        file_reference_factory=DifyFileReferenceFactory(graph_init_params.run_context),
         runtime=runtime,
     )
 
@@ -191,36 +190,32 @@ class TestDeliveryMethod:
         assert len(delivery_method.config.recipients.items) == 2
 
 
-class TestParagraphInputConfig:
-    """Test ParagraphInputConfig entity."""
+class TestFormInput:
+    """Test FormInput entity."""
 
-    def test_paragraph_input_with_constant_default(self):
-        """Test paragraph input with constant default value."""
-        default = StringSource(type=ValueSourceType.CONSTANT, value="Enter your response here...")
+    def test_text_input_with_constant_default(self):
+        """Test text input with constant default value."""
+        default = FormInputDefault(type=PlaceholderType.CONSTANT, value="Enter your response here...")
 
-        form_input = ParagraphInputConfig(
-            type=FormInputType.PARAGRAPH, output_variable_name="user_input", default=default
-        )
+        form_input = FormInput(type=FormInputType.TEXT_INPUT, output_variable_name="user_input", default=default)
 
-        assert form_input.type == FormInputType.PARAGRAPH
+        assert form_input.type == FormInputType.TEXT_INPUT
         assert form_input.output_variable_name == "user_input"
-        assert form_input.default.type == ValueSourceType.CONSTANT
+        assert form_input.default.type == PlaceholderType.CONSTANT
         assert form_input.default.value == "Enter your response here..."
 
-    def test_paragraph_input_with_variable_default(self):
-        """Test paragraph input with variable default value."""
-        default = StringSource(type=ValueSourceType.VARIABLE, selector=["node_123", "output_var"])
+    def test_text_input_with_variable_default(self):
+        """Test text input with variable default value."""
+        default = FormInputDefault(type=PlaceholderType.VARIABLE, selector=["node_123", "output_var"])
 
-        form_input = ParagraphInputConfig(
-            type=FormInputType.PARAGRAPH, output_variable_name="user_input", default=default
-        )
+        form_input = FormInput(type=FormInputType.TEXT_INPUT, output_variable_name="user_input", default=default)
 
-        assert form_input.default.type == ValueSourceType.VARIABLE
+        assert form_input.default.type == PlaceholderType.VARIABLE
         assert form_input.default.selector == ["node_123", "output_var"]
 
     def test_form_input_without_default(self):
         """Test form input without default value."""
-        form_input = ParagraphInputConfig(type=FormInputType.PARAGRAPH, output_variable_name="description")
+        form_input = FormInput(type=FormInputType.PARAGRAPH, output_variable_name="description")
 
         assert form_input.type == FormInputType.PARAGRAPH
         assert form_input.output_variable_name == "description"
@@ -228,11 +223,11 @@ class TestParagraphInputConfig:
 
 
 class TestUserAction:
-    """Test UserActionConfig entity."""
+    """Test UserAction entity."""
 
     def test_user_action_creation(self):
         """Test user action creation."""
-        action = UserActionConfig(id="approve", title="Approve", button_style=ButtonStyle.PRIMARY)
+        action = UserAction(id="approve", title="Approve", button_style=ButtonStyle.PRIMARY)
 
         assert action.id == "approve"
         assert action.title == "Approve"
@@ -240,22 +235,22 @@ class TestUserAction:
 
     def test_user_action_default_button_style(self):
         """Test user action with default button style."""
-        action = UserActionConfig(id="cancel", title="Cancel")
+        action = UserAction(id="cancel", title="Cancel")
 
         assert action.button_style == ButtonStyle.DEFAULT
 
     def test_user_action_length_boundaries(self):
         """Test user action id and title length boundaries."""
-        action = UserActionConfig(id="a" * 20, title="b" * 100)
+        action = UserAction(id="a" * 20, title="b" * 20)
 
         assert action.id == "a" * 20
-        assert action.title == "b" * 100
+        assert action.title == "b" * 20
 
     @pytest.mark.parametrize(
         ("field_name", "value"),
         [
             ("id", "a" * 21),
-            ("title", "b" * 101),
+            ("title", "b" * 21),
         ],
     )
     def test_user_action_length_limits(self, field_name: str, value: str):
@@ -264,7 +259,7 @@ class TestUserAction:
         data[field_name] = value
 
         with pytest.raises(ValidationError) as exc_info:
-            UserActionConfig.model_validate(data)
+            UserAction.model_validate(data)
 
         errors = exc_info.value.errors()
         assert any(error["loc"] == (field_name,) and error["type"] == "string_too_long" for error in errors)
@@ -278,14 +273,14 @@ class TestHumanInputNodeData:
         delivery_methods = [WebAppDeliveryMethod(enabled=True, config=_WebAppDeliveryConfig())]
 
         inputs = [
-            ParagraphInputConfig(
-                type=FormInputType.PARAGRAPH,
+            FormInput(
+                type=FormInputType.TEXT_INPUT,
                 output_variable_name="content",
-                default=StringSource(type=ValueSourceType.CONSTANT, value="Enter content..."),
+                default=FormInputDefault(type=PlaceholderType.CONSTANT, value="Enter content..."),
             )
         ]
 
-        user_actions = [UserActionConfig(id="submit", title="Submit", button_style=ButtonStyle.PRIMARY)]
+        user_actions = [UserAction(id="submit", title="Submit", button_style=ButtonStyle.PRIMARY)]
 
         node_data = HumanInputNodeData(
             title="Human Input Test",
@@ -343,8 +338,8 @@ class TestHumanInputNodeData:
     def test_duplicate_input_output_variable_name_raises_validation_error(self):
         """Duplicate form input output_variable_name should raise validation error."""
         duplicate_inputs = [
-            ParagraphInputConfig(type=FormInputType.PARAGRAPH, output_variable_name="content"),
-            ParagraphInputConfig(type=FormInputType.PARAGRAPH, output_variable_name="content"),
+            FormInput(type=FormInputType.TEXT_INPUT, output_variable_name="content"),
+            FormInput(type=FormInputType.TEXT_INPUT, output_variable_name="content"),
         ]
 
         with pytest.raises(ValidationError, match="duplicated output_variable_name 'content'"):
@@ -353,8 +348,8 @@ class TestHumanInputNodeData:
     def test_duplicate_user_action_ids_raise_validation_error(self):
         """Duplicate user action ids should raise validation error."""
         duplicate_actions = [
-            UserActionConfig(id="submit", title="Submit"),
-            UserActionConfig(id="submit", title="Submit Again"),
+            UserAction(id="submit", title="Submit"),
+            UserAction(id="submit", title="Submit Again"),
         ]
 
         with pytest.raises(ValidationError, match="duplicated user action id 'submit'"):
@@ -432,7 +427,7 @@ class TestHumanInputNodeVariableResolution:
     """Tests for resolving variable-based defaults in HumanInputNode."""
 
     def test_resolves_variable_defaults(self):
-        variable_pool = VariablePool.from_bootstrap(
+        variable_pool = VariablePool(
             system_variables=build_system_variables(
                 user_id="user",
                 app_id="app",
@@ -463,18 +458,18 @@ class TestHumanInputNodeVariableResolution:
             title="Human Input",
             form_content="Provide your name",
             inputs=[
-                ParagraphInputConfig(
-                    type=FormInputType.PARAGRAPH,
+                FormInput(
+                    type=FormInputType.TEXT_INPUT,
                     output_variable_name="user_name",
-                    default=StringSource(type=ValueSourceType.VARIABLE, selector=["start", "name"]),
+                    default=FormInputDefault(type=PlaceholderType.VARIABLE, selector=["start", "name"]),
                 ),
-                ParagraphInputConfig(
-                    type=FormInputType.PARAGRAPH,
+                FormInput(
+                    type=FormInputType.TEXT_INPUT,
                     output_variable_name="user_email",
-                    default=StringSource(type=ValueSourceType.CONSTANT, value="foo@example.com"),
+                    default=FormInputDefault(type=PlaceholderType.CONSTANT, value="foo@example.com"),
                 ),
             ],
-            user_actions=[UserActionConfig(id="submit", title="Submit")],
+            user_actions=[UserAction(id="submit", title="Submit")],
         )
         config = {"id": "human", "data": node_data.model_dump()}
 
@@ -509,7 +504,7 @@ class TestHumanInputNodeVariableResolution:
         assert params.resolved_default_values == expected_values
 
     def test_debugger_falls_back_to_recipient_token_when_webapp_disabled(self):
-        variable_pool = VariablePool.from_bootstrap(
+        variable_pool = VariablePool(
             system_variables=build_system_variables(
                 user_id="user",
                 app_id="app",
@@ -539,7 +534,7 @@ class TestHumanInputNodeVariableResolution:
             title="Human Input",
             form_content="Provide your name",
             inputs=[],
-            user_actions=[UserActionConfig(id="submit", title="Submit")],
+            user_actions=[UserAction(id="submit", title="Submit")],
         )
         config = {"id": "human", "data": node_data.model_dump()}
 
@@ -570,7 +565,7 @@ class TestHumanInputNodeVariableResolution:
         assert not hasattr(pause_event.reason, "form_token")
 
     def test_webapp_runtime_keeps_form_visible_in_ui_when_webapp_delivery_is_enabled(self):
-        variable_pool = VariablePool.from_bootstrap(
+        variable_pool = VariablePool(
             system_variables=build_system_variables(
                 user_id="user",
                 app_id="app",
@@ -636,7 +631,7 @@ class TestHumanInputNodeVariableResolution:
         assert params.display_in_ui is True
 
     def test_debugger_debug_mode_overrides_email_recipients(self):
-        variable_pool = VariablePool.from_bootstrap(
+        variable_pool = VariablePool(
             system_variables=build_system_variables(
                 user_id="user-123",
                 app_id="app",
@@ -666,7 +661,7 @@ class TestHumanInputNodeVariableResolution:
             title="Human Input",
             form_content="Provide your name",
             inputs=[],
-            user_actions=[UserActionConfig(id="submit", title="Submit")],
+            user_actions=[UserAction(id="submit", title="Submit")],
             delivery_methods=[
                 EmailDeliveryMethod(
                     enabled=True,
@@ -726,7 +721,7 @@ class TestValidation:
     def test_invalid_form_input_type(self):
         """Test validation with invalid form input type."""
         with pytest.raises(ValidationError):
-            ParagraphInputConfig(
+            FormInput(
                 type="invalid-type",  # Invalid type
                 output_variable_name="test",
             )
@@ -734,7 +729,7 @@ class TestValidation:
     def test_invalid_button_style(self):
         """Test validation with invalid button style."""
         with pytest.raises(ValidationError):
-            UserActionConfig(
+            UserAction(
                 id="test",
                 title="Test",
                 button_style="invalid-style",  # Invalid style
@@ -753,7 +748,7 @@ class TestHumanInputNodeRenderedContent:
     """Tests for rendering submitted content."""
 
     def test_replaces_outputs_placeholders_after_submission(self):
-        variable_pool = VariablePool.from_bootstrap(
+        variable_pool = VariablePool(
             system_variables=build_system_variables(
                 user_id="user",
                 app_id="app",
@@ -783,12 +778,12 @@ class TestHumanInputNodeRenderedContent:
             title="Human Input",
             form_content="Name: {{#$output.name#}}",
             inputs=[
-                ParagraphInputConfig(
-                    type=FormInputType.PARAGRAPH,
+                FormInput(
+                    type=FormInputType.TEXT_INPUT,
                     output_variable_name="name",
                 )
             ],
-            user_actions=[UserActionConfig(id="approve", title="Approve")],
+            user_actions=[UserAction(id="approve", title="Approve")],
         )
         config = {"id": "human", "data": node_data.model_dump()}
 
@@ -815,4 +810,4 @@ class TestHumanInputNodeRenderedContent:
         last_event = events[-1]
         assert isinstance(last_event, StreamCompletedEvent)
         node_run_result = last_event.node_run_result
-        assert node_run_result.outputs["__rendered_content"].to_object() == "Name: Alice"
+        assert node_run_result.outputs["__rendered_content"] == "Name: Alice"

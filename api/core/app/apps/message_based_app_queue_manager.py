@@ -1,5 +1,3 @@
-from typing import override
-
 from core.app.apps.base_app_queue_manager import AppQueueManager, PublishFrom
 from core.app.apps.exc import GenerateTaskStoppedError
 from core.app.entities.app_invoke_entities import InvokeFrom
@@ -23,7 +21,6 @@ class MessageBasedAppQueueManager(AppQueueManager):
         self._app_mode = app_mode
         self._message_id = str(message_id)
 
-    @override
     def _publish(self, event: AppQueueEvent, pub_from: PublishFrom):
         """
         Publish event to queue

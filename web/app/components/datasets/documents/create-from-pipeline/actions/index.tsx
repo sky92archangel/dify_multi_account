@@ -1,9 +1,9 @@
 import { Button } from '@langgenius/dify-ui/button'
-import { Checkbox } from '@langgenius/dify-ui/checkbox'
 import { RiArrowRightLine } from '@remixicon/react'
 import * as React from 'react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import Checkbox from '@/app/components/base/checkbox'
 import Link from '@/next/link'
 import { useParams } from '@/next/navigation'
 
@@ -13,7 +13,7 @@ type ActionsProps = {
   showSelect?: boolean
   totalOptions?: number
   selectedOptions?: number
-  onSelectAll?: (checked: boolean) => void
+  onSelectAll?: () => void
   tip?: string
 }
 
@@ -49,16 +49,16 @@ const Actions = ({
     <div className="flex items-center gap-x-2 overflow-hidden">
       {showSelect && (
         <>
-          <label className="flex shrink-0 cursor-pointer items-center gap-x-2 py-[3px] pr-2 pl-4">
+          <div className="flex shrink-0 items-center gap-x-2 py-[3px] pr-2 pl-4">
             <Checkbox
-              onCheckedChange={checked => onSelectAll?.(checked)}
+              onCheck={onSelectAll}
               indeterminate={indeterminate}
               checked={checked}
             />
             <span className="system-sm-medium text-text-accent">
               {t('operation.selectAll', { ns: 'common' })}
             </span>
-          </label>
+          </div>
           {tip && (
             <div title={tip} className="max-w-full truncate system-xs-regular text-text-tertiary">
               {tip}

@@ -39,17 +39,18 @@ const OperationDropdown: FC<Props> = ({
   popupClassName,
 }) => {
   const { t } = useTranslation()
+  const [open, setOpen] = React.useState(false)
   const { data: enable_marketplace } = useSuspenseQuery({
     ...systemFeaturesQueryOptions(),
     select: s => s.enable_marketplace,
   })
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
-        className="action-btn action-btn-m data-popup-open:bg-state-base-hover"
+        className={cn('action-btn action-btn-m', open && 'bg-state-base-hover')}
       >
-        <span className="i-ri-more-fill size-4" />
+        <span className="i-ri-more-fill h-4 w-4" />
       </DropdownMenuTrigger>
       <DropdownMenuContent
         placement={placement}
@@ -70,7 +71,7 @@ const OperationDropdown: FC<Props> = ({
         {(source === PluginSource.marketplace || source === PluginSource.github) && enable_marketplace && (
           <DropdownMenuItem render={<a href={detailUrl} target="_blank" rel="noopener noreferrer" />}>
             <span className="grow">{t('detailPanel.operation.viewDetail', { ns: 'plugin' })}</span>
-            <span className="i-ri-arrow-right-up-line size-3.5 shrink-0 text-text-tertiary" />
+            <span className="i-ri-arrow-right-up-line h-3.5 w-3.5 shrink-0 text-text-tertiary" />
           </DropdownMenuItem>
         )}
         {(source === PluginSource.marketplace || source === PluginSource.github) && enable_marketplace && (

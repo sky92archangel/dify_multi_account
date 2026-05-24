@@ -5,10 +5,11 @@ import { PlusIcon } from '@heroicons/react/20/solid'
 import { Button } from '@langgenius/dify-ui/button'
 import { cn } from '@langgenius/dify-ui/cn'
 import { RiInformation2Line } from '@remixicon/react'
+import { useSuspenseQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { trackEvent } from '@/app/components/base/amplitude'
 import AppIcon from '@/app/components/base/app-icon'
-import { IS_CLOUD_EDITION } from '@/config'
+import { systemFeaturesQueryOptions } from '@/service/system-features'
 import { AppModeEnum } from '@/types/app'
 import { AppTypeIcon } from '../../app/type-selector'
 
@@ -29,13 +30,14 @@ const AppCard = ({
 }: AppCardProps) => {
   const { t } = useTranslation()
   const { app: appBasicInfo } = app
-  const canViewApp = IS_CLOUD_EDITION
+  const { data: systemFeatures } = useSuspenseQuery(systemFeaturesQueryOptions())
+  const isTrialApp = app.can_trial && systemFeatures.enable_trial_app
   const handleTryApp = () => {
     trackEvent('preview_template', {
       template_id: app.app_id,
       template_name: appBasicInfo.name,
       template_mode: appBasicInfo.mode,
-      template_categories: app.categories,
+      template_category: app.category,
       page: 'explore',
     })
     onTry({ appId: app.app_id, app })
@@ -54,12 +56,12 @@ const AppCard = ({
           />
           <AppTypeIcon
             wrapperClassName="absolute -bottom-0.5 -right-0.5 w-4 h-4 shadow-sm"
-            className="size-3"
+            className="h-3 w-3"
             type={appBasicInfo.mode}
           />
         </div>
         <div className="w-0 grow py-px">
-          <div className="flex items-center text-sm/5 font-semibold text-text-secondary">
+          <div className="flex items-center text-sm leading-5 font-semibold text-text-secondary">
             <div className="truncate" title={appBasicInfo.name}>{appBasicInfo.name}</div>
           </div>
           <div className="flex items-center text-[10px] leading-[18px] font-medium text-text-tertiary">
@@ -76,23 +78,21 @@ const AppCard = ({
           {app.description}
         </div>
       </div>
-      {isExplore && (canCreate || canViewApp) && (
+      {isExplore && (canCreate || isTrialApp) && (
         <div className={cn('absolute right-0 bottom-0 left-0 hidden bg-linear-to-t from-components-panel-gradient-2 from-[60.27%] to-transparent p-4 pt-8 group-hover:flex')}>
-          <div className={cn('grid h-8 w-full grid-cols-1 space-x-2', canCreate && canViewApp && 'grid-cols-2')}>
+          <div className={cn('grid h-8 w-full grid-cols-1 space-x-2', canCreate && 'grid-cols-2')}>
             {
               canCreate && (
                 <Button variant="primary" className="h-7" onClick={() => onCreate()}>
-                  <PlusIcon className="mr-1 size-4" />
+                  <PlusIcon className="mr-1 h-4 w-4" />
                   <span className="text-xs">{t('appCard.addToWorkspace', { ns: 'explore' })}</span>
                 </Button>
               )
             }
-            {canViewApp && (
-              <Button className="h-7" onClick={handleTryApp}>
-                <RiInformation2Line className="mr-1 size-4" />
-                <span>{t('appCard.try', { ns: 'explore' })}</span>
-              </Button>
-            )}
+            <Button className="h-7" onClick={handleTryApp}>
+              <RiInformation2Line className="mr-1 size-4" />
+              <span>{t('appCard.try', { ns: 'explore' })}</span>
+            </Button>
           </div>
         </div>
       )}

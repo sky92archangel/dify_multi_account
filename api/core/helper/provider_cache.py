@@ -1,7 +1,7 @@
 import json
 from abc import ABC, abstractmethod
 from json import JSONDecodeError
-from typing import Any, override
+from typing import Any
 
 from extensions.ext_redis import redis_client
 
@@ -47,7 +47,6 @@ class SingletonProviderCredentialsCache(ProviderCredentialsCache):
             provider_identity=provider_identity,
         )
 
-    @override
     def _generate_cache_key(self, **kwargs) -> str:
         tenant_id = kwargs["tenant_id"]
         provider_type = kwargs["provider_type"]
@@ -62,7 +61,6 @@ class ToolProviderCredentialsCache(ProviderCredentialsCache):
     def __init__(self, tenant_id: str, provider: str, credential_id: str):
         super().__init__(tenant_id=tenant_id, provider=provider, credential_id=credential_id)
 
-    @override
     def _generate_cache_key(self, **kwargs) -> str:
         tenant_id = kwargs["tenant_id"]
         provider = kwargs["provider"]

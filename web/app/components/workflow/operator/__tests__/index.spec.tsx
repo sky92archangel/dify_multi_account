@@ -1,4 +1,4 @@
-import { act, screen, waitFor } from '@testing-library/react'
+import { act, screen } from '@testing-library/react'
 import { createNode } from '../../__tests__/fixtures'
 import { renderWorkflowFlowComponent } from '../../__tests__/workflow-test-env'
 import { BlockEnum } from '../../types'
@@ -110,7 +110,7 @@ describe('Operator', () => {
     expect(container.querySelector('div[style*="width: auto"]')).toBeInTheDocument()
   })
 
-  it('should sync the observed panel size back into the workflow store and disconnect on unmount', async () => {
+  it('should sync the observed panel size back into the workflow store and disconnect on unmount', () => {
     const { store, unmount } = renderOperator({
       workflowCanvasWidth: 900,
       rightPanelWidth: 260,
@@ -126,10 +126,8 @@ describe('Operator', () => {
       ], {} as ResizeObserver)
     })
 
-    await waitFor(() => {
-      expect(store.getState().bottomPanelWidth).toBe(512)
-      expect(store.getState().bottomPanelHeight).toBe(188)
-    })
+    expect(store.getState().bottomPanelWidth).toBe(512)
+    expect(store.getState().bottomPanelHeight).toBe(188)
 
     unmount()
 

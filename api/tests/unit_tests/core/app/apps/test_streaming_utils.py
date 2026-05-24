@@ -54,7 +54,7 @@ class FakeTopic:
         return self._state["subscribed"]
 
 
-def test_retrieve_events_calls_on_subscribe_after_subscription(monkeypatch: pytest.MonkeyPatch):
+def test_retrieve_events_calls_on_subscribe_after_subscription(monkeypatch):
     topic = FakeTopic()
 
     def fake_get_response_topic(cls, app_mode, workflow_run_id):
@@ -92,7 +92,7 @@ def test_normalize_terminal_events_empty_values():
     assert _normalize_terminal_events([]) == set({})
 
 
-def test_stream_topic_events_emits_ping_and_idle_timeout(monkeypatch: pytest.MonkeyPatch):
+def test_stream_topic_events_emits_ping_and_idle_timeout(monkeypatch):
     topic = FakeTopic()
     times = [1000.0, 1000.0, 1001.0, 1001.0, 1002.0]
 

@@ -52,11 +52,11 @@ const VarPicker: FC<Props> = ({
       <PopoverTrigger
         nativeButton={false}
         render={(
-          <div className={cn('group', triggerClassName)}>
+          <div className={cn(triggerClassName)}>
             <div className={cn(
               className,
               notSetVar ? 'border-[#FEDF89] bg-[#FFFCF5] text-[#DC6803]' : 'border-components-button-secondary-border text-text-accent hover:bg-components-button-secondary-bg',
-              'bg-transparent group-data-popup-open:bg-components-button-secondary-bg',
+              open ? 'bg-components-button-secondary-bg' : 'bg-transparent',
               `
               flex h-8 cursor-pointer items-center justify-center space-x-1 rounded-lg border px-2 text-[13px]
               font-medium shadow-xs
@@ -74,7 +74,7 @@ const VarPicker: FC<Props> = ({
                       </div>
                     )}
               </div>
-              <ChevronDownIcon className="size-3.5 group-data-popup-open:rotate-180 group-data-popup-open:text-text-tertiary" />
+              <ChevronDownIcon className={cn(open && 'rotate-180 text-text-tertiary', 'h-3.5 w-3.5')} />
             </div>
           </div>
         )}
@@ -83,6 +83,7 @@ const VarPicker: FC<Props> = ({
         placement="bottom-end"
         sideOffset={8}
         popupClassName="border-none bg-transparent p-0 shadow-none backdrop-blur-none"
+        positionerProps={{ style: { zIndex: 1000 } }}
       >
         {options.length > 0
           ? (
@@ -104,7 +105,7 @@ const VarPicker: FC<Props> = ({
           : (
               <div className="w-[240px] rounded-lg border border-components-panel-border bg-components-panel-bg p-6 shadow-lg">
                 <div className="mb-1 text-sm font-medium text-text-secondary">{t('feature.dataSet.queryVariable.noVar', { ns: 'appDebug' })}</div>
-                <div className="text-xs/normal text-text-tertiary">{t('feature.dataSet.queryVariable.noVarTip', { ns: 'appDebug' })}</div>
+                <div className="text-xs leading-normal text-text-tertiary">{t('feature.dataSet.queryVariable.noVarTip', { ns: 'appDebug' })}</div>
               </div>
             )}
       </PopoverContent>

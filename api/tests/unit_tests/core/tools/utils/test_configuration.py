@@ -4,8 +4,6 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import patch
 
-import pytest
-
 from core.app.entities.app_invoke_entities import InvokeFrom
 from core.helper.tool_parameter_cache import ToolParameterCache
 from core.tools.__base.tool import Tool
@@ -112,7 +110,7 @@ def test_encrypt_tool_parameters():
     assert encrypted["plain"] == "x"
 
 
-def test_decrypt_tool_parameters_cache_hit_and_miss(monkeypatch: pytest.MonkeyPatch):
+def test_decrypt_tool_parameters_cache_hit_and_miss(monkeypatch):
     manager = _build_manager()
 
     with (
@@ -141,7 +139,7 @@ def test_delete_tool_parameters_cache():
     mock_delete.assert_called_once()
 
 
-def test_configuration_manager_decrypt_suppresses_errors(monkeypatch: pytest.MonkeyPatch):
+def test_configuration_manager_decrypt_suppresses_errors(monkeypatch):
     manager = _build_manager()
     with (
         patch.object(ToolParameterCache, "get", return_value=None),

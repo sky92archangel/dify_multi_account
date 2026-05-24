@@ -1,5 +1,4 @@
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import Item from '../index'
 
 describe('Item', () => {
@@ -21,16 +20,14 @@ describe('Item', () => {
 
   // Toggling the optional tooltip indicator
   describe('Tooltip behavior', () => {
-    it('should render tooltip content when tooltip text is provided', async () => {
-      const user = userEvent.setup()
+    it('should render tooltip content when tooltip text is provided', () => {
       const label = 'Workspace seats'
       const tooltip = 'Seats define how many teammates can join the workspace.'
 
       const { container } = render(<Item label={label} tooltip={tooltip} />)
 
       expect(screen.getByText(label)).toBeInTheDocument()
-      await user.hover(screen.getByRole('button', { name: tooltip }))
-      expect(await screen.findByText(tooltip)).toBeInTheDocument()
+      expect(screen.getByText(tooltip)).toBeInTheDocument()
       expect(container.querySelector('.group')).not.toBeNull()
     })
 

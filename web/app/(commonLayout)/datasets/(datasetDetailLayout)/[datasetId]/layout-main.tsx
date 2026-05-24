@@ -23,25 +23,12 @@ import DatasetDetailContext from '@/context/dataset-detail'
 import { useEventEmitterContextContext } from '@/context/event-emitter'
 import useBreakpoints, { MediaType } from '@/hooks/use-breakpoints'
 import useDocumentTitle from '@/hooks/use-document-title'
-import { usePathname, useRouter } from '@/next/navigation'
+import { usePathname } from '@/next/navigation'
 import { useDatasetDetail, useDatasetRelatedApps } from '@/service/knowledge/use-dataset'
 
 type IAppDetailLayoutProps = {
   children: React.ReactNode
   datasetId: string
-}
-
-const getResponseStatus = (error: unknown) => {
-  if (error instanceof Response)
-    return error.status
-
-  if (typeof error === 'object' && error && 'status' in error && typeof error.status === 'number')
-    return error.status
-}
-
-const shouldRedirectToDatasetList = (error: unknown) => {
-  const status = getResponseStatus(error)
-  return status === 403 || status === 404
 }
 
 const DatasetDetailLayout: FC<IAppDetailLayoutProps> = (props) => {
@@ -50,7 +37,6 @@ const DatasetDetailLayout: FC<IAppDetailLayoutProps> = (props) => {
     datasetId,
   } = props
   const { t } = useTranslation()
-  const router = useRouter()
   const pathname = usePathname()
   const hideSideBar = pathname.endsWith('documents/create') || pathname.endsWith('documents/create-from-pipeline')
   const isPipelineCanvas = pathname.endsWith('/pipeline')
@@ -68,9 +54,8 @@ const DatasetDetailLayout: FC<IAppDetailLayoutProps> = (props) => {
   const isMobile = media === MediaType.mobile
 
   const { data: datasetRes, error, refetch: mutateDatasetRes } = useDatasetDetail(datasetId)
-  const shouldRedirect = shouldRedirectToDatasetList(error)
 
-  const { data: relatedApps } = useDatasetRelatedApps(datasetId, { enabled: !!datasetRes && !shouldRedirect })
+  const { data: relatedApps } = useDatasetRelatedApps(datasetId)
 
   const isButtonDisabledWithPipeline = useMemo(() => {
     if (!datasetRes)
@@ -130,15 +115,7 @@ const DatasetDetailLayout: FC<IAppDetailLayoutProps> = (props) => {
     setAppSidebarExpand(isMobile ? mode : localeMode)
   }, [isMobile, setAppSidebarExpand])
 
-  useEffect(() => {
-    if (shouldRedirect)
-      router.replace('/datasets')
-  }, [router, shouldRedirect])
-
   if (!datasetRes && !error)
-    return <Loading type="app" />
-
-  if (shouldRedirect)
     return <Loading type="app" />
 
   return (

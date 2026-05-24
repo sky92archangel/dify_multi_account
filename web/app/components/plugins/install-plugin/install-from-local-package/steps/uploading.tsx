@@ -1,47 +1,14 @@
 'use client'
 import type { FC } from 'react'
-import type { Dependency, Plugin, PluginDeclaration } from '../../../types'
+import type { Dependency, PluginDeclaration } from '../../../types'
 import { Button } from '@langgenius/dify-ui/button'
+import { RiLoader2Line } from '@remixicon/react'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import { uploadFile } from '@/service/plugins'
 import Card from '../../../card'
 
 const i18nPrefix = 'installModal'
-
-type PackageUploadResponse = {
-  unique_identifier: string
-  manifest: PluginDeclaration
-}
-
-type UploadFailureResponse = {
-  message?: string
-}
-
-function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null
-}
-
-function isPackageUploadResponse(value: unknown): value is PackageUploadResponse {
-  if (!isObject(value))
-    return false
-
-  return typeof value.unique_identifier === 'string' && isObject(value.manifest)
-}
-
-function getRejectedResponse(error: unknown): unknown {
-  if (!isObject(error) || !('response' in error))
-    return undefined
-
-  return error.response
-}
-
-function getUploadFailureMessage(response: unknown): string | undefined {
-  if (!isObject(response))
-    return undefined
-
-  return (response as UploadFailureResponse).message
-}
 
 type Props = {
   isBundle: boolean
@@ -65,50 +32,36 @@ const Uploading: FC<Props> = ({
 }) => {
   const { t } = useTranslation()
   const fileName = file.name
-  const handleUploadedResponse = React.useCallback((response: unknown) => {
-    if (isBundle) {
-      if (Array.isArray(response)) {
-        onBundleUploaded(response as Dependency[])
-        return
-      }
-      onFailed(t(`${i18nPrefix}.uploadFailed`, { ns: 'plugin' }))
-      return
-    }
-
-    if (!isPackageUploadResponse(response)) {
-      onFailed(t(`${i18nPrefix}.uploadFailed`, { ns: 'plugin' }))
-      return
-    }
-
-    onPackageUploaded({
-      uniqueIdentifier: response.unique_identifier,
-      manifest: response.manifest,
-    })
-  }, [isBundle, onBundleUploaded, onFailed, onPackageUploaded, t])
-
-  const handleUpload = React.useCallback(async () => {
+  const handleUpload = async () => {
     try {
-      handleUploadedResponse(await uploadFile(file, isBundle))
+      await uploadFile(file, isBundle)
     }
-    catch (error: unknown) {
-      const response = getRejectedResponse(error)
-      const message = getUploadFailureMessage(response)
-      if (message) {
-        onFailed(message)
-        return
+    catch (e: any) {
+      if (e.response?.message) {
+        onFailed(e.response?.message)
       }
-      handleUploadedResponse(response)
+      else { // Why it would into this branch?
+        const res = e.response
+        if (isBundle) {
+          onBundleUploaded(res)
+          return
+        }
+        onPackageUploaded({
+          uniqueIdentifier: res.unique_identifier,
+          manifest: res.manifest,
+        })
+      }
     }
-  }, [file, handleUploadedResponse, isBundle, onFailed])
+  }
 
   React.useEffect(() => {
     handleUpload()
-  }, [handleUpload])
+  }, [])
   return (
     <>
       <div className="flex flex-col items-start justify-center gap-4 self-stretch px-6 py-3">
         <div className="flex items-center gap-1 self-stretch">
-          <span className="i-ri-loader-2-line size-4 animate-spin-slow text-text-accent" />
+          <RiLoader2Line className="h-4 w-4 animate-spin-slow text-text-accent" />
           <div className="system-md-regular text-text-secondary">
             {t(`${i18nPrefix}.uploadingPackage`, {
               ns: 'plugin',
@@ -119,7 +72,7 @@ const Uploading: FC<Props> = ({
         <div className="flex flex-wrap content-start items-start gap-1 self-stretch rounded-2xl bg-background-section-burn p-2">
           <Card
             className="w-full"
-            payload={{ name: fileName } as Plugin}
+            payload={{ name: fileName } as any}
             isLoading
             loadingFileName={fileName}
             installed={false}

@@ -15,36 +15,11 @@ type VersionInfo = {
   importedVersion: string
   systemVersion: string
 }
-type ImportErrorResponse = {
-  message?: unknown
-  error?: unknown
-}
 type UseUpdateDSLModalParams = {
   onCancel: () => void
   onImport?: () => void
 }
 const isCompletedStatus = (status: DSLImportStatus): boolean => status === DSLImportStatus.COMPLETED || status === DSLImportStatus.COMPLETED_WITH_WARNINGS
-const getNonEmptyString = (value: unknown): string | undefined => {
-  if (typeof value !== 'string')
-    return undefined
-
-  const trimmedValue = value.trim()
-  return trimmedValue || undefined
-}
-const getImportErrorMessage = async (error: unknown): Promise<string | undefined> => {
-  if (error instanceof Response && !error.bodyUsed) {
-    try {
-      const errorData = await error.clone().json() as ImportErrorResponse
-      return getNonEmptyString(errorData.message) ?? getNonEmptyString(errorData.error)
-    }
-    catch {}
-  }
-
-  if (error instanceof Error)
-    return getNonEmptyString(error.message)
-
-  return undefined
-}
 export const useUpdateDSLModal = ({ onCancel, onImport }: UseUpdateDSLModalParams) => {
   const { t } = useTranslation()
   const { eventEmitter } = useEventEmitterContextContext()
@@ -77,9 +52,9 @@ export const useUpdateDSLModal = ({ onCancel, onImport }: UseUpdateDSLModalParam
     if (!file)
       setFileContent('')
   }
-  const notifyError = useCallback((message?: string) => {
+  const notifyError = useCallback(() => {
     setLoading(false)
-    toast.error(message || t('common.importFailure', { ns: 'workflow' }))
+    toast.error(t('common.importFailure', { ns: 'workflow' }))
   }, [t])
   const updateWorkflow = useCallback(async (pipelineId: string) => {
     const { graph, hash, rag_pipeline_variables } = await fetchWorkflowDraft(`/rag/pipelines/${pipelineId}/workflows/draft`)
@@ -142,10 +117,10 @@ export const useUpdateDSLModal = ({ onCancel, onImport }: UseUpdateDSLModalParam
       else if (status === DSLImportStatus.PENDING)
         showVersionMismatch(id, imported_dsl_version, current_dsl_version)
       else
-        notifyError(response.error)
+        notifyError()
     }
-    catch (error) {
-      notifyError(await getImportErrorMessage(error))
+    catch {
+      notifyError()
     }
     isCreatingRef.current = false
   }, [currentFile, fileContent, workflowStore, importDSL, completeImport, showVersionMismatch, notifyError])
@@ -153,16 +128,16 @@ export const useUpdateDSLModal = ({ onCancel, onImport }: UseUpdateDSLModalParam
     if (!importId)
       return
     try {
-      const { status, pipeline_id, error } = await importDSLConfirm(importId)
+      const { status, pipeline_id } = await importDSLConfirm(importId)
       if (status === DSLImportStatus.COMPLETED) {
         await completeImport(pipeline_id)
         return
       }
       if (status === DSLImportStatus.FAILED)
-        notifyError(error)
+        notifyError()
     }
-    catch (error) {
-      notifyError(await getImportErrorMessage(error))
+    catch {
+      notifyError()
     }
   }, [importId, importDSLConfirm, completeImport, notifyError])
   return {

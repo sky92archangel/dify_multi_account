@@ -1,6 +1,5 @@
-import { subscribeWorkflowCommand, WorkflowCommand } from '@/app/components/workflow/shortcuts/commands'
 import { registerCommands, unregisterCommands } from '../command-bus'
-import { zenCommand } from '../zen'
+import { ZEN_TOGGLE_EVENT, zenCommand } from '../zen'
 
 vi.mock('../command-bus')
 
@@ -25,6 +24,10 @@ describe('zenCommand', () => {
     expect(zenCommand.execute).toBeDefined()
   })
 
+  it('exports ZEN_TOGGLE_EVENT constant', () => {
+    expect(ZEN_TOGGLE_EVENT).toBe('zen-toggle-maximize')
+  })
+
   describe('isAvailable', () => {
     it('delegates to isInWorkflowPage', async () => {
       const { isInWorkflowPage } = vi.mocked(
@@ -40,14 +43,15 @@ describe('zenCommand', () => {
   })
 
   describe('execute', () => {
-    it('emits the workflow canvas maximize command', () => {
-      const listener = vi.fn()
-      const unsubscribe = subscribeWorkflowCommand(WorkflowCommand.ToggleCanvasMaximize, listener)
+    it('dispatches custom zen-toggle event', () => {
+      const dispatchSpy = vi.spyOn(window, 'dispatchEvent')
 
       zenCommand.execute?.()
 
-      expect(listener).toHaveBeenCalledTimes(1)
-      unsubscribe()
+      expect(dispatchSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ type: ZEN_TOGGLE_EVENT }),
+      )
+      dispatchSpy.mockRestore()
     })
   })
 

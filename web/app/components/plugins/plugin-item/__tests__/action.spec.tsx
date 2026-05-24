@@ -82,7 +82,15 @@ vi.mock('../../plugin-page/plugin-info', () => ({
   ),
 }))
 
-vi.mock('@langgenius/dify-ui/tooltip', () => import('@/__mocks__/base-ui-tooltip'))
+// Mock Tooltip - uses PortalToFollowElem which requires complex floating UI setup
+// Simplified mock that just renders children with tooltip content accessible
+vi.mock('../../../base/tooltip', () => ({
+  default: ({ children, popupContent }: { children: React.ReactNode, popupContent: string }) => (
+    <div data-testid="tooltip" data-popup-content={popupContent}>
+      {children}
+    </div>
+  ),
+}))
 
 // ==================== Test Utilities ====================
 
@@ -228,17 +236,8 @@ describe('Action Component', () => {
       render(<Action {...props} />)
 
       // Assert
-      const buttons = getActionButtons()
-      fireEvent.mouseEnter(buttons[0]!)
-      expect(screen.getByText('plugin.action.checkForUpdates'))!.toBeInTheDocument()
-      fireEvent.mouseLeave(buttons[0]!)
-
-      fireEvent.mouseEnter(buttons[1]!)
-      expect(screen.getByText('plugin.action.pluginInfo'))!.toBeInTheDocument()
-      fireEvent.mouseLeave(buttons[1]!)
-
-      fireEvent.mouseEnter(buttons[2]!)
-      expect(screen.getByText('plugin.action.delete'))!.toBeInTheDocument()
+      const tooltips = screen.getAllByTestId('tooltip')
+      expect(tooltips).toHaveLength(3)
     })
   })
 
@@ -257,7 +256,8 @@ describe('Action Component', () => {
       fireEvent.click(getActionButtons()[0]!)
 
       // Assert
-      expect(screen.getByRole('heading', { name: 'plugin.action.delete' }))!.toBeInTheDocument()
+      // Assert
+      expect(screen.getByText('plugin.action.delete'))!.toBeInTheDocument()
     })
 
     it('should display plugin name in delete confirm content', () => {
@@ -289,13 +289,13 @@ describe('Action Component', () => {
       // Act
       render(<Action {...props} />)
       fireEvent.click(getActionButtons()[0]!)
-      expect(screen.getByRole('heading', { name: 'plugin.action.delete' }))!.toBeInTheDocument()
+      expect(screen.getByText('plugin.action.delete'))!.toBeInTheDocument()
 
       fireEvent.click(getDeleteCancelButton())
 
       // Assert
       return waitFor(() => {
-        expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+        expect(screen.queryByText('plugin.action.delete')).not.toBeInTheDocument()
       })
     })
 
@@ -414,7 +414,7 @@ describe('Action Component', () => {
       // Resolve and check modal closes
       resolveUninstall!({ success: true })
       await waitFor(() => {
-        expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+        expect(screen.queryByText('plugin.action.delete')).not.toBeInTheDocument()
       })
     })
   })
@@ -871,7 +871,7 @@ describe('Action Component', () => {
       resolveFirst!({ success: true })
 
       await waitFor(() => {
-        expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+        expect(screen.queryByText('plugin.action.delete')).not.toBeInTheDocument()
       })
     })
 

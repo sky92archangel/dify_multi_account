@@ -8,7 +8,6 @@ from flask_restx import Resource, fields, marshal, marshal_with
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import sessionmaker
 
-from controllers.common.schema import register_schema_models
 from controllers.console import console_ns
 from controllers.console.app.error import (
     DraftWorkflowNotExist,
@@ -34,6 +33,7 @@ from services.workflow_service import WorkflowService
 
 logger = logging.getLogger(__name__)
 _file_access_controller = DatabaseFileAccessController()
+DEFAULT_REF_TEMPLATE_SWAGGER_2_0 = "#/definitions/{model}"
 
 
 class WorkflowDraftVariableListQuery(BaseModel):
@@ -56,25 +56,33 @@ class EnvironmentVariableUpdatePayload(BaseModel):
     environment_variables: list[dict[str, Any]] = Field(..., description="Environment variables for the draft workflow")
 
 
-register_schema_models(
-    console_ns,
-    WorkflowDraftVariableListQuery,
-    WorkflowDraftVariableUpdatePayload,
-    ConversationVariableUpdatePayload,
-    EnvironmentVariableUpdatePayload,
+console_ns.schema_model(
+    WorkflowDraftVariableListQuery.__name__,
+    WorkflowDraftVariableListQuery.model_json_schema(ref_template=DEFAULT_REF_TEMPLATE_SWAGGER_2_0),
+)
+console_ns.schema_model(
+    WorkflowDraftVariableUpdatePayload.__name__,
+    WorkflowDraftVariableUpdatePayload.model_json_schema(ref_template=DEFAULT_REF_TEMPLATE_SWAGGER_2_0),
+)
+console_ns.schema_model(
+    ConversationVariableUpdatePayload.__name__,
+    ConversationVariableUpdatePayload.model_json_schema(ref_template=DEFAULT_REF_TEMPLATE_SWAGGER_2_0),
+)
+console_ns.schema_model(
+    EnvironmentVariableUpdatePayload.__name__,
+    EnvironmentVariableUpdatePayload.model_json_schema(ref_template=DEFAULT_REF_TEMPLATE_SWAGGER_2_0),
 )
 
 
 def _convert_values_to_json_serializable_object(value: Segment):
-    match value:
-        case FileSegment():
-            return value.value.model_dump()
-        case ArrayFileSegment():
-            return [i.model_dump() for i in value.value]
-        case SegmentGroup():
-            return [_convert_values_to_json_serializable_object(i) for i in value.value]
-        case _:
-            return value.value
+    if isinstance(value, FileSegment):
+        return value.value.model_dump()
+    elif isinstance(value, ArrayFileSegment):
+        return [i.model_dump() for i in value.value]
+    elif isinstance(value, SegmentGroup):
+        return [_convert_values_to_json_serializable_object(i) for i in value.value]
+    else:
+        return value.value
 
 
 def _serialize_var_value(variable: WorkflowDraftVariable):
@@ -251,7 +259,7 @@ class WorkflowVariableCollectionApi(Resource):
         """
         Get draft workflow
         """
-        args = WorkflowDraftVariableListQuery.model_validate(request.args.to_dict(flat=True))
+        args = WorkflowDraftVariableListQuery.model_validate(request.args.to_dict(flat=True))  # type: ignore
 
         # fetch draft workflow by app_model
         workflow_service = WorkflowService()

@@ -4,7 +4,6 @@ import type { InitialDocumentDetail } from '@/models/pipeline'
 import type { RETRIEVE_METHOD } from '@/types/app'
 import { Button } from '@langgenius/dify-ui/button'
 import { cn } from '@langgenius/dify-ui/cn'
-import { Popover, PopoverContent, PopoverTrigger } from '@langgenius/dify-ui/popover'
 import {
   RiAedFill,
   RiArrowRightLine,
@@ -18,6 +17,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import Divider from '@/app/components/base/divider'
 import NotionIcon from '@/app/components/base/notion-icon'
+import Tooltip from '@/app/components/base/tooltip'
 import PriorityLabel from '@/app/components/billing/priority-label'
 import { Plan } from '@/app/components/billing/type'
 import UpgradeBtn from '@/app/components/billing/upgrade-btn'
@@ -203,18 +203,15 @@ const EmbeddingProcess = ({
                   <div className="shrink-0 text-xs text-text-secondary">{`${getSourcePercent(indexingStatusDetail)}%`}</div>
                 )}
                 {indexingStatusDetail.indexing_status === 'error' && (
-                  <Popover>
-                    <PopoverTrigger
-                      openOnHover
-                      aria-label={indexingStatusDetail.error}
-                      className="inline-flex border-0 bg-transparent p-0"
-                    >
+                  <Tooltip
+                    popupClassName="px-4 py-[14px] max-w-60 body-xs-regular text-text-secondary border-[0.5px] border-components-panel-border rounded-xl"
+                    offset={4}
+                    popupContent={indexingStatusDetail.error}
+                  >
+                    <span>
                       <RiErrorWarningFill className="size-4 shrink-0 text-text-destructive" />
-                    </PopoverTrigger>
-                    <PopoverContent popupClassName="max-w-60 rounded-xl border-[0.5px] border-components-panel-border px-4 py-[14px] body-xs-regular text-text-secondary">
-                      {indexingStatusDetail.error}
-                    </PopoverContent>
-                  </Popover>
+                    </span>
+                  </Tooltip>
                 )}
                 {indexingStatusDetail.indexing_status === 'completed' && (
                   <RiCheckboxCircleFill className="size-4 shrink-0 text-text-success" />

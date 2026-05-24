@@ -1,4 +1,3 @@
-import { createPreviewCardHandle } from '@langgenius/dify-ui/preview-card'
 import { render, screen } from '@testing-library/react'
 import { useGetLanguage } from '@/context/i18n'
 import useTheme from '@/hooks/use-theme'
@@ -37,7 +36,6 @@ describe('ToolListTreeView Item', () => {
         toolList={[createToolProvider({
           label: { en_US: 'Provider Alpha', zh_Hans: 'Provider Alpha' },
         })]}
-        previewCardHandle={createPreviewCardHandle()}
         hasSearchText={false}
         onSelect={vi.fn()}
       />,

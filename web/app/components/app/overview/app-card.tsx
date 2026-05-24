@@ -1,5 +1,4 @@
 'use client'
-import type { WorkflowLaunchInputValue } from './app-card-utils'
 import type { ConfigParams } from './settings'
 import type { AppDetailResponse } from '@/models/app'
 import type { AppSSO } from '@/types/app'
@@ -29,16 +28,11 @@ import {
   AppCardOperations,
   AppCardUrlSection,
   createAppCardOperations,
-  WorkflowLaunchDialog,
 } from './app-card-sections'
 import {
-  buildWorkflowLaunchUrl,
-  createWorkflowLaunchInitialValues,
   getAppCardDisplayState,
   getAppCardOperationKeys,
-  getAppHiddenLaunchVariables,
   isAppAccessConfigured,
-  isWorkflowLaunchInputSupported,
 } from './app-card-utils'
 
 export type IAppCardProps = {
@@ -69,8 +63,7 @@ function AppCard({
   const router = useRouter()
   const pathname = usePathname()
   const { isCurrentWorkspaceManager, isCurrentWorkspaceEditor } = useAppContext()
-  const shouldFetchWorkflow = appInfo.mode === AppModeEnum.WORKFLOW || appInfo.mode === AppModeEnum.ADVANCED_CHAT
-  const { data: currentWorkflow } = useAppWorkflow(shouldFetchWorkflow ? appInfo.id : '')
+  const { data: currentWorkflow } = useAppWorkflow(appInfo.mode === AppModeEnum.WORKFLOW ? appInfo.id : '')
   const docLink = useDocLink()
   const appDetail = useAppStore(state => state.appDetail)
   const setAppDetail = useAppStore(state => state.setAppDetail)
@@ -80,8 +73,6 @@ function AppCard({
   const [genLoading, setGenLoading] = useState(false)
   const [showConfirmDelete, setShowConfirmDelete] = useState(false)
   const [showAccessControl, setShowAccessControl] = useState(false)
-  const [showWorkflowLaunchDialog, setShowWorkflowLaunchDialog] = useState(false)
-  const [workflowLaunchValues, setWorkflowLaunchValues] = useState<Record<string, WorkflowLaunchInputValue>>({})
   const { t } = useTranslation()
   const { data: systemFeatures } = useSuspenseQuery(systemFeaturesQueryOptions())
   const { data: appAccessSubjects } = useAppWhiteListSubjects(
@@ -106,25 +97,6 @@ function AppCard({
   const isAppAccessSet = useMemo(
     () => isAppAccessConfigured(appDetail, appAccessSubjects),
     [appAccessSubjects, appDetail],
-  )
-  const hiddenLaunchVariables = useMemo(
-    () => getAppHiddenLaunchVariables({
-      appInfo,
-      currentWorkflow,
-    }) || [],
-    [appInfo, currentWorkflow],
-  )
-  const supportedWorkflowLaunchVariables = useMemo(
-    () => hiddenLaunchVariables.filter(isWorkflowLaunchInputSupported),
-    [hiddenLaunchVariables],
-  )
-  const unsupportedWorkflowLaunchVariables = useMemo(
-    () => hiddenLaunchVariables.filter(variable => !isWorkflowLaunchInputSupported(variable)),
-    [hiddenLaunchVariables],
-  )
-  const initialWorkflowLaunchValues = useMemo(
-    () => createWorkflowLaunchInitialValues(supportedWorkflowLaunchVariables),
-    [supportedWorkflowLaunchVariables],
   )
 
   const onGenCode = async () => {
@@ -166,31 +138,6 @@ function AppCard({
   const handleLaunch = useCallback(() => {
     window.open(cardState.accessibleUrl, '_blank')
   }, [cardState.accessibleUrl])
-
-  const handleOpenWorkflowLaunchDialog = useCallback(() => {
-    setWorkflowLaunchValues(initialWorkflowLaunchValues)
-    setShowWorkflowLaunchDialog(true)
-  }, [initialWorkflowLaunchValues])
-
-  const handleWorkflowLaunchValueChange = useCallback((variable: string, value: WorkflowLaunchInputValue) => {
-    setWorkflowLaunchValues(prev => ({
-      ...prev,
-      [variable]: value,
-    }))
-  }, [])
-
-  const handleWorkflowLaunchConfirm = useCallback(async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-
-    const targetUrl = await buildWorkflowLaunchUrl({
-      accessibleUrl: cardState.accessibleUrl,
-      variables: supportedWorkflowLaunchVariables,
-      values: workflowLaunchValues,
-    })
-
-    window.open(targetUrl, '_blank')
-    setShowWorkflowLaunchDialog(false)
-  }, [cardState.accessibleUrl, supportedWorkflowLaunchVariables, workflowLaunchValues])
 
   const handleOpenCustomize = useCallback(() => {
     setShowCustomizeModal(true)
@@ -357,17 +304,7 @@ function AppCard({
         {!cardState.isMinimalState && (
           <div className="flex items-center gap-1 self-stretch p-3">
             {!isApp && <SecretKeyButton appId={appInfo.id} />}
-            <AppCardOperations
-              t={t}
-              operations={operations}
-              launchConfigAction={hiddenLaunchVariables.length > 0
-                ? {
-                    label: t('operation.config', { ns: 'common' }),
-                    disabled: triggerModeDisabled || !cardState.runningStatus,
-                    onClick: handleOpenWorkflowLaunchDialog,
-                  }
-                : undefined}
-            />
+            <AppCardOperations t={t} operations={operations} />
           </div>
         )}
       </div>
@@ -386,17 +323,6 @@ function AppCard({
         onCloseAccessControl={() => setShowAccessControl(false)}
         onSaveSiteConfig={onSaveSiteConfig}
         onConfirmAccessControl={handleAccessControlUpdate}
-        hiddenInputs={hiddenLaunchVariables}
-      />
-      <WorkflowLaunchDialog
-        t={t}
-        open={showWorkflowLaunchDialog}
-        hiddenVariables={supportedWorkflowLaunchVariables}
-        unsupportedVariables={unsupportedWorkflowLaunchVariables}
-        values={workflowLaunchValues}
-        onOpenChange={setShowWorkflowLaunchDialog}
-        onValueChange={handleWorkflowLaunchValueChange}
-        onSubmit={handleWorkflowLaunchConfirm}
       />
     </div>
   )
